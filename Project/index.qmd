@@ -1,14 +1,14 @@
 ---
 title: "Writing a great story for data science projects "
 subtitle: "This is a Report Template Quarto"
-author: "Student Name (Advisor: Dr. Cohen)"
+author: "Mike Fazio (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
   html:
     code-fold: true
 course: Capstone Projects in Data Science
 bibliography: references.bib # file contains bibtex for references
-#always_allow_html: true # this allows to get PDF with HTML features
+zXalways_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 execute: 
   warning: false
@@ -114,6 +114,12 @@ library(knitr)
 library(ggthemes)
 library(ggrepel)
 library(dslabs)
+library(reticulate)
+
+py_require(c(
+  "numpy",
+  "pandas"
+))
 ```
 
 ```{python}

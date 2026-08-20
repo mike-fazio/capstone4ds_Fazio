@@ -1,0 +1,162 @@
+\documentclass[addpoints, answers]{exam}
+
+
+%This is where you'll edit your class information for each test
+\newcommand{\instructor}{\textbf{Instructor: Shusen Pu}}
+\newcommand{\class}{\textbf{Capstone}}
+\newcommand{\examnum}{\textbf{\, \, HW \#1}}
+\newcommand{\examdate}{March 3, 2022}
+\newcommand{\name}{\textbf{Student Name (print)}: \underline{\hspace{2in}}   }
+\usepackage{listings}
+\usepackage[shortlabels]{enumitem}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{cancel}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{relsize}
+\usepackage{marvosym}
+\usepackage{dirtytalk}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,urlcolor=blue}
+\usepackage{upgreek}
+\usepackage{graphicx}
+\usepackage{color}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\la}{\leftarrow}
+\newcommand{\suchthat}{\textnormal{ such that }}
+\newcommand{\for}{\textnormal{ for }}
+\newcommand{\where}{\textnormal{ where }}
+\newcommand{\by}{\textnormal{ by }}
+\newcommand{\when}{\textnormal{ when }}
+\newcommand{\then}{\textnormal{ then }}
+\newcommand{\mn}{\medskip \noindent}
+
+\newcommand{\ds}{\displaystyle}
+%\usepackage{lipsum}
+
+
+\newcommand\afterclasspart{\renewcommand\partlabel{(\thepartno)\makebox[0pt]{$\ ^\star$}}}  
+\newcommand\standardpart{\renewcommand\partlabel{(\thepartno)}}
+\newcommand\afterclassquestion{\renewcommand\questionlabel{\makebox[2pt]{$\bigstar$}\, \thequestion.}}  
+\newcommand\afterclassquestions{\renewcommand\questionlabel{\makebox[4pt]{$\bigstar\bigstar$}\, \,  \thequestion.}} 
+
+\newcommand\standardquestion{\renewcommand\questionlabel{\thequestion.}} 
+
+%\newcommand\standardquestion{\renewcommand\questionlabel{\thequestion.}} 
+
+\newenvironment{modenumerate}
+  {\enumerate\setupmodenumerate}
+  {\endenumerate}
+
+\newif\ifmoditem
+\newcommand{\setupmodenumerate}{%
+  \global\moditemfalse
+  \let\origmakelabel\makelabel
+  \def\moditem##1{\global\moditemtrue\def\mesymbol{##1}\item}%
+  \def\makelabel##1{%
+    \origmakelabel{\ifmoditem\llap{\mesymbol\enspace}\fi##1}%
+    \global\moditemfalse}%
+}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.11}
+\newcommand{\e}{\mathrm{e}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\M}{\mathbb{M}}
+\newcommand{\C}{\mathbb{C}}
+
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\V}{\mathcal{V}}
+
+\newcommand{\Rn}{\R^n}
+\newcommand{\Mn}{\M_n}
+\newcommand{\Mmn}{\M_{m,n}}
+\newcommand{\seq}[1]{\{#1_i\}_{i=1}^{\infty}}
+\newcommand{\trace}{\mathrm{tr}}
+\newcommand{\rsa}{\rightsquigarrow}
+\newcommand{\rank}{\mathrm{rank}}
+\newcommand{\proj}{\mathrm{proj}}
+\newcommand{\vol}{\mathrm{vol}}
+
+\newcommand{\mat}[1]{\begin{bmatrix} #1 \end{bmatrix}}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+
+%This is where you can print out your solutions
+
+\printanswers
+%\noprintanswers
+
+\begin{document}
+
+
+
+% This is where you change the header of the first page and the running header
+\pagestyle{headandfoot} 
+\firstpageheader{\Large{{\class}}}{\Large{\examnum}}{\instructor}
+\runningheader{\class\ \examnum}{Page \thepage\ of \numpages}{}
+\runningheadrule
+%\runningfooter{Page \thepage\ of \numpages}{}{\hfill{\large{\textbf{Points earned: \makebox[.5in]{\hrulefill} out of \pointsonpage{\thepage} points}}}}	
+%\runningfooter{Page \thepage\ of \numpages}{}{}	
+%\vspace{0.5cm}		
+\name\\ [0.4cm]
+This assignment contains \numpages\ pages and is due at \textbf{11:59 pm on Sunday.}\\
+
+{\begin{center}
+   {\gradetable[h]} 
+\end{center}}
+
+
+\begin{questions}
+ \question [2] 
+ \textbf{Introduce yourself and meet your classmates:}
+ Please upload/insert a screenshot here.
+ 
+ \vfill
+
+\question [2] 
+\textbf{Join the course Discord channel.} 
+ Please upload/insert a screenshot here.
+\vfill
+\newpage
+
+\question[2] List a tentative topic or method that you’re interested in exploring during this course. You have the flexibility to change it up until week 5.
+\vfill
+
+\question[5] Form a team with no more than 4 members. List your teammates' names in the homework. You can adjust your team anytime before week 5.
+ 
+\vfill
+
+\question[5] Please review and study the following two methods for presenting your progress and research report:
+
+\begin{enumerate}
+\item Write your report on Overleaf. You can copy or download the template from: 
+\href{https://www.overleaf.com/read/tgrddxgwrhst\#ff33cc}{\url{https://www.overleaf.com/read/tgrddxgwrhst\#ff33cc}}.
+
+\item Write your report on GitHub. The template is available here:
+\href{https://github.com/capstone4ds/capstone4ds_template}{\url{https://github.com/capstone4ds/capstone4ds_template}}.
+You can find instructions for setting up the website on the same page.
+\end{enumerate}
+
+
+Please indicate which method you will use for this course.
+
+\vfill
+
+
+\end{questions}
+
+
+\end{document}

@@ -1,0 +1,47 @@
+---
+title: "Week 2 Notes"
+author: "Mike Fazio (Advisor: Dr. Cohen)"
+date: '`r Sys.Date()`'
+format:
+  html:
+    code-fold: true
+course: Capstone Projects in Data Science
+# bibliography: references.bib # file contains bibtex for references
+zXalways_allow_html: true # this allows to get PDF with HTML features
+self-contained: true
+execute: 
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+### General:
+
+-  Groups manually assigned, can still switch.
+   Can work alone after seeing how week goes. 
+   - Contact Brandon B. and discuss group or no group.
+
+### Week 2 Assignment
+
+-  Review Literature Review Guidance
+    - has this already been done?
+        - are proper methods?
+
+    - how to find papers?
+        - google scholar
+            - use keywords (e.g. species distribution, ecosystem, modeling, etc). 
+
+-  Summarize the papers 
+    - read 5, 6, 10 
+        - okay to use old papers, but look for new as well. 
+
+    - Summarize (at least 1 paper):
+        - Background
+        - Methods used
+        - Significance 
+        - Connection to other work
+        - Relevance to capstone
+    
+

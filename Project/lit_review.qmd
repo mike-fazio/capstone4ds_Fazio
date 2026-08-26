@@ -1,0 +1,12 @@
+---
+title: "Literature Review"
+author: "Michael Fazio"
+bibliography: references.bib
+
+format:
+  pdf:
+    toc: true
+    toc-depth: 2
+    number-sections: false
+---
+

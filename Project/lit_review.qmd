@@ -1,12 +1,53 @@
 ---
 title: "Literature Review"
 author: "Michael Fazio"
-bibliography: references.bib
+
 
 format:
   pdf:
     toc: true
     toc-depth: 2
     number-sections: false
+
+bibliography: references.bib
+zXalways_allow_html: true # this allows to get PDF with HTML features
+self-contained: true
+execute: 
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
+# Article's Reviewed
+
+## Article 1 - An evaluation of mapped species distribution models used for conservation planning. [@Johnson2005]
+
+
+### Background
+
+- 
+
+### Methods
+
+- 
+
+### Key Findings
+
+- 
+
+### Significance
+
+- 
+
+### Connections to Other Work
+
+- 
+
+### Relevance to Capstone
+
+- 
+
+
+# Works Cited

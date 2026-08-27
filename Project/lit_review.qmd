@@ -55,9 +55,11 @@ Authors: @Johnson2005
 - Author's demonstrate that there is a benefit to using quantitative models over qualitative models when evaluating species distribution. But acknowledge, that the choice of modeling technique should be based on data availability and costs. Further, this paper demonstrates that there is value in using multiple modeling techniques to compare the effectiveness for SDM. 
 
 
-### Relevance to Capstone
+### Relevance to Capstone and Final Thoughts
 
 - This paper largely employs the same thesis that my project would be based around. I think there could be some potential using the same approach to evaluate Oyster habitat in the Pensacola Bay area. 
+
+- Will keep seraching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.
 
 
 # References

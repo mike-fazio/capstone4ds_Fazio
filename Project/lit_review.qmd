@@ -1,15 +1,15 @@
 ---
 title: "Literature Review"
-author: "Michael Fazio"
-
-
+author: 
+  name: "Mike Fazio"
+  course: "Capstone Projects in Data Science"
+date: today
+date-format: "MMMM DD, YYYY"
 format:
-  pdf:
-    toc: true
-    toc-depth: 2
-    number-sections: false
-
-bibliography: references.bib
+  html:
+    code-fold: true
+course: Capstone Projects in Data Science
+bibliography: references.bib # file contains bibtex for references
 zXalways_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 execute: 
@@ -19,35 +19,45 @@ editor:
   markdown: 
     wrap: 72
 ---
+# Article 1:
 
-# Article's Reviewed
+## An evaluation of mapped species distribution models used for conservation planning.
 
-## Article 1 - An evaluation of mapped species distribution models used for conservation planning. [@Johnson2005]
+Authors: @Johnson2005
 
 
 ### Background
 
-- 
+- Researchers compare the performance of species distribution models (SDMs) using four different modeling techniques: Habitat suitability index (HSI), logistic regression-based resource selection function (RSF), Mahalanobis distance, and an ecological niche model. 
+
+- To evaluate performance, they measuered differences in the distribution of ranked habitats, and they evaluated the predictive ability of the occurence of habitats that correlated with known species locations. 
 
 ### Methods
 
-- 
+- The authors selected models based on relevance (i.e. contemporary and proad usee in existing literature), ability to be used within GIS, and representation of the data types necessary to parameterize models. 
+
+- For the RSF, Mahalanobis distance, and niche model, the authors developed 3 sets of models for each. The HSI model was predetermined via previous research. A total of 10 maps were created and normalized by calculating number of species locations within each of 6 habitat classes. 
+
+- Relationship between predicted class and normalized frequency of species locations were evaluated using Spearman rank and Pearson correlations. Kappa index of agreement was used to measure spatial correlation between maps. 
+
+- Using the results of the correlations, the authors evaluated only the maps for each model that demonstrated the highest predictive ability.  
 
 ### Key Findings
 
-- 
+- There was no reported significance in predictive capability between different variable sets or quantitative models. Comparing quantitative to qualitative models, the maps generated with HSI had weakest correlation and underperformed relative to other techniques. 
+
+- Of the models, Mahalanobis distance was best at preicitng high-quality habitat, followed by RSF and niche models. Conversely, HSI was poor at predicting high-quality habitat. All models performed well at predicting low-quality habitat.
+
+- Modeling technique largely dertermined by data availability and costs. RSFs provide greatest flexibility as model parameters are easily assessed. Mhalanobis distancs and niche models do not provide metrics for evaluating strength of variable relationships. HSI coefficients are difficult to evaluate. 
 
 ### Significance
 
-- 
+- Author's demonstrate that there is a benefit to using quantitative models over qualitative models when evaluating species distribution. But acknowledge, that the choice of modeling technique should be based on data availability and costs. Further, this paper demonstrates that there is value in using multiple modeling techniques to compare the effectiveness for SDM. 
 
-### Connections to Other Work
-
-- 
 
 ### Relevance to Capstone
 
-- 
+- This paper largely employs the same thesis that my project would be based around. I think there could be some potential using the same approach to evaluate Oyster habitat in the Pensacola Bay area. 
 
 
-# Works Cited
+# References

@@ -34,6 +34,10 @@ Authors: @Johnson2005
 
   - RSF was defined as "any mathematical funciton that provides predictions of resource or habitat use taht are proportional to the true probabliltiiy of use." The model is based on the theory that when use of habitat exceeds availability, then selection is inferred, and when use is lesss than availability then the habitat is avoided. 
 
+  - Mahalanobis distance is described as a multivariate dissimiliarity statistic. In the context of SDMs, the mean conditions of a set of environmental variables are compared to other locations around the broader landscape. When a larger value of the statistic represents a larger deviation from the mean conditions. 
+
+  - Ecological niche models are explicityly linked ot niche theory, and are used to represent species distribution across larger scale regions. These models seem to require much more indepth knowledge about the studied species as the model relies on evolutionary constructs that determine whether a set of environmental variables can or cannot support a species population. 
+
 - To evaluate performance, they measuered differences in the distribution of ranked habitats, and they evaluated the predictive ability of the occurence of habitats that correlated with known species locations. 
 
 ### Methods

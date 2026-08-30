@@ -5,9 +5,9 @@ author:
   course: "Capstone Projects in Data Science"
 date: today
 date-format: "MMMM DD, YYYY"
-format:
-  html:
-    code-fold: true
+format: pdf
+  #html:
+   # code-fold: true
 course: Capstone Projects in Data Science
 bibliography: references.bib # file contains bibtex for references
 zXalways_allow_html: true # this allows to get PDF with HTML features
@@ -30,6 +30,10 @@ Authors: @Johnson2005
 
 - Researchers compare the performance of species distribution models (SDMs) using four different modeling techniques: Habitat suitability index (HSI), logistic regression-based resource selection function (RSF), Mahalanobis distance, and an ecological niche model. 
 
+  - HSI applies expert knowledge and meta-analysis to rank wildlife-habitat relationships using additive, multilplicative or logical variables with coefficients typically ranging from 0 to 1 based on percieved relevance. 
+
+  - RSF was defined as "any mathematical funciton that provides predictions of resource or habitat use taht are proportional to the true probabliltiiy of use." The model is based on the theory that when use of habitat exceeds availability, then selection is inferred, and when use is lesss than availability then the habitat is avoided. 
+
 - To evaluate performance, they measuered differences in the distribution of ranked habitats, and they evaluated the predictive ability of the occurence of habitats that correlated with known species locations. 
 
 ### Methods
@@ -37,6 +41,7 @@ Authors: @Johnson2005
 - The authors selected models based on relevance (i.e. contemporary and proad usee in existing literature), ability to be used within GIS, and representation of the data types necessary to parameterize models. 
 
 - For the RSF, Mahalanobis distance, and niche model, the authors developed 3 sets of models for each. The HSI model was predetermined via previous research. A total of 10 maps were created and normalized by calculating number of species locations within each of 6 habitat classes. 
+
 
 - Relationship between predicted class and normalized frequency of species locations were evaluated using Spearman rank and Pearson correlations. Kappa index of agreement was used to measure spatial correlation between maps. 
 
@@ -59,7 +64,7 @@ Authors: @Johnson2005
 
 - This paper largely employs the same thesis that my project would be based around. I think there could be some potential using the same approach to evaluate Oyster habitat in the Pensacola Bay area. 
 
-- Will keep seraching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.
+- Will keep searching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.
 
 
 # References

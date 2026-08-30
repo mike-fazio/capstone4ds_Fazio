@@ -43,9 +43,18 @@ Authors: @Johnson2005
 ### Methods
 
 - The authors selected models based on relevance (i.e. contemporary and proad usee in existing literature), ability to be used within GIS, and representation of the data types necessary to parameterize models. 
+  - The HSI was based on preivous reasearch and was derived from published literature, agencyt reports and expert opinion. The index was then ranked on a six class scale: high, moderately high, moderate, low, very low, and nil.
+  - The RSF was based on fixed-effects logistic regression:
+   $$ w(x) = exp(\beta_1x_1 + \beta_2x_2 + ... + \beta_nx_n) $$
+   where $\beta_1...\beta_n$ are coefficients generated from the regrfession and $w(x)$ is the relative probablility of species occurance. 
+
+   - Mahalanobis distance was calculated at each raster cell using GIS using the formula:
+   $$D^2 = (x-m)^TC^{-1}(x-m)$$
+   where $D^2$ is th eMahalanobis distance, $x$ is the habitat variable, $m$ is the mean value of habitat characteristics recorded at known locations, $T$ indicates that vector should be  transposed, and $C^{-1}$ is the covariance matrix for the same vector of habitat characteristics. The authors used ESRI ArcView and GIS IDRISI to perform matrix calculations on ecological variables. 
+
+  - The ecological niche model was adobted from teh Genetic Algorithm for Rule_set Prediction (GARP) computational approach for modeling. The GARP model is a standalone machine-learning process that develops rule sets to best identify species distribution. 
 
 - For the RSF, Mahalanobis distance, and niche model, the authors developed 3 sets of models for each. The HSI model was predetermined via previous research. A total of 10 maps were created and normalized by calculating number of species locations within each of 6 habitat classes. 
-
 
 - Relationship between predicted class and normalized frequency of species locations were evaluated using Spearman rank and Pearson correlations. Kappa index of agreement was used to measure spatial correlation between maps. 
 
@@ -68,7 +77,9 @@ Authors: @Johnson2005
 
 - This paper largely employs the same thesis that my project would be based around. I think there could be some potential using the same approach to evaluate Oyster habitat in the Pensacola Bay area. 
 
-- Will keep searching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.
+- While this paper is very helpful in guideing my thoughts on my own research, I Will keep searching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.  
+
+- The author's cite a number of research papers that aim to compare model performance in SDM that would prove beneficial to review. 
 
 
 # References

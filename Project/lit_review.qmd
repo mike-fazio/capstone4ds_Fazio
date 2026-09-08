@@ -19,7 +19,7 @@ editor:
   markdown: 
     wrap: 72
 ---
-# Article 1:
+# Week 1 Article Review:
 
 ## An evaluation of mapped species distribution models used for conservation planning.
 
@@ -80,6 +80,13 @@ Authors: @Johnson2005
 - While this paper is very helpful in guideing my thoughts on my own research, I Will keep searching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.  
 
 - The author's cite a number of research papers that aim to compare model performance in SDM that would prove beneficial to review. 
+
+
+# Week 2 Article Review:
+## Estuary-Specific and Adaptive Habitat Suitability Index Model for the Eastern Oyster Crassostrea Virginica in the Pensacola Bay System, Florida, USA
+
+Authors: @Geselbracht2024
+
 
 
 # References

@@ -10,7 +10,7 @@ format: pdf
    # code-fold: true
 course: Capstone Projects in Data Science
 bibliography: references.bib # file contains bibtex for references
-zXalways_allow_html: true # this allows to get PDF with HTML features
+always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 execute: 
   warning: false
@@ -19,74 +19,210 @@ editor:
   markdown: 
     wrap: 72
 ---
+
 # Week 1 Article Review:
 
 ## An evaluation of mapped species distribution models used for conservation planning.
 
 Authors: @Johnson2005
 
-
 ### Background
 
-- Researchers compare the performance of species distribution models (SDMs) using four different modeling techniques: Habitat suitability index (HSI), logistic regression-based resource selection function (RSF), Mahalanobis distance, and an ecological niche model. 
+- Researchers compare the performance of species distribution models
+  (SDMs) using four different modeling techniques: Habitat suitability
+  index (HSI), logistic regression-based resource selection function
+  (RSF), Mahalanobis distance, and an ecological niche model.
 
-  - HSI applies expert knowledge and meta-analysis to rank wildlife-habitat relationships using additive, multilplicative or logical variables with coefficients typically ranging from 0 to 1 based on percieved relevance. 
+    - HSI applies expert knowledge and meta-analysis to rank
+      wildlife-habitat relationships using additive, multiplicative,
+      or logical variables with coefficients typically ranging from 0
+      to 1 based on perceived relevance.
 
-  - RSF was defined as "any mathematical funciton that provides predictions of resource or habitat use taht are proportional to the true probabliltiiy of use." The model is based on the theory that when use of habitat exceeds availability, then selection is inferred, and when use is lesss than availability then the habitat is avoided. 
+    - RSF was defined as "any mathematical function that provides
+      predictions of resource or habitat use that are proportional to
+      the true probability of use." The model is based on the theory
+      that when use of habitat exceeds availability, then selection is
+      inferred, and when use is less than availability, then the
+      habitat is avoided.
 
-  - Mahalanobis distance is described as a multivariate dissimiliarity statistic. In the context of SDMs, the mean conditions of a set of environmental variables are compared to other locations around the broader landscape. When a larger value of the statistic represents a larger deviation from the mean conditions. 
+    - Mahalanobis distance is described as a multivariate
+      dissimilarity statistic. In the context of SDMs, the mean
+      conditions of a set of environmental variables are compared to
+      other locations around the broader landscape. A larger
+      value of the statistic represents a larger deviation from the
+      mean conditions.
 
-  - Ecological niche models are explicityly linked ot niche theory, and are used to represent species distribution across larger scale regions. These models seem to require much more indepth knowledge about the studied species as the model relies on evolutionary constructs that determine whether a set of environmental variables can or cannot support a species population. 
+    - Ecological niche models are explicitly linked to niche theory,
+      and are used to represent species distribution across larger-
+      scale regions. These models seem to require much more in-depth
+      knowledge about the studied species, as the model relies on
+      evolutionary constructs that determine whether a set of
+      environmental variables can or cannot support a species
+      population.
 
-- To evaluate performance, they measuered differences in the distribution of ranked habitats, and they evaluated the predictive ability of the occurence of habitats that correlated with known species locations. 
+- To evaluate performance, they measured differences in the
+  distribution of ranked habitats, and they evaluated the predictive
+  ability of the occurrence of habitats that correlated with known
+  species locations.
 
 ### Methods
 
-- The authors selected models based on relevance (i.e. contemporary and proad usee in existing literature), ability to be used within GIS, and representation of the data types necessary to parameterize models. 
-  - The HSI was based on preivous reasearch and was derived from published literature, agencyt reports and expert opinion. The index was then ranked on a six class scale: high, moderately high, moderate, low, very low, and nil.
-  - The RSF was based on fixed-effects logistic regression:
-   $$ w(x) = exp(\beta_1x_1 + \beta_2x_2 + ... + \beta_nx_n) $$
-   where $\beta_1...\beta_n$ are coefficients generated from the regrfession and $w(x)$ is the relative probablility of species occurance. 
+- The authors selected models based on relevance (i.e., contemporary
+  and broad use in existing literature), ability to be used within
+  GIS, and representation of the data types necessary to parameterize
+  models.
 
-   - Mahalanobis distance was calculated at each raster cell using GIS using the formula:
-   $$D^2 = (x-m)^TC^{-1}(x-m)$$
-   where $D^2$ is th eMahalanobis distance, $x$ is the habitat variable, $m$ is the mean value of habitat characteristics recorded at known locations, $T$ indicates that vector should be  transposed, and $C^{-1}$ is the covariance matrix for the same vector of habitat characteristics. The authors used ESRI ArcView and GIS IDRISI to perform matrix calculations on ecological variables. 
+    - The HSI was based on previous research and was derived from
+      published literature, agency reports, and expert opinion. The
+      index was then ranked on a six-class scale: high, moderately
+      high, moderate, low, very low, and nil.
 
-  - The ecological niche model was adobted from teh Genetic Algorithm for Rule_set Prediction (GARP) computational approach for modeling. The GARP model is a standalone machine-learning process that develops rule sets to best identify species distribution. 
+    - The RSF was based on fixed-effects logistic regression:
 
-- For the RSF, Mahalanobis distance, and niche model, the authors developed 3 sets of models for each. The HSI model was predetermined via previous research. A total of 10 maps were created and normalized by calculating number of species locations within each of 6 habitat classes. 
+      $$ w(x) = exp(\beta_1x_1 + \beta_2x_2 + ... + \beta_nx_n) $$
 
-- Relationship between predicted class and normalized frequency of species locations were evaluated using Spearman rank and Pearson correlations. Kappa index of agreement was used to measure spatial correlation between maps. 
+      where $\beta_1...\beta_n$ are coefficients generated from the
+      regression and $w(x)$ is the relative probability of species
+      occurrence.
 
-- Using the results of the correlations, the authors evaluated only the maps for each model that demonstrated the highest predictive ability.  
+    - Mahalanobis distance was calculated at each raster cell using
+      GIS using the formula:
+
+      $$D^2 = (x-m)^TC^{-1}(x-m)$$
+
+      where $D^2$ is the Mahalanobis distance, $x$ is the habitat variable, $m$ is
+      the mean value of habitat characteristics recorded at known
+      locations, $T$ indicates that the vector should be transposed, and
+      $C^{-1}$ is the covariance matrix for the same vector of habitat
+      characteristics. The authors used ESRI ArcView and GIS IDRISI to
+      perform matrix calculations on ecological variables.
+
+    - The ecological niche model was adopted from the Genetic
+      Algorithm for Rule-set Prediction (GARP) computational approach
+      for modeling. The GARP model is a standalone machine-learning
+      process that develops rule sets to best identify species
+      distribution.
+
+- For the RSF, Mahalanobis distance, and niche model, the authors
+  developed 3 sets of models for each. The HSI model was predetermined
+  via previous research. A total of 10 maps were created and
+  normalized by calculating the number of species locations within each of
+  6 habitat classes.
+
+- The relationship between predicted class and normalized frequency of
+  species locations was evaluated using Spearman rank and Pearson
+  correlations. Kappa index of agreement was used to measure spatial
+  correlation between maps.
+
+- Using the results of the correlations, the authors evaluated only
+  the maps for each model that demonstrated the highest predictive
+  ability.
 
 ### Key Findings
 
-- There was no reported significance in predictive capability between different variable sets or quantitative models. Comparing quantitative to qualitative models, the maps generated with HSI had weakest correlation and underperformed relative to other techniques. 
+- There was no reported significance in predictive capability between
+  different variable sets or quantitative models. Comparing
+  quantitative to qualitative models, the maps generated with HSI had
+  the weakest correlation and underperformed relative to other techniques.
 
-- Of the models, Mahalanobis distance was best at preicitng high-quality habitat, followed by RSF and niche models. Conversely, HSI was poor at predicting high-quality habitat. All models performed well at predicting low-quality habitat.
+- Of the models, Mahalanobis distance was best at predicting
+  high-quality habitat, followed by RSF and niche models. Conversely,
+  HSI was poor at predicting high-quality habitat. All models
+  performed well at predicting low-quality habitat.
 
-- Modeling technique largely dertermined by data availability and costs. RSFs provide greatest flexibility as model parameters are easily assessed. Mhalanobis distancs and niche models do not provide metrics for evaluating strength of variable relationships. HSI coefficients are difficult to evaluate. 
+- Modeling technique was largely determined by data availability and
+  costs. RSFs provide the greatest flexibility, as model parameters are
+  easily assessed. Mahalanobis distances and niche models do not provide
+  metrics for evaluating strength of variable relationships. HSI
+  coefficients are difficult to evaluate.
 
 ### Significance
 
-- Author's demonstrate that there is a benefit to using quantitative models over qualitative models when evaluating species distribution. But acknowledge, that the choice of modeling technique should be based on data availability and costs. Further, this paper demonstrates that there is value in using multiple modeling techniques to compare the effectiveness for SDM. 
-
+- Authors demonstrate that there is a benefit to using quantitative
+  models over qualitative models when evaluating species distribution,
+  but acknowledge that the choice of modeling technique should be
+  based on data availability and costs. Further, this paper
+  demonstrates that there is value in using multiple modeling
+  techniques to compare the effectiveness for SDM.
 
 ### Relevance to Capstone and Final Thoughts
 
-- This paper largely employs the same thesis that my project would be based around. I think there could be some potential using the same approach to evaluate Oyster habitat in the Pensacola Bay area. 
+- This paper largely employs the same thesis that my project would be
+  based around. I think there could be some potential using the same
+  approach to evaluate oyster habitat in the Pensacola Bay area.
 
-- While this paper is very helpful in guideing my thoughts on my own research, I Will keep searching for more recent papers that have used similar approaches to evaluate species distribution as this one is from 2005.  
+- While this paper is very helpful in guiding my thoughts on my own
+  research, I will keep searching for more recent papers that have
+  used similar approaches to evaluate species distribution, as this one
+  is from 2005.
 
-- The author's cite a number of research papers that aim to compare model performance in SDM that would prove beneficial to review. 
-
+- The authors cite a number of research papers that aim to compare
+  model performance in SDM that would prove beneficial to review.
 
 # Week 2 Article Review:
+
 ## Estuary-Specific and Adaptive Habitat Suitability Index Model for the Eastern Oyster Crassostrea Virginica in the Pensacola Bay System, Florida, USA
 
 Authors: @Geselbracht2024
 
+### Background
 
+The paper opens with discussion on the sharp decline in geographic distribution of the Eastern Oyster *Crassostrea virginica* in recent decades. The authors attribute the decline to anthropogenic influences such as unsustainable management policies, overharvesting, mining of oyster shell as construction material, shifting hydrology, water quality degradation, siltation and sedimentation, disease and predation, and erosion. As a result, the decline in *C. virginica* has also led to a decline in the many ecological and economic goods and services provided by healthy oyster reefs. Many ecological services were cited, including: food production, fish and invertebrate habitat, shoreline protection, water filtration, and nutrient cycling. Declining oyster populations also produce negative economic impacts as the oyster-related businesses and employment in fisheries, recreation, and the tourism industry begin to decline.
+
+The authors move on to discuss the decline within the context of the Pensacola Bay System (PBS) located in Pensacola, FL. The authors cite that the decline in oyster populations has been well documented in the PBS, citing that a historical US Fish Commission map depicts approximately 15,000 ha of oyster reef in the system, and more recent assessments found only 91.5 ha. If accurate, this represents a 99.4% decline in oyster reef habitat in the PBS. Recognizing the sharp decline in oyster populations in the PBS, recent efforts have been made to begin restoring oyster reefs in the system. However, the authors note that restoring such a large system is challenging. The authors cited a lack of information on system-specific characteristics, out-of-date data, insufficient data coverage, and high monetary costs as barriers to successful restoration. To address these challenges, The Nature Conservancy (TNC) led a broad-based stakeholder engagement effort creating a Stakeholder Working Group (SWG) to develop an Oyster Fisheries and Habitat Management Plan. The SWG included representatives from many backgrounds, including: federal and state agencies, local governments, universities, non-governmental organizations, and the private sector. As part of the management plan, it was recognized that determining where to prioritize restoration activities would in itself be quite challenging. This recognition led to the development of a Habitat Suitability Index Model (HSI) for the PBS.
+
+The authors describe HSIs as decision support tools that can assist with the identification of areas to focus restoration efforts by integrating spatial information important to the survival of a particular species or habitat, including biological, chemical, and/or physical characteristics. They also note that socioeconomic and regulatory information can also be incorporated into the model to factor in cost-benefit and/or expediency of restoration efforts. HSIs are described as being first developed by the US Fish and Wildlife Service (USFWS) in the 1980s and have been widely used for the eastern oyster throughout the United States and within the Gulf of Mexico region. While HSIs were originally developed to determine species presence, they can also be used to determine where activities are likely to have the greatest success. Factors included in the HSI are selected based on the purpose of the application, relying on data relevancy, availability, and quality. These factors are then weighted with scores ranging from 0 to 1, with higher values indicating greater suitability.
+
+Finally, the authors describe the objectives of the study as follows:
+
+1. to describe the development of an estuary-specific decision support tool that streamlines the selection of restoration sites where restoration activities are likely to have the greatest success, even where data are limited, and
+
+2. to demonstrate the value of engaging resource-knowledgeable stakeholders and resource users in the HSI development process, and
+
+3. to illustrate how an HSI can be adapted as higher-resolution data becomes available.
+
+The authors then hypothesize that "applying estuary specific and adaptable HSIs will streamline decisions regarding distribution of finite restoration funds to priority locations, prevent years of misguided work, and capitalize on remaining larval oyster sources in estuaries where reefs with live oysters have been greatly diminished."
+
+### Methods
+
+The study opted to leverage Geographic Information Systems (GIS) to develop the HSI model, following similar models developed for oysters and other living marine organisms. Potential data sources were collated and the selected factors were evaluated for 1) availability, quality, and resolution of spatial extent, 2) relevance of the biological, chemical, and physical factors that indicate positive influence on oyster survival and reef formation without causing negative external effects, and 3) whether the factors represented preexisting human uses that would conflict with restoration efforts.
+
+Through the study's review of available literature and stakeholder knowledge, 22 factors were identified as potentially important to oyster reef viability: aquaculture and shellfish leases, bathymetry, summer mean bottom dissolved oxygen (DO), chlorophyll a concentration, coastal maintained channels, contemporary oyster reef, disease intensity and prevalence, historical oyster reef presence, hydrology, oyster recruitment, managed areas, marsh migration areas, military zones, predation, regulatory restrictions, summer mean salinity, seagrass presence, sea level rise, shoreline type, substrate type, temperature, and water quality. Of these 22 factors, only 7 were selected for the model: contemporary oyster reef, summer mean bottom DO, historical oyster reefs, oyster recruitment, summer mean salinity, seagrass presence, and substrate type. The selected factors were each assigned a score between 0 and 1, with 1 representing optimal conditions and 0 representing unacceptable conditions. Depending on the factor type, the scoring was assigned as binary (0 or 1), grouped into bins based on a range of values, or assigned a dummy value based on qualitative characteristics. GIS was then used to convert each factor into a raster dataset spanning the PBS with a resolution of $124 m^2$, which was determined as an appropriate middle ground balancing the needs of stakeholder activity with computational processing time. One factor, oyster recruitment, required regularized spline interpolation using the mean recruits per shell per day over the study period. The resulting raster was a smooth gradient of estimated oyster recruitment over the entire PBS that was then standardized to have values of 0 to 1 for use in the HSI model. Finally, a composite score was calculated for the entire PBS using the following formula:
+
+$$
+Composite \ Score = \frac{({Factor \ Score}_1 + {Factor \ Score}_2 + ... + {Factor \ Score}_7)}{Max \ Score}
+$$
+
+The resulting model was then reviewed during numerous meetings with members of the SWG to refine factor values to eventually generate the final model.
+
+### Key Findings
+
+The resulting HSI was a raster grid covering the entire PBS with suitability values ranging from 0.12 to 1.00. Using GIS, the raster grid cells were then reclassified into 5 classes using natural breaks. The areas of highest suitability (score 0.74 to 1.00) represented 16% of the area, with high (0.64 to 0.74), medium (0.54 to 0.64), low (0.41 to 0.53), and lowest (0.12 to 0.41) representing 27%, 20%, 20%, and 9%, respectively.
+
+Suitability scores were validated using digitized maps representing known oyster reef locations provided by local experts and oyster fishermen, in which there was agreement of 87% in areas with HSI scores > 0.50, suggesting HSIs are a reliable tool for predicting species habitat and, as a result, predicting habitat suitability.
+
+### Significance
+
+- The authors demonstrated that HSIs are useful in developing decision support tools when looking to determine where to prioritize ecosystem restoration efforts. Further, they demonstrated how quickly a model can be adjusted and re-run once developed, as they demonstrated when updating bottom sediment data from a study that was completed during the course of this research. The results of this study were able to help restoration practitioners greatly reduce the area of consideration by 57% for areas with an $HSI \ge 0.64$ and by 84% for areas with an $HSI \ge 0.74$.
+
+- The authors demonstrate that reliable HSIs can be built even when the study area may be lacking in high-resolution input data, and that lack of quantitative data can be supplemented by expert knowledge.
+
+- The authors also suggest that the model can be adapted and used to predict future conditions by using climate change forecasts and future estimates.
+
+- The authors list their own key contributions as:
+
+  1. Development of a relatively quick, simple, and low-cost method for developing a reliable HSI where quantitative physical and biological data for the system may be lacking in spatial or temporal resolution,
+
+  2. illustrating the value of incorporating local expert knowledge as an independent source of information to validate the HSI results,
+
+  3. demonstrating how, once developed, the HSI can be relatively easily updated and adjusted to incorporate new or updated data as it becomes available.
+
+### Relevance to Capstone and Final Thoughts
+
+This study is relevant because it will be used as the comparative analysis for my species distribution model. The authors have provided an accurate model that was validated using local expert knowledge. Further, it highlights the importance and need for generating quick and affordable suitability models that can be used to determine and prioritize restoration activities. Where this study relied on input from local stakeholders, my analysis will be based on observed oyster occurrences and known environmental conditions, and evaluate if an SDM can complement or even provide an alternative to the HSI approach. 
+
+Additionally, where the authors of this study found a lack of spatial and temporal data, I hope to leverage the vast amount of data available via the EPA's Water Quality Portal that can be accessed using their API and the dataRetrieval package [@dataRetrieval2026]. These data are provided as point data and are well represented within the PBS. These points can be spatially interpolated by using spatial kriging or other interpolation techniques to provide a continuous surface of that parameter. Finally, these continuous surfaces will be used to determine habitat suitability.
+
+The next steps are to review literature that will help narrow down what environmental variables should be used when determining oyster reef suitability, which are the most appropriate interpolation techniques, and the most suitable species distribution modeling packages available within R.
 
 # References

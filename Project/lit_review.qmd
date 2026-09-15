@@ -225,4 +225,28 @@ Additionally, where the authors of this study found a lack of spatial and tempor
 
 The next steps are to review literature that will help narrow down what environmental variables should be used when determining oyster reef suitability, which are the most appropriate interpolation techniques, and the most suitable species distribution modeling packages available within R.
 
+# Week 3 Article Review:
+
+# Week 4 Article Review: 
+## Oyster model inventory: Identifying critical data and modeling approaches to support restoration of oyster reefs in coastal U.S. Gulf of Mexico waters
+
+Authors: @LaPeyre2021
+
+### Background
+
+This report was produced by the U.S. Geological Survey and is meant to serve as a guide for researchers and practitioners who are looking to develop oyster habitat models for research and restoration purposes. The paper covers the relevant geopgraphic scope as it pertains to the eatern Oyster, highlights key environmental drivers that lead to oyster habitat success, and aims to provide an inventory of recent data sources, models, and approaches. 
+
+In the data section, they cover water-quality variables, ecological factors, and physical data. The oyster modeling inventory is broken into several different approaches: 
+
+- 1. Geospatial Habiat Suitability Index,
+- 2. Larval Transport Modeling,
+- 3. On-Reef Oyster Growth, Mortality, and Reproduction Modeling,
+- 4. Metapopulation Approach (Coupled larval transport and on-reef oyster models),
+- 5. Other Approaches
+
+In order to simplify the process, the authors' suggest a single unified modeling framework that can be transferred across estuaries to be the the most efficient. Such a framework would require the user to only update the environmental variables to their estuary specific values before running the model. Of all the approaches, the authors believe that 1.) Habitat Suitability Index (HSI) models and 2.) a mechanistic coupled larval transport on-reef metapopulation model to be the best two choices. Stating that the HSI is much more widely used and accessable, but is lacking in reef connectivity information. Where as, the metapopulation approach considers the full oyster lifecycle, including on-reef growth, mortality, reproduction, substrate persisence, and transport. Such a model would provide much more detail and system level understanding, but requires significant up-front investment. 
+
+Ideally, having a unified single platform for model development, would allow for better testing, calibrating, and evalution of modeled scenarios. Allowing users to not only compare different scenario outcomes within a single estuary, but also to compare those results across estuaries without being limited to varying inputs, specific equations, or user derived input decisions. 
+
+
 # References

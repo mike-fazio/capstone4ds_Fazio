@@ -1,0 +1,76 @@
+---
+title: "Weekly Progress Report"
+author: 
+  name: "Mike Fazio"
+  course: "Capstone Projects in Data Science"
+date: today
+date-format: "MMMM DD, YYYY"
+format: pdf
+  #html:
+   # code-fold: true
+course: Capstone Projects in Data Science
+bibliography: references.bib # file contains bibtex for references
+always_allow_html: true # this allows to get PDF with HTML features
+self-contained: true
+execute: 
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Week 4 Progress Update:
+(9/8/2026 - 9/15/2026)
+
+## This Week's Focus 
+Reviewed literature for environmental factors to include in the species distribution model.
+
+### Candidate Variables 
+The following variables are currently selected based off representation in literature, percieved data availability, or in an effort to maintain cross comparison compatibility with the HSI derived in @Geselbracht2024. 
+
+```{r}
+#| echo: false
+#| label: tbl-candidate-variables
+#| tbl-cap: "Preliminary Environmental Variables Considered for the Eastern Oyster SDM"
+
+library(knitr)
+library(tibble)
+
+variables <- tribble(
+  ~Variable, ~`Reason`, ~Reference, ~`Data Source`,
+  "Salinity",
+  "Widely available, large driver of ecosystem suitability",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]" ,"Water Quality Portal [@dataRetrieval2026]",
+
+  "Water temperature",
+  "Widely available, large driver of ecosystem suitability",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "Water Quality Portal [@dataRetrieval2026]",
+
+  "Substrate / bottom type",
+  "suitable substrate required for recruitment",
+  "[@lePeyre2021; @Geselbracht2024; @Barnes2007]", "TBD",
+
+  "Water depth / bathymetery",
+  "Depth is a key driver in oyster habitat extent",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "National Centers for Environmental Information [@NOAA_2018]",
+
+  "Dissolved oxygen",
+  "Low DO can cause oyster stress and mortality",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012]", "Water Quality Portal [@dataRetrieval2026]",
+
+  "Chlorophyll-a",
+  "Common proxy for food resources supporting oyster growth",
+  "[@lePeyre2021; @Geselbracht2024]" , "Water Quality Portal [@dataRetrieval2026]",
+
+  "Oyster bed locations",
+  "important for SDM modeling requiring species presence data", "[@lePeyre2021; @Geselbracht2024]", "Florida Fish and Wildlife Conservation Commission [@fwc_oyster_beds_2015]",
+)
+
+kable(
+  variables,
+  align = c("l", "l", "l")
+)
+```
+
+# References 

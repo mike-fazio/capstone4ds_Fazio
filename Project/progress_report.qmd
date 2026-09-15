@@ -26,15 +26,9 @@ editor:
 ## This Week's Focus 
 Reviewed literature for environmental factors to include in the species distribution model.
 
-## Main Source: Oyster model inventory: Identifying critical data and modeling approaches to support restoration of oyster reefs in coastal U.S. Gulf of Mexico waters. @LaPeyre2021
-
-### Summary of document
-
-This report was produced by the U.S. Geological Survey and is meant to serve as a guide for researchers and practitioners who are looking to develop oyster habitat models for research and restoration purposes. The paper covers the relevant geopgraphic scope as it pertains to the eatern Oyster, highlights key environmental drivers that lead to oyster habitat success, and aims to provide an inventory of recent data sources, models, and approaches. 
-
-
 ### Candidate Variables 
-The following variables are currently selected based off percieved availability, relevance, or in an effort to maintain cross comparison compatibility with the HSI derived in @Geselbracht2024. 
+The following variables are currently selected based off representation in literature, percieved data availability, or in an effort to maintain cross comparison compatibility with the HSI derived in @Geselbracht2024. 
+
 ```{r}
 #| echo: false
 #| label: tbl-candidate-variables
@@ -47,33 +41,36 @@ variables <- tribble(
   ~Variable, ~`Reason`, ~Reference, ~`Data Source`,
   "Salinity",
   "Widely available, large driver of ecosystem suitability",
-  "[@lePeyre2021; @Geselbracht2024]" ,"Water Quality Portal [@dataRetrieval]",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]" ,"Water Quality Portal [@dataRetrieval2026]",
 
   "Water temperature",
   "Widely available, large driver of ecosystem suitability",
-  "[@lePeyre2021; @Geselbracht2024]", "Water Quality Portal [@dataRetrieval]",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "Water Quality Portal [@dataRetrieval2026]",
 
   "Substrate / bottom type",
   "suitable substrate required for recruitment",
-  "[@lePeyre2021; @Geselbracht2024]", "TBD",
+  "[@lePeyre2021; @Geselbracht2024; @Barnes2007]", "TBD",
 
-  "Water depth",
+  "Water depth / bathymetery",
   "Depth is a key driver in oyster habitat extent",
-  "[@lePeyre2021; @Geselbracht2024]", "National Centers for Environmental Information [@NOAA_2018]",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "National Centers for Environmental Information [@NOAA_2018]",
 
   "Dissolved oxygen",
   "Low DO can cause oyster stress and mortality",
-  "[@lePeyre2021; @Geselbracht2024]", "Water Quality Portal [@dataRetrieval]",
+  "[@lePeyre2021; @Geselbracht2024; @Pollack2012]", "Water Quality Portal [@dataRetrieval2026]",
 
   "Chlorophyll-a",
   "Common proxy for food resources supporting oyster growth",
-  "[@lePeyre2021; @Geselbracht2024]" , "Water Quality Portal [@dataRetrieval]",
+  "[@lePeyre2021; @Geselbracht2024]" , "Water Quality Portal [@dataRetrieval2026]",
 
   "Oyster bed locations",
-  "important for SDM modeling requiring species presence data", "[@lePeyre2021; @Geselbracht2024]", "Florida Fish and Wildlife Conservation Commission [fwc_oyster_beds_2015]",
+  "important for SDM modeling requiring species presence data", "[@lePeyre2021; @Geselbracht2024]", "Florida Fish and Wildlife Conservation Commission [@fwc_oyster_beds_2015]",
+)
 
 kable(
   variables,
   align = c("l", "l", "l")
 )
 ```
+
+# References 

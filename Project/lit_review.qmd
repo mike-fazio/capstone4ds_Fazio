@@ -225,4 +225,27 @@ Additionally, where the authors of this study found a lack of spatial and tempor
 
 The next steps are to review literature that will help narrow down what environmental variables should be used when determining oyster reef suitability, which are the most appropriate interpolation techniques, and the most suitable species distribution modeling packages available within R.
 
+# Week 3 Article Review:
+## Maximum entropy modeling of species geographic distributions
+Authors: @Phillips2006
+
+### Background
+
+The authors note that presence-absence modeling techniques are widely accepted and used for various types of ecoloagical modeling. However, the authors note that for many species reliable absence data is not widely available. Thus, techniques that require presence-only data are considered highly valueable. In this study, @Phillips2006 set out to create a modeluing using species occurence locations along with environmental factors that likely contribute to the suitability of the environment for said species. Using layers of grid based environmental variables, the modeling method aims to predict environmental suitability as a function of said environmental varialbles. 
+
+Niche-based models can predict the geographic extent, but will often overestimate the reality of the speices distribution. It is recognized that because an environment might fall within the niche of a givens speicies, doesn't necessarily mean the species are actually established there due to a multitude of geographic, biotic, or anthropogenic barriers. Additionally, there are many assumptions made in such modeling techniques, so the author's express that much care must be taken when choosing which environmnetal factors to use. With so many assumptions, the author's cite many sources of errors that can be introduced if care is not taken such as using improper temporal or spatial resolutions and scales. 
+
+#### Maxent 
+
+
+
+
+### Methods
+
+
+### Key Findings
+
+### Significance
+
+### Relevence to capstone and final thoughts 
 # References

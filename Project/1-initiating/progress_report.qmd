@@ -1,5 +1,5 @@
 ---
-title: "Weekly Progress Report"
+title: "Data Sources and Methods"
 author: 
   name: "Mike Fazio"
   course: "Capstone Projects in Data Science"
@@ -20,10 +20,10 @@ editor:
     wrap: 72
 ---
 
-# Week 4 Progress Update:
-(9/8/2026 - 9/15/2026)
+# Weeks 4 Progress Update:
+(9/8/2026 - 9/14/2026)
 
-## This Week's Focus 
+## Focus 
 Reviewed literature for environmental factors to include in the species distribution model.
 
 ### Candidate Variables 
@@ -72,5 +72,54 @@ kable(
   align = c("l", "l", "l")
 )
 ```
+
+# Week 5 Progress Update:
+(9/15/2026 - 9/21/2026)
+
+## Focus
+Review literature relating to spatial modeling methods to employ in the interpoloation of geographic variables to create a continuos surface grids of predictor variables, and review the MaxEnt species distribution modeling logic. 
+
+## Methods
+
+### Spatial interpolation of environmental variables
+
+### MaxEnt Species Distribution Modeling 
+
+*Maximum entropy modeling of species geographic distributions*
+@Phillips2006
+
+**Background**
+
+The authors introduce Maxent as a method for species distribution modeling when only presence data is available. The authors cite that for many species having both presence and absence data is very unlikely. Maxent uses environmental characteristics of known locations and is able to apply them to unknown locations to predict probability of species occurance. 
+
+Niche-based models can predict the geographic extent, but will often overestimate the reality of the speices distribution. It is recognized that because an environment might fall within the niche of a givens speicies, doesn't necessarily mean the species are actually established there due to a multitude of geographic, biotic, or anthropogenic barriers. Additionally, there are many assumptions made in such modeling techniques, so the author's express that much care must be taken when choosing which environmnetal factors to use. With so many assumptions, the author's cite many sources of errors that can be introduced if care is not taken such as using improper temporal or spatial resolutions and scales. Further, the authors state significant erros can also arise from inproper data manipulation, poorly optimized environmental models, and interpolation oof lower-resolution data. 
+
+We must also acknowledge that there are problems with presence-only data as a whole that must be considered when designing the model. The author's mention things such as geographic sampling bias, spatial autocorrelation, poor sampling design (e.g. small sample sizes and erroneous sample collection/reporting), and missing or important environmental predictors to name a few. 
+
+**Maxent**
+
+The authors describe the basics of maximum entropy modeling where the goal is to estimate an unknown proability distribution while making as few assumptions as possible. As hinted in the name, the model seeks the distribution that has the maximum entropy (i.e. the most uniform distribution), while maintaining the influence of what is known from the presence data. In species modeling, the model is made up of 3 major parts: 1) the study area pixel grid represents all possible location, 2) known presence observations provide sample locations, and 3) the environmental predictor variables act as features that describe the conditions at the species occurance locations. 
+
+The authors highlight a number of advantages and disadvantages associated with Maxent modeling. 
+
+**Maxent Advantages:**
+
+- Only requires presence data;
+- Can use both continuous and categorical data, and incorporate interactions between variables;
+- Efficient deterministic algorithms have been developed which are guaranteed to converge on optimal probability distribution;
+- The Maxent probability distribution has a well described mathematical definition;
+- Over-fitting can be avoided by using regularization techniques;
+- Provides flexibility for adding thresholds to continuous predictions;
+- Can work on relatively limited data and be applied to all levels of scale. 
+
+**Maxent Disadvatges:**
+
+- At the time of the paper, the Maxent method was still new;
+- model guidance was still under development;
+- uncertainty estimation was not as well developed when compared to other statistical methods;
+- overestimation of environmental variables is possible do to the use of an exponential model for probabilities;
+- specialized software requirements
+
+
 
 # References 

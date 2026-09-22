@@ -1,5 +1,5 @@
 ---
-title: "Data Sources and Methods"
+title: "Capstone Proposal Progress Update"
 author: 
   name: "Mike Fazio"
   course: "Capstone Projects in Data Science"
@@ -19,6 +19,18 @@ editor:
   markdown: 
     wrap: 72
 ---
+
+# Topic
+
+My capstone will be evaluating the efficacy of using an empirically driven statistical species distribution model as a tool for determining habitat suitability for the eastern oyster (*C. virginica*) within the Pensacola Bay System (PBS) to help drive decision-making in habitat restoration activities. The model will use the Maximum Entropy (MaxEnt) framework, which predicts the relationship between known oyster locations and the underlying environmental conditions using presence-only data. 
+
+The resulting suitability grid will be compared to an recent Habitat Suitability Index (HSI) developed for the PBS. HSIs often rely on expert opinion, subjective ranking, and literature derived thresholds for each environmental variable, where as MaxEnt relies on a purely empirically data driven relationship between speceis occurance and the environmental conditions. This comparison will test whether the MaxEnt framework can sufficiently produce an efficient alternative to traditional HSI-based restoration planning. 
+
+I hypothesize that the MaxEnt approach will result in a highly effective and reproducible habitat suitability workflow that can be updated efficiently as new or more up-to-date data becomes available. The results of the MaxEnt model will be compared to the existing HSI to evaluate model performance and determine potential usefulness for restoration site decsion making. 
+
+# Programming 
+
+I anticipate that all data manipulation, processing, and modeling will be done in R using the Positron IDE. 
 
 # Weeks 4 Progress Update:
 (9/8/2026 - 9/14/2026)

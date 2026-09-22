@@ -27,7 +27,7 @@ editor:
 Reviewed literature for environmental factors to include in the species distribution model.
 
 ### Candidate Variables 
-The following variables are currently selected based off representation in literature, percieved data availability, or in an effort to maintain cross comparison compatibility with the HSI derived in @Geselbracht2024. 
+The following variables are currently selected based off representation in literature, percieved data availability, or an effort to maintain cross-comparison compatibility with the HSI derived in @Geselbracht2024. 
 
 ```{r}
 #| echo: false
@@ -41,35 +41,35 @@ variables <- tribble(
   ~Variable, ~`Reason`, ~Reference, ~`Data Source`,
   "Salinity",
   "Widely available, large driver of ecosystem suitability",
-  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]" ,"Water Quality Portal [@dataRetrieval2026]",
+  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]" ,"Water Quality Portal [@dataRetrieval2026]",
 
   "Water temperature",
   "Widely available, large driver of ecosystem suitability",
-  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "Water Quality Portal [@dataRetrieval2026]",
+  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "Water Quality Portal [@dataRetrieval2026]",
 
   "Substrate / bottom type",
-  "suitable substrate required for recruitment",
-  "[@lePeyre2021; @Geselbracht2024; @Barnes2007]", "TBD",
+  "suitable substrate is required for recruitment",
+  "[@LaPeyre2021; @Geselbracht2024; @Barnes2007]", "TBD",
 
-  "Water depth / bathymetery",
+  "Water depth / bathymetry",
   "Depth is a key driver in oyster habitat extent",
-  "[@lePeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "National Centers for Environmental Information [@NOAA_2018]",
+  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "National Centers for Environmental Information [@NOAA_2018]",
 
   "Dissolved oxygen",
   "Low DO can cause oyster stress and mortality",
-  "[@lePeyre2021; @Geselbracht2024; @Pollack2012]", "Water Quality Portal [@dataRetrieval2026]",
+  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012]", "Water Quality Portal [@dataRetrieval2026]",
 
   "Chlorophyll-a",
   "Common proxy for food resources supporting oyster growth",
-  "[@lePeyre2021; @Geselbracht2024]" , "Water Quality Portal [@dataRetrieval2026]",
+  "[@LaPeyre2021; @Geselbracht2024]" , "Water Quality Portal [@dataRetrieval2026]",
 
   "Oyster bed locations",
-  "important for SDM modeling requiring species presence data", "[@lePeyre2021; @Geselbracht2024]", "Florida Fish and Wildlife Conservation Commission [@fwc_oyster_beds_2015]",
+  "important for SDM modeling, which requires species presence data", "[@LaPeyre2021; @Geselbracht2024]", "Florida Fish and Wildlife Conservation Commission [@fwc_oyster_beds_2015]"
 )
 
 kable(
   variables,
-  align = c("l", "l", "l")
+  align = c("l", "l", "l", "l")
 )
 ```
 
@@ -77,49 +77,57 @@ kable(
 (9/15/2026 - 9/21/2026)
 
 ## Focus
-Review literature relating to spatial modeling methods to employ in the interpoloation of geographic variables to create a continuos surface grids of predictor variables, and review the MaxEnt species distribution modeling logic. 
+Review literature relating to the underlying logic used in MaxEnt species distribution model. 
 
-## Methods
-
-### Spatial interpolation of environmental variables
-
-### MaxEnt Species Distribution Modeling 
-
-*Maximum entropy modeling of species geographic distributions*
-@Phillips2006
+### *Maximum entropy modeling of species geographic distributions*
+Authors: @Phillips2006
 
 **Background**
 
-The authors introduce Maxent as a method for species distribution modeling when only presence data is available. The authors cite that for many species having both presence and absence data is very unlikely. Maxent uses environmental characteristics of known locations and is able to apply them to unknown locations to predict probability of species occurance. 
+The authors introduce Maxent as a method for species distribution modeling when only presence data are available. The authors note that for many species having both presence and absence data is very unlikely. Maxent uses environmental characteristics of known locations and is able to apply them to unknown locations to predict probability of species occurrence.  
 
-Niche-based models can predict the geographic extent, but will often overestimate the reality of the speices distribution. It is recognized that because an environment might fall within the niche of a givens speicies, doesn't necessarily mean the species are actually established there due to a multitude of geographic, biotic, or anthropogenic barriers. Additionally, there are many assumptions made in such modeling techniques, so the author's express that much care must be taken when choosing which environmnetal factors to use. With so many assumptions, the author's cite many sources of errors that can be introduced if care is not taken such as using improper temporal or spatial resolutions and scales. Further, the authors state significant erros can also arise from inproper data manipulation, poorly optimized environmental models, and interpolation oof lower-resolution data. 
+Niche-based models can predict the geographic extent but will often overestimate the reality of the species distribution. It is recognized that because an environment might fall within the niche of a given species, doesn't necessarily mean the species are actually established there due to a multitude of geographic, biotic, or anthropogenic barriers. Additionally, there are many assumptions made in such modeling techniques, so the author's express that much care must be taken when choosing which environmental factors to use. With so many assumptions, the authors cite many sources of errors that can be introduced if care is not taken such as using improper temporal or spatial resolutions and scales. Further, the authors state significant errors can also arise from improper data manipulation, poorly optimized environmental models, and interpolation oof lower-resolution data.  
 
-We must also acknowledge that there are problems with presence-only data as a whole that must be considered when designing the model. The author's mention things such as geographic sampling bias, spatial autocorrelation, poor sampling design (e.g. small sample sizes and erroneous sample collection/reporting), and missing or important environmental predictors to name a few. 
+Finally, the authors acknowledge that there are problems with presence-only data as a whole that must be considered when designing the model. The author's mention things such as geographic sampling bias, spatial autocorrelation, poor sampling design (e.g. small sample sizes and erroneous sample collection/reporting), and missing or important environmental predictors to name a few.
 
 **Maxent**
 
-The authors describe the basics of maximum entropy modeling where the goal is to estimate an unknown proability distribution while making as few assumptions as possible. As hinted in the name, the model seeks the distribution that has the maximum entropy (i.e. the most uniform distribution), while maintaining the influence of what is known from the presence data. In species modeling, the model is made up of 3 major parts: 1) the study area pixel grid represents all possible location, 2) known presence observations provide sample locations, and 3) the environmental predictor variables act as features that describe the conditions at the species occurance locations. 
+The authors describe the basics of maximum entropy modeling where the goal is to estimate an unknown probability distribution while making as few assumptions as possible. As hinted in the name, the model seeks the distribution that has the maximum entropy (i.e. the most uniform distribution), while maintaining the influence of what is known from the presence data. In species modeling, the model is made up of 3 major parts: 1) the study area pixel grid represents all possible location, 2) known presence observations provide sample locations, and 3) the environmental predictor variables act as features that describe the conditions at the species occurrence locations.  
 
-The authors highlight a number of advantages and disadvantages associated with Maxent modeling. 
+Maxent Advantages: 
 
-**Maxent Advantages:**
+- Only requires presence data; 
+- Can use both continuous and categorical data, and incorporate interactions between variables; 
+- Efficient deterministic algorithms have been developed which are guaranteed to converge on optimal probability distribution; 
+- The Maxent probability distribution has a well described mathematical definition; 
+- Over-fitting can be avoided by using regularization techniques; 
+- Provides flexibility for adding thresholds to continuous predictions; 
+- Can work on relatively limited data and be applied to all levels of scale.  
 
-- Only requires presence data;
-- Can use both continuous and categorical data, and incorporate interactions between variables;
-- Efficient deterministic algorithms have been developed which are guaranteed to converge on optimal probability distribution;
-- The Maxent probability distribution has a well described mathematical definition;
-- Over-fitting can be avoided by using regularization techniques;
-- Provides flexibility for adding thresholds to continuous predictions;
-- Can work on relatively limited data and be applied to all levels of scale. 
+Maxent Disadvantages: 
 
-**Maxent Disadvatges:**
+- At the time of the paper, the Maxent method was still new; 
+- model guidance was still under development; 
+- uncertainty estimation was not as well developed when compared to other statistical methods; 
+- overestimation of environmental variables is possible due to the use of an exponential model for probabilities; 
+- specialized software requirements 
 
-- At the time of the paper, the Maxent method was still new;
-- model guidance was still under development;
-- uncertainty estimation was not as well developed when compared to other statistical methods;
-- overestimation of environmental variables is possible do to the use of an exponential model for probabilities;
-- specialized software requirements
+In the paper's methods section, the author's detail the maxent framework. Principally, maxent relies on the assumption that without outside influence, a distribution would become completely uniform, and in the context of species distribution result in a species having the same probability of occurring at any given geographic location. However, species typically occupy an ecological niche which is defined by a series of environmental constraints. As such, Maxent focuses on satisfying each of the constraints (as bounded using known conditions at known locations), while also maximizing the entropy.  To do this, the model uses environmental variables as features and tries to use these features to predict a distribution that resembles that of the observed values at occurrence locations. To prevent overfitting, maxent uses regularization which allows some flexibility between the predicted and observed environmental variables.  
 
+Maxent has the ability to transform predictor variables in a number of ways: linear features represent the variable directly (i.e. $f(x) = Temperature$), quadratic features use a squared predictor allowing for an exponential change (e.g. $f(x) = Temperature^2$), product features allow for variable interactions (e.g. $f(x) = Temperature \times Salinity$), threshold features allows for predictor values to require certain conditions be met (e.g. $f(x) = Salinity > 20$), and binary features which allows predictor variables to represent categorical factors. The ability to transform variables in such away means that maxent has the capability of handling both continuous and categorical variables.  
 
+**Keyfindings:**
+
+In the rest of the paper, the authors describe an implementation of the maxent model and compare it to another more commonly used presence-only modeling method known as a Genetic Algorithm for Rule-Set Prediction (GARP). Using the same predictor data sets and 70/30 training split, both models were able to perform better than random. A threshold-dependent and threshold=independent evaluation was conducted on both models. Threshold-dependent considers the percentage of known points misclassified as unsuitable (omission rate) and the percentage of overall study region that was classified as suitable (predicted area). Threshold-independent receiver operating characteristic (ROC) and area under the ROC curve (AUC) which can describe the overall model performance (e.g. $AUC = 0.5$ roughly equals to random). 
+
+The results of the threshold-dependent evaluation showed that both models produced low omission rates. In the threshold-independent test both models AUC values were significantly greater than random, and Maxent generally had higher AUC values than GARP. Overall, maxent proved to be a stronger presence-only modeling approach.  
+
+**Relevance to capstone:**
+
+@Phillips2006 developed the foundational framework of the proposed Maxent species distribution model. They successfully demonstrate using presence-only species data in combination with spatial environmental datasets to predict habitat suitability. They also outline many limitations that should be considered when building the model, selecting predictor variables, and when interpreting model outputs. Finally, the authors provide a useful case study that can help guide my own implementation of the model, describing many useful data manipulation techniques as well as model output evaluation and interpretation guidance. 
+
+**Next Steps**
+
+Review literature on proper spatial modeling techniques to conver environmental point data into continous surface rasters using interpolation techniques such as kriging, etc. 
 
 # References 

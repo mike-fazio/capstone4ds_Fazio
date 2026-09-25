@@ -1,0 +1,1266 @@
+<?xml version="1.0" encoding="UTF-8"?><metadata>
+    <idinfo>
+        <citation>
+            <citeinfo>
+                <origin/>
+                <pubdate>20050915</pubdate>
+                <title>Waterbody IDs (WBIDs)</title>
+                <edition>Run 67</edition>
+                <geoform>vector digital data</geoform>
+                <onlink>https://publicfiles.dep.state.fl.us/OTIS/GIS/data/WBIDS_SP.zip</onlink>
+            </citeinfo>
+        </citation>
+        <descript>
+            <abstract>This is a statewide polygon layer in which each polygon has a unique Water Body Identification number (WBID). The assessment units are drainage basins, lakes, lake drainage areas, springs, rivers and streams, segments of rivers and streams, coastal, bay and estuarine waters in Florida. The polygons roughly delineate the drainage basins surrounding the water body assessment units. The WBIDs are used in the Basin Rotation Total Maximum Daily Load (TMDL) program as well as other applications. WBIDs are assigned a FDEP district as part of their attribution. There are multiple instances where a WBID may be assigned to an FDEP district, but physically fall within the boundary of a different district. This is because WBIDs are grouped together into basins called Planning Units and there are instances where a Planning Unit basin will fall across FDEP district boundaries. In these cases, for consistency's sake, all the WBIDs that are in the Planning Unit will be assigned to the same FDEP district. For information on which district the WBID physically falls in, please refer to the FDEP Regulatory Districts layer.</abstract>
+            <purpose>To spatially represent the water feature that is being assessed for IWR Run 67.</purpose>
+        </descript>
+        <timeperd>
+            <timeinfo>
+                <sngdate>
+                    <caldate>20260204</caldate>
+                </sngdate>
+            </timeinfo>
+            <current>Date of the last update in the GIS library</current>
+        </timeperd>
+        <status>
+            <progress>Complete</progress>
+            <update>As needed</update>
+        </status>
+        <spdom>
+            <bounding>
+                <westbc>-89.503141</westbc>
+                <eastbc>-77.430145</eastbc>
+                <northbc>33.149353</northbc>
+                <southbc>22.826020</southbc>
+            </bounding>
+        </spdom>
+        <keywords>
+            <theme>
+                <themekt>Waterbody IDs (WBIDs)</themekt>
+                <themekey>environment</themekey>
+            </theme>
+            <theme>
+                <themekt>Waterbody IDs (WBIDs)</themekt>
+                <themekey>Water Resources (Inland)</themekey>
+                <themekey>Environmental Monitoring and Modeling</themekey>
+                <themekey>Water Body</themekey>
+            </theme>
+            <theme>
+                <themekt>ISO 19115 Topic Categories</themekt>
+                <themekey>environment</themekey>
+            </theme>
+        </keywords>
+        <accconst>There are no restrictions.</accconst>
+        <useconst>Use is limited to showing approximate feature delineations and is used for illustrative purposes only. This layer is not for legal decision making. Because this layer is frequently modified, it is not to be used in conjunction with STORET data for purposes of analysis.</useconst>
+        <ptcontac>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>Florida Department of Environmental Protection (FDEP), Division of Environmental Assessment and Restoration</cntorg>
+                    <cntper>Phillip Homann</cntper>
+                </cntorgp>
+                <cntpos>Environmental Consultant</cntpos>
+                <cntaddr>
+                    <addrtype>physical</addrtype>
+                    <address>2600 Blair Stone Road,</address>
+                    <city>Tallahassee</city>
+                    <state>FL</state>
+                    <postal>32399-2400</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntvoice>850-245-8472</cntvoice>
+                <cntemail>philip.homann@dep.state.fl.us</cntemail>
+            </cntinfo>
+        </ptcontac>
+        <datacred>Florida Department of Environmental Protection (DEP), Division of Environmental Assessment and Restoration (DEAR)</datacred>
+        <native>Esri ArcGIS 13.4.0.55405</native>
+    </idinfo>
+    <dataqual>
+        <lineage>
+            <srcinfo>
+                <srcscale>0</srcscale>
+                <typesrc>None</typesrc>
+            </srcinfo>
+            <procstep>
+                <procdesc>Topology cleaned up and resubmitted. WBID_Run23_1_4_06.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated. This update has 5 fewer records than the previous versions 6262 records. This was a result of elimination of sliver parcels and merging of parcels.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Layer had polygon boundaries updated for IWR Run 23. WBIDS_Run23_12_20_05, which translates into WBID shapefile based on IWR Run 23, was submitted for update to SDE DataMiner Layer.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 40</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated shapefile obtained from Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 39</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset obtained from Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Layer updated for Run 46</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 43.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Data updated for Run 35</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated shapefile for Run 24. Five records removed.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 45</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated shapefile for Run 26. 50 records added.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated shapefile for Run 25. 14 new records added.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>The Watershed Rotation Groups and Schedule (Proposed) coverage was created from the drainage basins coverage (basin-24 (area)). The watershed groups were created by unioning the drainage basins in the basin-24 cover. The watershed groups generally follow the boundaries of the the USGS 8-digit HUCS. (Creation of the basin-24 (area) dataset) In Spring of '97, the data was converted from NAD27 to HPGN using the Arc/INFO projection command within Arc/INFO version 7.0.4. One coverage of the entire state, excluding South Florida was digitized using ARC/INFO. The South florida coverage was digitized by SFWMD from USGS mylars of 7.5' quads dated 1978-1979 by engineers familiar with the landscape using ARC/INFO 6.1.1. The two coverages were joined to form a statewide coverage using the update command, then polygon slivers were eliminated. Check plots were made. The coverage was converted to Albers Conformal Area projection and exported from the VAX VMS system using ARC/INFO. On the DEC/ALPHA UNIX system, the export file was imported and inserted into the (quad) library. Since the original creation of the WBIDS spatial dataset recommended changes to the linework by basin rotationstaff and outside professionals have been incorporated on a case by case basis. These changes are documented in the CHANGES coloum of the dataset. During August of 2003 the ARC coverage was converted into a Geodatabase to facilitate the editing process in ARCGIS. Geodatabase is joined to Access IWR database to get information in specific waterbodies. For more information, contact the Department of Environmental Protection or South Florida Water Management District for copies of data dictionaries. Dataset copied.</procdesc>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Janis Paulsen</cntper>
+                        </cntorgp>
+                        <cntpos>Systems Project Administrator</cntpos>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 44.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for IWR Run 24.1 5/1/2006</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>WBIDS_Run22_9_15_05, which translates into WBID shapefile based on IWR Run 22, completed on September 15, 2005 was submitted as a new SDE DataMiner Layer.</procdesc>
+            </procstep>
+            <procstep>
+                <procdesc>Updated metadata obtained from DEAR and updated within the GIS Library.
+</procdesc>
+                <procdate> 20260204</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@floridadep.gov</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>WBID Shapefile updated for IWR Run 28. Fifteen records added.</procdesc>
+                <procdate>20070405</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Rene Arbogast/Ron Hughes (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20070411</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>WBID shapefile updated for IWR Run 29</procdesc>
+                <procdate>20070625</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Rene Arbogast (WRM) and inserted in ArcSDE. Metadata updated. This layer is added in the Environmental Monitoring and Modeling category in addition to the Water Resources (Inland) category in DataCatalog.</procdesc>
+                <procdate>20070813</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Major edits were made to the Everglades West Coast Group for Run 30. Other minor updates were also done for Run 30.</procdesc>
+                <procdate>20071001</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from Rene Arbogast (WRM) and inserted in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20071008</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for IWR Run 31.</procdesc>
+                <procdate>20080220</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20080317</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated to reflect changes for IWR Run 32</procdesc>
+                <procdate>20080422</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20080429</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 33.</procdesc>
+                <procdate>20080721</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20080820</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>The schema (attribute table) of DEP.WBIDS was modified in ArcSDE as per a request from the WBIDS data stewards with this update. The field "PK_BASIN" was renamed "PARENT_WBID". The data type of the field "MILES" was changed from a text field to a numeric DOUBLE field.</procdesc>
+                <procdate>20090303</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Data updated for Run 36.</procdesc>
+                <procdate>20090604</procdate>
+                <proctime>111520</proctime>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20090616</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 38.</procdesc>
+                <procdate>20090929</procdate>
+                <proctime>075415</proctime>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20091124</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted updated shapefile obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20100209</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 41</procdesc>
+                <procdate>20100729</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Inserted new layer obtained from WRM in ArcSDE. Metadata updated.</procdesc>
+                <procdate>20100820</procdate>
+                <proctime>135912</proctime>
+            </procstep>
+            <procstep>
+                <procdesc>More updates for Run 41 at the request of WAS section.</procdesc>
+                <procdate>20100830</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated layer in ArcSDE.Metadata updated.</procdesc>
+                <procdate>20100916</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 42.</procdesc>
+                <procdate>20101203</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data in ArcSDE and symbology as displayed in DataMiner. Metadata updated.</procdesc>
+                <procdate>20110105</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Added OBJECTID column and removed the old OBJECT_1 column from the schema.</procdesc>
+                <procdate>20110325</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated layer in ArcSDE and DataMiner.Metadata updated.</procdesc>
+                <procdate>20110406</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated layer in ArcSDE and DataMiner.Metadata updated.</procdesc>
+                <procdate>20110919</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated layer in ArcSDE and DataMiner. Metadata updated.</procdesc>
+                <procdate>20120622</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated layer in ArcSDE and DataMiner. Metadata updated.</procdesc>
+                <procdate>20120814</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 47.</procdesc>
+                <procdate>20121203</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated layer in ArcSDE and DataMiner. Metadata updated.</procdesc>
+                <procdate>20121204</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 49</procdesc>
+                <procdate>20140408</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Janis Morrow</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Manager</cntpos>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data in SDE/DataMiner. Metadata updated</procdesc>
+                <procdate>20140414</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <address>Twin towers MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 50.</procdesc>
+                <procdate>20150818</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Phillip Homann</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>physical</addrtype>
+                            <address>2600 Blair Stone Road,</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8472</cntvoice>
+                        <cntemail>philip.homann@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20150819</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20160711</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated for Run 52.</procdesc>
+                <procdate>20160711</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Phillip Homann</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>physical</addrtype>
+                            <address>2600 Blair Stone Road,</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8472</cntvoice>
+                        <cntemail>philip.homann@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 53.</procdesc>
+                <procdate>20170321</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Phillip Homann</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>physical</addrtype>
+                            <address>2600 Blair Stone Road,</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8472</cntvoice>
+                        <cntemail>philip.homann@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20170329</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 54.</procdesc>
+                <procdate>20171220</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Phillip Homann</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>physical</addrtype>
+                            <address>2600 Blair Stone Road,</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8472</cntvoice>
+                        <cntemail>philip.homann@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20180118</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 55.</procdesc>
+                <procdate>20180720</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>FDEP</cntorg>
+                            <cntper>Phillip Homann</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>physical</addrtype>
+                            <address>2600 Blair Stone Road,</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8472</cntvoice>
+                        <cntemail>philip.homann@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20180723</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 56.</procdesc>
+                <procdate>20190122</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20190131</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 57.</procdesc>
+                <procdate>20190822</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20190826</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 58</procdesc>
+                <procdate>20191024</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20191030</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 59.</procdesc>
+                <procdate>20200713</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20200721</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 60.</procdesc>
+                <procdate>20201016</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20201119</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Dataset updated for Run 61.</procdesc>
+                <procdate>20210614</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20210616</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Update to the metadata listing the Run 61 in the description section.</procdesc>
+                <procdate>20210824</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20210825</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Update to the metadata listing the Run 62 in the description section.</procdesc>
+                <procdate>20220111</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated the same in the GIS library.</procdesc>
+                <procdate>20220119</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road MS 6520</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@dep.state.fl.us</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Update to the metadata listing the Run 64 in the description section.</procdesc>
+                <procdate>20220923</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated within the GIS Library.
+
+</procdesc>
+                <procdate>20220929</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>MS 6520</address>
+                            <address>2600 Blair Stone Rd</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@floridadep.gov</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Update to the metadata listing Run 65 in the description section.</procdesc>
+                <procdate>20240117</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated within the GIS Library.
+</procdesc>
+                <procdate>20240124</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@floridadep.gov</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Update to the metadata listing Run 66 in the description section.</procdesc>
+                <procdate>20241004</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated metadata obtained from DEAR and updated within the GIS Library.
+</procdesc>
+                <procdate>20250127</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@floridadep.gov</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>WBIDs with the text of “Gulf of Mexico” within the waterbody name have been replace by “Gulf Waters” but retaining the supporting geographic content in the parentheses.</procdesc>
+                <procdate>20251027</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@dep.state.fl.us</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Updated data obtained from DEAR and updated within the GIS Library.</procdesc>
+                <procdate>20251112</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                        </cntorgp>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Rd</address>
+                            <city>Tallahassee</city>
+                            <state>FL</state>
+                            <postal>32399-2400</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntemail>GIS.Librarian@floridadep.gov</cntemail>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Update to the metadata listing Run 67 in the description section.</procdesc>
+                <procdate>20260115</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Florida Department of Environmental Protection, Division of Environmental Assessment and Restoration, Watershed Services Program</cntorg>
+                            <cntper>Andrew Morris</cntper>
+                        </cntorgp>
+                        <cntpos>Environmental Consultant</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical</addrtype>
+                            <address>2600 Blair Stone Road</address>
+                            <city>Tallahassee</city>
+                            <state>Florida</state>
+                            <postal>32399</postal>
+                            <country>US</country>
+                        </cntaddr>
+                        <cntvoice>850-245-8426</cntvoice>
+                        <cntemail>Andrew.Morris@floridadep.gov</cntemail>
+                        <hours>8:30-4:30, M-F</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+        </lineage>
+    </dataqual>
+    <spdoinfo>
+        <direct>Vector</direct>
+        <ptvctinf>
+            <sdtsterm>
+                <sdtstype>Complete chain</sdtstype>
+                <ptvctcnt>0</ptvctcnt>
+            </sdtsterm>
+        </ptvctinf>
+    </spdoinfo>
+    <eainfo>
+        <detailed>
+            <enttyp>
+                <enttypl>WBIDS_SP</enttypl>
+            </enttyp>
+            <attr>
+                <attrlabl>EDITS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>Shape</attrlabl>
+                <attrdef>Feature geometry.</attrdef>
+                <attrdefs>Esri</attrdefs>
+                <attrdomv>
+                                        
+                    
+                    <udom>Coordinates defining the features.</udom>
+                                        
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>HUC</attrlabl>
+                <attrdef>USGS Hydrologic Unit Code</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>PARENT_WBID</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>CLASS</attrlabl>
+                <attrdef>Surface Water Classification</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>PLANNING_UNIT</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>GROUP_NUMBER</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>UNITS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>WATERBODY_NAME</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>WATERBODY_SIZE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>WBID</attrlabl>
+                <attrdef>Unique Alpha Numeric Water Body Identification</attrdef>
+                <attrdomv>
+                                        
+                    
+                    <udom>Positive real numbers that are automatically generated.</udom>
+                                        
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>OBJECTID</attrlabl>
+                <attrdef>Internal feature number.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                                        
+                    
+                    <udom>Sequential unique whole numbers that are automatically generated.</udom>
+                                        
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>GROUP_NAME</attrlabl>
+                <attrdef>Name of Basin rotation Group, consists of multiple planning units and WBIDs</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>PERIMETER</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>CHANGES</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>DISTRICT</attrlabl>
+                <attrdef>Florida Regulatory District</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>DEP_WBIDS_SP_AREA</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>WATER_TYPE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>SE_ANNO_CAD_DATA</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>GEOMETRY_Length</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>GEOMETRY_Area</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>Shape_Length</attrlabl>
+                <attrdef>Length of feature in internal units.</attrdef>
+                <attrdefs>Esri</attrdefs>
+                <attrdomv>
+                                        
+                    
+                    <udom>Positive real numbers that are automatically generated.</udom>
+                                        
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>Shape_Area</attrlabl>
+                <attrdef>Area of feature in internal units squared.</attrdef>
+                <attrdefs>Esri</attrdefs>
+                <attrdomv>
+                                        
+                    
+                    <udom>Positive real numbers that are automatically generated.</udom>
+                                        
+                
+                </attrdomv>
+            </attr>
+        </detailed>
+    </eainfo>
+    <metainfo>
+        <metd>20260204</metd>
+        <metc>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>Florida Department of Environmental Protection (FDEP) OTIS/GIS Section</cntorg>
+                </cntorgp>
+                <cntaddr>
+                    <addrtype>mailing and physical</addrtype>
+                    <address>2600 Blair Stone Rd</address>
+                    <city>Tallahassee</city>
+                    <state>FL</state>
+                    <postal>32399-2400</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntemail>GIS.Librarian@floridadep.gov</cntemail>
+            </cntinfo>
+        </metc>
+        <metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+        <metstdv>FGDC-STD-001-1998</metstdv>
+        <mettc>local time</mettc>
+    </metainfo>
+</metadata>

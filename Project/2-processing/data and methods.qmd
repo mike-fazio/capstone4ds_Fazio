@@ -10,10 +10,11 @@ format: pdf
   #html:
    # code-fold: true
 course: Capstone Projects in Data Science
-bibliography: C:\\courses\\capstone4ds_Fazio\\Project\\1-initiating\\references.bib # file contains bibtex for references
+bibliography: C:/courses/capstone4ds_Fazio/Project/1-initiating/references.bib # file contains bibtex for references
 always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
-execute: 
+execute:
+  cache: true 
   warning: false
   message: false
 editor: 
@@ -21,6 +22,177 @@ editor:
     wrap: 72
 ---
 
-# Study Area
+```{r}
+#| label: load-packages and package configs
+#| echo: false
+setwd("C:/courses/capstone4ds_Fazio/Project")
 
-The study area for this project is the Pensacola Bay System whcih 
+library(dataRetrieval)
+library(sf)
+library(tidyverse)
+library(tmap)
+library(geolibre)
+
+tmap_mode("plot")
+
+```
+
+# Data Processing and Analysis
+
+## Software and Packages
+
+All data processing, analysis, and modeling will be conducted using free
+open source software and packages to maximize accessibility and
+reproducibility. The majority of data manipulation and processing will
+be performed in the R programming language using the tidyverse suite of
+packages [@tidyverse; @r]. Any data operations that need to be
+"spatially aware" will be performed using the Simple Features package
+[@sf].
+
+Analysis will be scripted and ran in Positron, an open-source integrated
+development environment developed by Posit that supports R, Python,
+scripts, notebooks, integrated consoles, along with interactive plots
+and data viewers.
+
+## Study Area
+
+The study area for this project is the Pensacola Bay System which
+includes portions of Pensacola Bay, Escambia Bay, East Bay and
+Blackwater Bay. Boundaries of this study area were achieved by accessing
+Florida Department of Protections (FDEP) Waterbod IDs feature layer
+hosted on ArcGIS Online [@FDEP2005WBIDs]. ArcGIS allows direct access to
+hosted feature services via several formats. To avoid any potential
+compatibility issues, the GeoJSON format was chosen as this format is
+non-proprietary. Once retrieved, the dataset was filtered to include
+only relevant WBIDs (WBID = 548) and then combined to create a singular
+study area polygon. Creating the study area polygon is an important
+first step as it will be needed to extract relevant environmental data
+from much larger datasets in the coming data gathering.
+
+```{r}
+#| label: study-area
+#| output: false
+
+# Create study area using FDEP WBID feature service
+
+wbid <- st_read("2-processing/data/raw/Waterbody_IDs_(WBIDs).shp")
+
+# List of relevant WBIDs
+study_area_wbid_list <- c(
+  "548GA",
+  "548GB",
+  "548H",
+  "548C",
+  "548D",
+  "548B",
+  "548AA",
+  "548AB",
+  "548AC"
+)
+
+study_area <- wbid %>%
+  filter(WBID %in% study_area_wbid_list) %>% # Filter results to only include desired WBIDs
+  summarise() # dissolve all polygons into one singular geometry
+
+tm_shape(study_area) +
+  tm_polygons(fill_alpha = 0, col = "red", lwd = 2) +
+  tm_basemap("Esri.WorldStreetMap")
+
+```
+
+## Water Quality Portal Data
+
+Water quality data is widely available for the entire United States via
+the EPA's Water Quality Portal (WQP) which allows for a wide range of
+data querying for any data as it relates to Water Quality Monitoring
+programs (@wqp_2026). For this analysis, site data for Escambia and Santa Rosa County was queried using the WQP API then the study area polygon was used to extract only the relevent sites:
+
+```{r}
+#| output: true
+
+# To avoid re-downloading data everytime, cache data to local directory after first download.
+
+sites_path <- "2-processing/data/raw/sites.rds" 
+
+# Check if dataset was already downloaded, if so, load. Otherwise, proceed to download
+if (file.exists(sites_path)) {
+
+  # Load previously downloaded data
+  wqp_sites <- readRDS(sites_path)
+
+} else {
+
+  # Query WQP and cache result
+  wqp_sites <- tryCatch(
+    {
+      sites <- whatWQPsites(
+        countycode = c("US:12:033", "US:12:113"),
+        siteType = "Estuary",
+        legacy = FALSE
+      )
+
+      saveRDS(sites, sites_path)
+
+      sites
+    },
+    error = function(e) {
+      stop(
+        "WQP site download failed: ",
+        conditionMessage(e)
+      )
+    }
+  )
+}
+
+## Extract only PBS sites from raw data and make spatial 
+
+pbs_sites_path = "2-processing/data/processed/pbs_sites.rds"
+
+if (file.exists(pbs_sites_path)) {
+
+  # load processed data
+  pbs_sites <- readRDS(pbs_sites_path)
+
+} else {  
+
+  # process
+    pbs_sites <- wqp_sites %>%
+      select(
+        Org_Identifier,
+        Org_FormalName,
+        Location_Identifier,
+        Location_Longitude,
+        Location_Latitude
+      ) %>% 
+      filter(
+        !is.na(Location_Longitude),
+        !is.na(Location_Latitude)
+      ) %>%  
+      st_as_sf(
+        coords = c("Location_Longitude", "Location_Latitude"),
+        crs = 4326,
+        remove = TRUE
+      ) %>%
+      st_transform(st_crs(study_area)) %>%
+      st_filter(study_area, .predicate = st_within)
+
+    saveRDS(pbs_sites, pbs_sites_path)
+  }
+
+## Add sites to map for visualization
+tm_shape(pbs_sites) +
+  tm_dots(
+     fill = "red",
+     size = 0.3
+     ) +
+tm_shape(study_area) +
+  tm_polygons(
+    fill_alpha = 0, 
+    col = "black", 
+    lwd = 2
+    ) +
+tm_basemap("Esri.WorldStreetMap") +
+tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
+```
+
+# References

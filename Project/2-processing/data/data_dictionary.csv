@@ -1,0 +1,8 @@
+Variable,Obtained? (Y/N),Total Records,Data Source
+Salinity,Y,6994,@WQP_salinity_2026
+Water temperature,,,@wqp_2026
+Substrate / bottom type,,,TBD
+Water depth / bathymetry,,,@NOAA_2018
+Dissolved oxygen,,,@wqp_2026
+Chlorophyll-a,,,@wqp_2026
+Oyster bed locations,,, @FWC2026Oysters

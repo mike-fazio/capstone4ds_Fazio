@@ -1,38 +1,47 @@
 ---
 title: "Capstone Proposal"
-subtitle: "Methoda and Data"
+subtitle: "Methods and Data"
+
 author: 
   name: "Mike Fazio"
   course: "Capstone Projects in Data Science"
+
 date: today
 date-format: "MMMM DD, YYYY"
+
 format: pdf
-  #html:
-   # code-fold: true
-course: Capstone Projects in Data Science
-bibliography: C:/courses/capstone4ds_Fazio/Project/1-initiating/references.bib # file contains bibtex for references
+
+bibliography: ../1-initiating/references.bib # file contains bibtex for references
+citeproc: true
+
 always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
+
 execute:
-  cache: true 
+  cache: true
+  freeze: true 
   warning: false
   message: false
+
 editor: 
   markdown: 
     wrap: 72
+
 ---
 
 ```{r}
 #| label: load-packages and package configs
 #| echo: false
-setwd("C:/courses/capstone4ds_Fazio/Project")
-
-library(dataRetrieval)
 library(sf)
 library(tidyverse)
 library(tmap)
-library(geolibre)
+library(knitr)
+library(tibble)
 
+#load functions from source script
+source("2-processing/scripts/process_wq_data.r")
+
+# set tmap to static map
 tmap_mode("plot")
 
 ```
@@ -70,33 +79,15 @@ first step as it will be needed to extract relevant environmental data
 from much larger datasets in the coming data gathering.
 
 ```{r}
-#| label: study-area
+#| label: create-study-area
 #| output: false
 
-# Create study area using FDEP WBID feature service
-
-wbid <- st_read("2-processing/data/raw/Waterbody_IDs_(WBIDs).shp")
-
-# List of relevant WBIDs
-study_area_wbid_list <- c(
-  "548GA",
-  "548GB",
-  "548H",
-  "548C",
-  "548D",
-  "548B",
-  "548AA",
-  "548AB",
-  "548AC"
-)
-
-study_area <- wbid %>%
-  filter(WBID %in% study_area_wbid_list) %>% # Filter results to only include desired WBIDs
-  summarise() # dissolve all polygons into one singular geometry
+study_area <- get_study_area()
 
 tm_shape(study_area) +
   tm_polygons(fill_alpha = 0, col = "red", lwd = 2) +
-  tm_basemap("Esri.WorldStreetMap")
+  tm_basemap("Esri.WorldStreetMap") +
+  tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
 
 ```
 
@@ -108,76 +99,12 @@ data querying for any data as it relates to Water Quality Monitoring
 programs (@wqp_2026). For this analysis, site data for Escambia and Santa Rosa County was queried using the WQP API then the study area polygon was used to extract only the relevent sites:
 
 ```{r}
-#| output: true
+#| echo: false
+#| label: fig-study-area
+#| fig-cap: "Pensacola Bay System with monitoring sites"
+#| fig-align: center
 
-# To avoid re-downloading data everytime, cache data to local directory after first download.
-
-sites_path <- "2-processing/data/raw/sites.rds" 
-
-# Check if dataset was already downloaded, if so, load. Otherwise, proceed to download
-if (file.exists(sites_path)) {
-
-  # Load previously downloaded data
-  wqp_sites <- readRDS(sites_path)
-
-} else {
-
-  # Query WQP and cache result
-  wqp_sites <- tryCatch(
-    {
-      sites <- whatWQPsites(
-        countycode = c("US:12:033", "US:12:113"),
-        siteType = "Estuary",
-        legacy = FALSE
-      )
-
-      saveRDS(sites, sites_path)
-
-      sites
-    },
-    error = function(e) {
-      stop(
-        "WQP site download failed: ",
-        conditionMessage(e)
-      )
-    }
-  )
-}
-
-## Extract only PBS sites from raw data and make spatial 
-
-pbs_sites_path = "2-processing/data/processed/pbs_sites.rds"
-
-if (file.exists(pbs_sites_path)) {
-
-  # load processed data
-  pbs_sites <- readRDS(pbs_sites_path)
-
-} else {  
-
-  # process
-    pbs_sites <- wqp_sites %>%
-      select(
-        Org_Identifier,
-        Org_FormalName,
-        Location_Identifier,
-        Location_Longitude,
-        Location_Latitude
-      ) %>% 
-      filter(
-        !is.na(Location_Longitude),
-        !is.na(Location_Latitude)
-      ) %>%  
-      st_as_sf(
-        coords = c("Location_Longitude", "Location_Latitude"),
-        crs = 4326,
-        remove = TRUE
-      ) %>%
-      st_transform(st_crs(study_area)) %>%
-      st_filter(study_area, .predicate = st_within)
-
-    saveRDS(pbs_sites, pbs_sites_path)
-  }
+pbs_sites <- get_wq_sites(study_area)
 
 ## Add sites to map for visualization
 tm_shape(pbs_sites) +
@@ -193,6 +120,41 @@ tm_shape(study_area) +
     ) +
 tm_basemap("Esri.WorldStreetMap") +
 tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
+```
+
+## Water Quality Data
+
+```{r}
+#| label: retrieve-process-wq-data
+
+salinity <- get_wq_data(
+  param = "Salinity",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "salinity",
+  force = FALSE
+  )
+
+```
+
+
+```{r}
+#| echo: false
+#| label: tbl-candidate-variables
+#| tbl-cap: "Preliminary Environmental Variables Considered for the Eastern Oyster SDM"
+
+data_dict <- read_csv("2-processing/data/data_dictionary.csv") 
+  
+kable(
+  data_dict,
+  align = c("l", "l", "l","l")
+)
+```
+
+
+```{r}
+
 ```
 
 # References

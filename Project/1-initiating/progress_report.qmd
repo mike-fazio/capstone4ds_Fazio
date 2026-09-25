@@ -50,33 +50,33 @@ library(knitr)
 library(tibble)
 
 variables <- tribble(
-  ~Variable, ~`Reason`, ~Reference, ~`Data Source`,
+  ~Variable, ~Reason, ~Reference, ~`Data Source`,
   "Salinity",
   "Widely available, large driver of ecosystem suitability",
-  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]" ,"Water Quality Portal [@dataRetrieval2026]",
+  "@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007" ,"Water Quality Portal [@dataRetrieval2026]",
 
   "Water temperature",
   "Widely available, large driver of ecosystem suitability",
-  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "Water Quality Portal [@dataRetrieval2026]",
+  "@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007", "Water Quality Portal [@dataRetrieval2026]",
 
   "Substrate / bottom type",
   "suitable substrate is required for recruitment",
-  "[@LaPeyre2021; @Geselbracht2024; @Barnes2007]", "TBD",
+  "@LaPeyre2021; @Geselbracht2024; @Barnes2007", "TBD",
 
   "Water depth / bathymetry",
   "Depth is a key driver in oyster habitat extent",
-  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007]", "National Centers for Environmental Information [@NOAA_2018]",
+  "@LaPeyre2021; @Geselbracht2024; @Pollack2012; @Barnes2007", "National Centers for Environmental Information [@NOAA_2018]",
 
   "Dissolved oxygen",
   "Low DO can cause oyster stress and mortality",
-  "[@LaPeyre2021; @Geselbracht2024; @Pollack2012]", "Water Quality Portal [@dataRetrieval2026]",
+  "@LaPeyre2021; @Geselbracht2024; @Pollack2012", "Water Quality Portal [@dataRetrieval2026]",
 
   "Chlorophyll-a",
   "Common proxy for food resources supporting oyster growth",
-  "[@LaPeyre2021; @Geselbracht2024]" , "Water Quality Portal [@dataRetrieval2026]",
+  "@LaPeyre2021; @Geselbracht2024" , "Water Quality Portal [@dataRetrieval2026]",
 
   "Oyster bed locations",
-  "important for SDM modeling, which requires species presence data", "[@LaPeyre2021; @Geselbracht2024]", "Florida Fish and Wildlife Conservation Commission [@fwc_oyster_beds_2015]"
+  "important for SDM modeling, which requires species presence data", "@LaPeyre2021; @Geselbracht2024", "Florida Fish and Wildlife Conservation Commission [@fwc_oyster_beds_2015]"
 )
 
 kable(

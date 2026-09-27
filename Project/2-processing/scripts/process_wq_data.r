@@ -125,3 +125,58 @@ get_wq_data <- function(
   # return data
   return(pbs_df)
 }
+
+
+### PROCESS WQ DATA ----
+
+proc_wq_data <- function(input_data){
+  
+  #get name of data set
+  input_name <- deparse(substitute(input_data))
+
+  df <- input_data %>% 
+    mutate(
+      Result_Measure = as.numeric(Result_Measure)
+    ) %>%
+    filter(
+      month(Activity_StartDate, label = TRUE) 
+        %in% 
+        c("May", "Jun", "Jul", "Aug", "Sep", "Oct"), # select warm season
+      !is.na(Result_Measure), # remove any potential null results
+      !is.na(Location_Latitude), # remove any y location agnostic data
+      !is.na(Location_Longitude) # remove any x location agnostic data
+    ) %>% 
+    group_by(Location_Identifier) %>%
+    summarise(
+      # Although all values should be the same, we take the first of each for our summary data
+      location_name = first(Location_Name),
+      latitude = first(Location_Latitude),
+      longitude = first(Location_Longitude),
+      
+      # create basic stats for each
+      mean = mean(Result_Measure, na.rm = TRUE),
+      sd = sd(Result_Measure, na.rm = TRUE),
+      n = n(),
+      
+      # include date range for qc and reference
+      first_date = min(Activity_StartDate, na.rm = TRUE),
+      last_date = max(Activity_StartDate, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    # make data spatially aware for interpolation
+    st_as_sf(
+      coords = c("longitude", "latitude"),
+      crs = 4326, 
+      remove = FALSE
+    ) %>% 
+    # Convert to NAD 1983 (2011) StatePlane Florida North FIPS 0903 (Meters)
+    st_transform("ESRI:103021")
+
+  # save data for later use   
+  outname <- paste0(input_name, "_0903.rds")
+  saveRDS(df, 
+    file.path("2-processing/data/processed", outname)
+    )
+  
+  return(df)
+}

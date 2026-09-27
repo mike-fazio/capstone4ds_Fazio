@@ -18,8 +18,8 @@ always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 
 execute:
-  cache: true
-  freeze: true 
+  cache: false
+  freeze: false 
   warning: false
   message: false
 
@@ -191,7 +191,144 @@ kable(
 
 
 ```{r}
+# process wq data 
 
+sal <- proc_wq_data(salinity)
+do <- proc_wq_data(do_mgL)
+chla <- proc_wq_data(chl_a_mgL)
+turb <- proc_wq_data(turbidity)
+temp <- proc_wq_data(water_temp)
 ```
+
+
+```{r}
+wq_summary <- bind_rows(
+  sal  %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
+  do   %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
+  chla %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
+  turb %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
+  temp %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
+)
+
+ggplot(wq_summary, aes(x = mean)) +
+  geom_histogram(
+    bins = 20,
+    color = "white",
+    linewidth = 0.3
+  ) +
+  facet_wrap(
+    ~ parameter,
+    scales = "free",
+    ncol = 2
+  ) +
+  labs(
+    title = "Distribution of Warm-Season Water Quality Conditions",
+    subtitle = "Site-level means for monitoring locations in the Pensacola Bay System",
+    x = "Site Mean",
+    y = "Number of Monitoring Locations"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10),
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+
+# map points for each variable
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = sal, aes(size = n)) +
+  labs(
+    title = "Warm-Season Salinity Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = temp, aes(size = n)) +
+  labs(
+    title = "Warm-Season Temperature Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = chla, aes(size = n)) +
+  labs(
+    title = "Warm-Season Chloraphyll-a Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = do, aes(size = n)) +
+  labs(
+    title = "Warm-Season Dissolved Oxygen Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = turb, aes(size = n)) +
+  labs(
+    title = "Warm-Season Turbidity Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+```
+
+
+::: {.landscape}
+```{r}
+
+wq_summary_table <- wq_summary %>%
+  group_by(parameter) %>%
+  summarise(
+    stations = n(),
+    observations = sum(n),
+    overall_mean = mean(mean, na.rm = TRUE),
+    overall_sd = sd(mean, na.rm = TRUE),
+    min = min(mean, na.rm = TRUE),
+    q1 = quantile(mean, 0.25, na.rm = TRUE),
+    median = median(mean, na.rm = TRUE),
+    q3 = quantile(mean, 0.75, na.rm = TRUE),
+    max = max(mean, na.rm = TRUE),
+    first_date = min(first_date, na.rm = TRUE),
+    last_date = max(last_date, na.rm = TRUE),
+    .groups = "drop"
+  )
+  
+
+kable(
+  wq_summary_table,
+  caption = "Summary Statistics for Warm-Season Water Quality Data",
+  col.names = c(
+    "Parameter",
+    "Stations",
+    "Observations",
+    "Mean",
+    "SD",
+    "Min",
+    "Q1",
+    "Median",
+    "Q3",
+    "Max",
+    "First Sample",
+    "Last Sample"
+  ),
+  align = c("l", "c", "c", "c"),
+  digits = 2,
+  booktabs = TRUE
+) 
+```
+
+:::
+
+
 
 # References

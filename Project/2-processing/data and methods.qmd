@@ -124,6 +124,7 @@ tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
 
 ## Water Quality Data
 
+Water quality data was selected based off of availability and relevance within literature. Each parameter was filtered to include just those measurements 
 ```{r}
 #| label: retrieve-process-wq-data
 
@@ -145,6 +146,32 @@ water_temp <- get_wq_data(
   force = FALSE
   )
 
+do_mgL <- get_wq_data(
+  param = "Dissolved oxygen (DO)",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "do_mgL",
+  force = FALSE
+  )
+
+chl_a_mgL <- get_wq_data(
+  param = "Chlorophyll a, corrected for pheophytin",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "chl_a_mgL",
+  force = FALSE
+  )
+
+turbidity <- get_wq_data(
+  param = "Turbidity",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "turbidity",
+  force = FALSE
+  )  
 
 ```
 

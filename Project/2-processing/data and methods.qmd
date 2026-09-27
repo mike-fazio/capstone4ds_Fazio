@@ -238,7 +238,14 @@ ggplot(wq_summary, aes(x = mean)) +
 # map points for each variable
 ggplot() +
   geom_sf(data = study_area, fill = "grey95") +
-  geom_sf(data = sal, aes(size = n)) +
+  geom_sf(data = sal, aes(size = n, fill = mean),
+  shape = 21,
+    color = "white",
+    stroke = 0.25
+  ) +
+  scale_fill_viridis_c(
+    option = "viridis"
+  ) +
   labs(
     title = "Warm-Season Salinity Monitoring Locations",
     subtitle = "Point size represents number of observations"
@@ -329,6 +336,8 @@ kable(
 
 :::
 
+# Spatial interpolation
 
+Points are interpolated into prediction rasters using inverse path distance weighting  (IPDW) (package idpw). Blah blah blah blah
 
 # References

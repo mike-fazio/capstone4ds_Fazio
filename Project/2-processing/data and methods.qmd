@@ -136,6 +136,16 @@ salinity <- get_wq_data(
   force = FALSE
   )
 
+water_temp <- get_wq_data(
+  param = "Temperature, water",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "water_temp",
+  force = FALSE
+  )
+
+
 ```
 
 

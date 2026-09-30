@@ -191,7 +191,7 @@ kable(
 
 
 ```{r}
-# process wq data 
+#| label: process-wq-data
 
 sal <- proc_wq_data(salinity)
 do <- proc_wq_data(do_mgL)
@@ -202,6 +202,8 @@ temp <- proc_wq_data(water_temp)
 
 
 ```{r}
+#| label: create-histogram-and-maps-to-view-distribution
+
 wq_summary <- bind_rows(
   sal  %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
   do   %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),

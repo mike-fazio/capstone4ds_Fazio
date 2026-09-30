@@ -1,0 +1,498 @@
+---
+title: "Capstone Proposal"
+subtitle: "Introduction"
+
+author: 
+  name: "Mike Fazio"
+  course: "Capstone Projects in Data Science"
+
+date: today
+date-format: "MMMM DD, YYYY"
+
+format: pdf
+
+bibliography: ../1-initiating/references.bib # file contains bibtex for references
+citeproc: true
+
+always_allow_html: true # this allows to get PDF with HTML features
+self-contained: true
+
+execute:
+  cache: false
+  freeze: false 
+  warning: false
+  message: false
+
+editor: 
+  markdown: 
+    wrap: 72
+
+---
+
+# Introduction
+
+The eastern oyster (*Crassostrea virginica*) are viewed as a foundational species as they are directly responsible for creating and providing numerous ecosystem goods and services such as food and habitat production, shoreline stabilization and protection, water quality improvement, nutrient cycling, and carbon sequestration [@Geselbracht2024; @Grabowski2012]. Aditionally, they provide numerous economic benefits such as supporting oyster fisheries, recreational harvesting, tourism, along with the associated employment that goes along with those  industries [@Geselbracht2024; @LaPeyre2021]. In one study, @Grabowski2012 estimated the average annual value to range from $10,325 to $99,421 per hectare (2011 Dollars).   
+
+In recent decades, oyster reefs have experienced substantial declines, with only an estimated 15% remaining worldwide, and 50 to 80% being lost within the Gulf of (America) alone [@Pollack2012; @LaPeyre2021]. The decline is largely attributed to a combination of anthropogenic activities such us over harvesting, habitat alteration, sedimentation and water quality decline, disease and changing hydrology [@LaPeyre2021; @Geselbracht2024]. In response to these sharp declines, many restoration efforts have been undertaken with varying strategies and success rates; recently, planning documents released by the Deepwater Horizon Natural resource Damage Assessment Trustees called for largescale development of reef networks to increase resilience [@Geselbracht2024]. 
+
+**Oyster decline in the Pensacola Bay System**
+
+   1. Introduce the Pensacola Bay System (PBS) as the geographic focus of the study.
+      - Describe PBS as a large estuarine system in northwest Florida.
+      - Briefly describe its historical importance for Eastern oyster habitat.
+      - Citation: [@Geselbracht2024]
+   
+   2. Describe the magnitude of oyster habitat loss within PBS.
+      - Contrast historical oyster reef extent with recent mapped oyster reef extent.
+      - Establish the need for restoration and improved restoration-site selection.
+      - Citation: [@Geselbracht2024]
+   
+   3. Explain why restoration-site selection is important.
+      - Restoration resources are finite.
+      - Environmental conditions vary spatially throughout the estuary.
+      - Poor site selection can reduce oyster survival, recruitment, and long-term reef persistence.
+      - Citations: [@Pollack2012; @Barnes2007; @Geselbracht2024]
+
+3. **Environmental controls on Eastern oyster habitat**
+   
+   1. Oyster occurrence and persistence are controlled by interacting physical, chemical, and biological conditions.
+      - Establish habitat suitability as a multivariate problem.
+      - Citations: [@LaPeyre2021; @Pollack2012; @Barnes2007]
+   
+   2. Salinity is a major determinant of Eastern oyster distribution and habitat suitability.
+      - Influences physiology, recruitment, disease, predation, and survival.
+      - Represents an important environmental gradient within estuarine systems.
+      - Citations: [@LaPeyre2021; @Pollack2012; @Barnes2007; @Geselbracht2024]
+   
+   3. Additional important habitat variables include dissolved oxygen, temperature, depth, turbidity, and substrate.
+      - Dissolved oxygen influences physiological stress and mortality.
+      - Temperature affects growth, reproduction, and physiological stress.
+      - Depth influences physical habitat availability and environmental conditions.
+      - Turbidity and sedimentation may influence feeding and reef persistence.
+      - Suitable substrate is required for settlement and reef formation.
+      - Citations: [@LaPeyre2021; @Pollack2012; @Barnes2007; @Geselbracht2024]
+   
+   4. Environmental predictors used in this study will therefore be selected based on both ecological relevance and available spatial data coverage.
+      - Not every ecologically important parameter will necessarily provide adequate spatial data for predictive modeling.
+      - Citations: [@LaPeyre2021; @Geselbracht2024]
+
+4. **Habitat Suitability Indices as restoration decision-support tools**
+   
+   1. Introduce Habitat Suitability Indices (HSIs).
+      - Describe HSIs as methods that transform environmental characteristics into standardized estimates of habitat suitability.
+      - Explain their use as spatial decision-support tools for restoration.
+      - Citations: [@Barnes2007; @Pollack2012; @Geselbracht2024]
+   
+   2. HSIs have been applied specifically to Eastern oyster restoration.
+      - Caloosahatchee Estuary, Florida.
+      - Mission-Aransas Estuary, Texas.
+      - Pensacola Bay System, Florida.
+      - Citations: [@Barnes2007; @Pollack2012; @Geselbracht2024]
+   
+   3. Describe the existing Pensacola Bay HSI.
+      - GIS-based and estuary-specific.
+      - Integrates biological, physical, chemical, and management-related factors.
+      - Developed to identify candidate restoration areas within PBS.
+      - Citation: [@Geselbracht2024]
+   
+   4. Describe the strengths and limitations of HSI approaches.
+      - Strengths include interpretability, adaptability, and integration of established ecological knowledge.
+      - Results depend on decisions regarding variable selection, suitability functions, scoring, weighting, and aggregation.
+      - Avoid characterizing HSI approaches as inherently inferior to statistical SDMs.
+      - Citations: [@Geselbracht2024; @Johnson2005]
+
+5. **Species distribution models as an empirical alternative or complement**
+   
+   1. Introduce species distribution models (SDMs).
+      - SDMs quantitatively relate known species distributions to environmental conditions.
+      - They can be used for ecological explanation and spatial prediction.
+      - Citation: [@Elith2009]
+   
+   2. Different habitat-modeling approaches can produce different spatial predictions.
+      - Model selection and environmental-variable selection can influence areas identified as suitable.
+      - Comparing modeling approaches can reveal areas of agreement and disagreement.
+      - Citation: [@Johnson2005]
+   
+   3. Empirical SDMs provide an alternative method of estimating habitat relationships directly from observed species occurrence.
+      - Establish the conceptual transition from HSI approaches to MaxEnt.
+      - Citations: [@Elith2009; @Johnson2005]
+
+6. **Maximum Entropy species distribution modeling**
+   
+   1. Introduce MaxEnt as a presence-background species distribution modeling framework.
+      - Particularly useful where reliable absence observations are unavailable.
+      - Relates environmental conditions at known occurrence locations to environmental conditions available throughout the modeling region.
+      - Citations: [@Phillips2006; @Elith2011]
+   
+   2. Explain why MaxEnt is appropriate for Eastern oyster occurrence data in PBS.
+      - FWC oyster-bed data provide known oyster occurrences without systematically sampled absence locations.
+      - Presence-background modeling therefore fits the available data structure.
+      - Citations: [@Phillips2006; @FWC2026Oysters]
+   
+   3. Explain important considerations when implementing MaxEnt.
+      - Background extent and sampling.
+      - Spatial sampling bias.
+      - Predictor selection.
+      - Regularization.
+      - Feature classes and model complexity.
+      - Citations: [@Phillips2009; @Merow2013; @Elith2011]
+   
+   4. Explain the need for model tuning and spatial validation.
+      - MaxEnt should not be treated as an automated black-box model.
+      - Model configuration should be evaluated systematically.
+      - Spatially independent validation should be used where occurrence data exhibit spatial structure.
+      - Citations: [@Kass2021; @Roberts2017; @Valavi2019]
+
+7. **Research rationale, objectives, and hypotheses**
+   
+   1. Establish the primary research problem.
+      - An estuary-specific HSI already exists for Eastern oyster restoration within PBS.
+      - This study will independently develop an empirically fitted MaxEnt habitat-suitability model using observed oyster occurrences and environmental conditions.
+      - Citations: [@Geselbracht2024; @Phillips2006]
+   
+   2. Primary objective.
+      - Develop a spatially explicit MaxEnt SDM representing relative Eastern oyster habitat suitability throughout PBS.
+   
+   3. Secondary objective.
+      - Quantitatively compare the MaxEnt suitability surface with the existing Pensacola Bay HSI.
+   
+   4. Supporting objectives.
+      - Identify environmental predictors associated with observed oyster distribution.
+      - Evaluate MaxEnt predictive performance using spatially separated validation data.
+      - Identify geographic areas where MaxEnt and the HSI agree or disagree.
+      - Evaluate whether MaxEnt provides a reproducible empirical complement to HSI-based restoration planning.
+      - Citations: [@Johnson2005; @Geselbracht2024; @Merow2013]
+   
+   5. Research hypothesis.
+      - The MaxEnt model is expected to identify patterns of habitat suitability consistent with established Eastern oyster habitat requirements.
+      - Measurable agreement is expected between MaxEnt and the existing HSI, with spatial disagreement arising from differences between empirically fitted environmental relationships and predefined HSI suitability relationships.
+      - Citations: [@Johnson2005; @Geselbracht2024]
+
+
+# Methods
+
+1. **Study design and team status**
+   
+   1. State project team status.
+      - This capstone is being completed as an individual project.
+      - All data acquisition, processing, modeling, analysis, and interpretation will be conducted by the author.
+   
+   2. Describe the overall analytical workflow.
+      - Environmental and occurrence data acquisition.
+      - Data QA/QC and preprocessing.
+      - Creation of continuous environmental predictor surfaces.
+      - Oyster occurrence preparation.
+      - Background sampling.
+      - Predictor screening.
+      - MaxEnt tuning and fitting.
+      - Spatial model validation.
+      - HSI comparison.
+      - Citations: [@Phillips2006; @Merow2013; @Kass2021]
+
+2. **Study area**
+   
+   1. Define the Pensacola Bay System modeling extent.
+      - Delineate the study area using selected Florida Department of Environmental Protection Waterbody Identification (WBID) polygons.
+      - Describe the primary embayments included within the analysis.
+      - Citations: [@FDEP2005WBIDs; @Geselbracht2024]
+   
+   2. Restrict the modeling domain to aquatic habitat.
+      - Background and prediction locations should represent environments potentially available to Eastern oysters.
+      - Terrestrial areas should be excluded from the modeling domain.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   3. Maintain spatial compatibility with the existing Pensacola Bay HSI where possible.
+      - A comparable geographic extent will support subsequent spatial comparison.
+      - Citation: [@Geselbracht2024]
+   
+   4. Develop a study-area map.
+      - PBS boundary.
+      - Major embayments.
+      - Oyster occurrence locations.
+      - Environmental monitoring locations.
+
+3. **Data acquisition and dataset inventory**
+   
+   1. Eastern oyster occurrence data.
+      - Source data from the FWC-FWRI Oyster Beds in Florida dataset.
+      - Record dataset version and acquisition date.
+      - Document original geometry type.
+      - Document number of source features and number retained within the study area.
+      - Document temporal/source-data information where available.
+      - Citation: [@FWC2026Oysters]
+   
+   2. Water-quality observations.
+      - Retrieve observations from the Water Quality Portal.
+      - Use the `dataRetrieval` package and associated WQP services.
+      - Restrict queries to relevant counties, estuarine monitoring locations, selected parameters, and the study period.
+      - Citations: [@wqp_2026; @dataRetrieval2026]
+   
+   3. Document water-quality dataset size and temporal coverage.
+      - Dissolved oxygen: approximately 145 stations and 3,072 observations.
+      - Salinity: approximately 135 stations and 3,401 observations.
+      - Temperature: approximately 145 stations and 3,442 observations.
+      - Turbidity: approximately 122 stations and 1,563 observations.
+      - Chlorophyll-a: approximately 48 stations and 754 observations.
+      - Current temporal coverage is approximately 2005--2024.
+      - Citations for source data: [@wqp_2026; @dataRetrieval2026]
+   
+   4. Evaluate candidate predictors based on spatial coverage.
+      - Chlorophyll-a is currently expected to be excluded from interpolation because available stations do not provide adequate system-wide spatial coverage.
+      - Salinity, dissolved oxygen, temperature, and turbidity currently provide substantially stronger monitoring coverage.
+      - Ecological rationale for candidate variables: [@LaPeyre2021; @Geselbracht2024]
+   
+   5. Bathymetry.
+      - Obtain Pensacola Bay estuarine bathymetry from NOAA.
+      - Document raster resolution, vertical datum, geographic extent, and preprocessing requirements.
+      - Citation: [@NOAA_2018]
+   
+   6. Substrate or bottom type.
+      - Identify and acquire a suitable spatial dataset describing bottom characteristics.
+      - Document spatial resolution, classes, temporal source, and coverage.
+      - Ecological justification: [@Barnes2007; @Geselbracht2024]
+      - **Citation needed for final substrate dataset.**
+   
+   7. Existing Pensacola Bay HSI.
+      - Obtain the original GIS/raster output used by Geselbracht et al.
+      - Document raster score range, projection, extent, resolution, and NoData handling.
+      - Citation for methodology: [@Geselbracht2024]
+      - **Add a separate dataset citation once the original HSI GIS product is acquired.**
+
+4. **Water-quality preprocessing**
+   
+   1. Standardize measurement characteristics and units.
+      - Avoid combining fundamentally different measurement types that share similar characteristic names.
+      - Retain comparable units and analytical forms for each predictor.
+      - Citations: [@wqp_2026; @dataRetrieval2026]
+   
+   2. Restrict observations to warm-season conditions.
+      - Current working definition: May through October.
+      - Use seasonal filtering to characterize environmental conditions relevant to warm-season oyster stress and habitat suitability.
+      - Citation for Pensacola seasonal precedent: [@Geselbracht2024]
+   
+   3. Generate station-level environmental summaries.
+      - Calculate warm-season mean.
+      - Calculate standard deviation.
+      - Record total observation count.
+      - Record number of unique years represented.
+      - Record first and last sample date.
+      - Consider calculating site-year warm-season means prior to calculating long-term site means to avoid over-weighting heavily sampled individual years.
+   
+   4. Perform QA/QC.
+      - Identify potential unit inconsistencies.
+      - Investigate implausible or extreme values.
+      - Document removal or correction criteria.
+      - Retain original raw data separately from processed datasets.
+   
+   5. Convert monitoring data to spatial features.
+      - Use `sf` for spatial-vector processing.
+      - Project observations to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters.
+      - Citation: [@sf]
+
+5. **Generation of continuous environmental predictor surfaces**
+   
+   1. Assess monitoring-station spatial coverage prior to interpolation.
+      - Map station distribution for each parameter.
+      - Identify spatial clustering.
+      - Identify portions of PBS lacking observations.
+      - Exclude variables where prediction would consist primarily of spatial extrapolation.
+   
+   2. Account for coastal barriers and complex estuarine geometry.
+      - Straight-line Euclidean distance may incorrectly represent spatial relationships between monitoring locations separated by peninsulas, islands, or narrow water connections.
+      - Barrier-aware interpolation will be evaluated where feasible.
+      - **Suggested citation: Stachelek and Madden (2015).**
+   
+   3. Evaluate inverse path distance weighting (IPDW) as a candidate interpolation method.
+      - IPDW uses aquatic path distance rather than straight-line Euclidean distance.
+      - This approach is specifically suited to coastal water-quality interpolation where land barriers affect connectivity.
+      - **Suggested citation: Stachelek and Madden (2015).**
+   
+   4. Compare candidate interpolation approaches.
+      - Potential methods include:
+        - Inverse path distance weighting.
+        - Conventional inverse distance weighting.
+        - Ordinary kriging.
+      - Use spatially withheld monitoring locations to evaluate predictive performance.
+      - Compare RMSE, MAE, and bias.
+      - Select the final interpolation method based on predictive performance and ecological appropriateness.
+      - Citations: [@Roberts2017; @Valavi2019]
+   
+   5. Produce final environmental predictor rasters.
+      - Use a common projected coordinate system.
+      - Use a common cell size.
+      - Use common raster origin and alignment.
+      - Mask predictions to aquatic habitat.
+      - Document final raster resolution.
+      - Citation for Pensacola spatial-modeling precedent: [@Geselbracht2024]
+
+6. **Oyster occurrence preparation**
+   
+   1. Clip FWC oyster-bed features to the study area.
+      - Remove occurrences outside the PBS modeling extent.
+      - Citation: [@FWC2026Oysters]
+   
+   2. Convert mapped oyster-bed polygons into representative MaxEnt presence observations.
+      - Use a reproducible procedure to avoid overrepresenting large or heavily mapped oyster polygons.
+      - Document the initial number of oyster polygons and final number of presence observations.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   3. Evaluate spatial clustering of presence observations.
+      - Apply spatial thinning where necessary.
+      - Thinning should be based on sampling bias and spatial dependence rather than arbitrary data reduction.
+      - Citations: [@Phillips2009; @Merow2013]
+
+7. **Background sampling**
+   
+   1. Define the accessible/background modeling region.
+      - Restrict background sampling to aquatic habitat within PBS.
+      - Require complete environmental predictor coverage.
+      - Exclude terrestrial areas and locations outside the modeled environmental domain.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   2. Generate MaxEnt background locations.
+      - Document the number of background points.
+      - Sample from the defined accessible region rather than an arbitrary rectangular extent.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   3. Address occurrence-sampling bias.
+      - Evaluate whether spatial thinning, bias weighting, or restricted background sampling is necessary.
+      - Citation: [@Phillips2009]
+
+8. **Predictor screening**
+   
+   1. Assemble final candidate predictor stack.
+      - Salinity.
+      - Dissolved oxygen.
+      - Temperature.
+      - Turbidity.
+      - Bathymetry/depth.
+      - Substrate/bottom type, if suitable data are obtained.
+      - Citations: [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]
+   
+   2. Evaluate correlation and redundancy among predictors.
+      - Calculate pairwise correlations.
+      - Identify highly correlated environmental variables.
+      - Retain predictors based on ecological relevance, data quality, and interpretability.
+      - **Suggested citation: Dormann et al. (2013).**
+
+9. **MaxEnt model fitting and tuning**
+   
+   1. Fit MaxEnt using occurrence locations, background samples, and the finalized environmental predictor stack.
+      - Citations: [@Phillips2006; @Elith2011]
+   
+   2. Tune model complexity rather than relying exclusively on default settings.
+      - Evaluate multiple regularization multipliers.
+      - Evaluate multiple feature-class combinations.
+      - Citations: [@Merow2013; @Kass2021]
+   
+   3. Use the `ENMeval` framework for model tuning and evaluation.
+      - Citation: [@Kass2021]
+   
+   4. Select the final MaxEnt configuration.
+      - Consider predictive performance.
+      - Consider omission rates.
+      - Consider model complexity.
+      - Citations: [@Kass2021; @Merow2013]
+   
+   5. Generate the final continuous habitat-suitability surface.
+      - Retain continuous predictions for primary comparison with the HSI.
+      - Citations: [@Elith2011; @Merow2013]
+   
+   6. Evaluate environmental-variable influence.
+      - Examine permutation importance.
+      - Examine response curves.
+      - Evaluate other supported measures of predictor contribution.
+      - Interpret associations as predictive relationships rather than direct causal effects.
+      - Citations: [@Elith2011; @Merow2013]
+
+10. **Spatial model validation**
+    
+    1. Use spatial rather than purely random cross-validation.
+       - Nearby oyster occurrences may experience highly similar environmental conditions.
+       - Random partitions may therefore produce overly optimistic estimates of predictive performance.
+       - Citations: [@Roberts2017; @Valavi2019]
+    
+    2. Divide oyster occurrences into spatially separated validation folds.
+       - Select spatial-block dimensions based on observed spatial structure.
+       - Citation: [@Valavi2019]
+    
+    3. Evaluate models against withheld spatial folds.
+       - Report appropriate presence-background performance metrics.
+       - Consider omission rate and AUC where appropriate.
+       - Report variation in model performance among folds.
+       - Citations: [@Phillips2006; @Kass2021]
+
+11. **Comparison with the existing Habitat Suitability Index**
+    
+    1. Harmonize the MaxEnt and HSI raster surfaces.
+       - Match geographic extent.
+       - Match coordinate reference system.
+       - Match cell size and alignment.
+       - Ensure suitability values are directly comparable.
+       - Citations: [@Geselbracht2024; @Johnson2005]
+    
+    2. Compare continuous habitat-suitability predictions.
+       - Calculate cell-by-cell correlation.
+       - Consider Pearson and/or Spearman correlation depending on model-output distributions.
+       - Citation: [@Johnson2005]
+    
+    3. Generate a spatial difference surface.
+       
+       $$
+       D_i = S_{MaxEnt,i} - S_{HSI,i}
+       $$
+       
+       - Values near zero represent agreement.
+       - Positive values identify locations where MaxEnt predicts relatively greater suitability.
+       - Negative values identify locations where the HSI predicts relatively greater suitability.
+       - Citation: [@Johnson2005]
+    
+    4. Evaluate categorical agreement if suitability classes are created.
+       - Both models predict high suitability.
+       - Both models predict low suitability.
+       - MaxEnt predicts high suitability while HSI predicts low suitability.
+       - HSI predicts high suitability while MaxEnt predicts low suitability.
+       - Consider an agreement statistic if appropriate.
+       - Citation: [@Johnson2005]
+    
+    5. Interpret disagreement between models.
+       - Determine whether disagreement is geographically concentrated.
+       - Evaluate whether disagreement corresponds with particular environmental predictors.
+       - Consider differences in data availability and modeling assumptions.
+       - Avoid treating either model as automatically representing ground truth.
+       - Citations: [@Johnson2005; @Geselbracht2024]
+
+12. **Software and reproducibility**
+    
+    1. Conduct data processing, statistical analysis, and modeling in R.
+       - Citation: [@r]
+    
+    2. Use scripted workflows for data transformation and spatial processing.
+       - `tidyverse` for data manipulation.
+       - `sf` for vector spatial processing.
+       - Citations: [@tidyverse; @sf]
+    
+    3. Maintain reproducibility throughout the workflow.
+       - Record package versions.
+       - Set random seeds where applicable.
+       - Record data-acquisition dates.
+       - Document model settings and tuning parameters.
+       - Preserve raw data separately from processed data.
+       - Citations for dynamic data sources: [@dataRetrieval2026; @wqp_2026; @FWC2026Oysters]
+
+
+# Additional References to Obtain
+
+1. **Barrier-aware interpolation**
+   - Stachelek, J., & Madden, C. J. (2015). *Application of inverse path distance weighting for high-density spatial mapping of coastal water quality patterns*. *International Journal of Geographical Information Science, 29*(7), 1240--1250.
+   - DOI: 10.1080/13658816.2015.1018833
+   - Use for justification of inverse path distance weighting and coastal-barrier-aware interpolation.
+
+2. **Predictor collinearity**
+   - Dormann, C. F., Elith, J., Bacher, S., et al. (2013). *Collinearity: a review of methods to deal with it and a simulation study evaluating their performance*. *Ecography, 36*(1), 27--46.
+   - DOI: 10.1111/j.1600-0587.2012.07348.x
+   - Use for predictor screening and treatment of correlated environmental variables.
+
+3. **IPDW R package**
+   - Add the current package citation if `ipdw` is used for the final interpolation workflow.
+   - DOI: 10.32614/CRAN.package.ipdw

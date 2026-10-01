@@ -3,14 +3,14 @@ title: "Capstone Proposal"
 subtitle: "Introduction"
 
 author: 
-  name: "Mike Fazio"
+  name: "M. Fazio"
   course: "Capstone Projects in Data Science"
 
 date: today
 date-format: "MMMM DD, YYYY"
 
 format: pdf
-
+    
 bibliography: ../1-initiating/references.bib # file contains bibtex for references
 citeproc: true
 
@@ -22,69 +22,81 @@ execute:
   freeze: false 
   warning: false
   message: false
+  echo: false
 
 editor: 
   markdown: 
     wrap: 72
 
+
 ---
+```{r}
+library(knitr)
+library(reader)
+library(tidyverse)
+
+```
 
 # Introduction
 
-The eastern oyster (*Crassostrea virginica*) are viewed as a foundational species as they are directly responsible for creating and providing numerous ecosystem goods and services such as food and habitat production, shoreline stabilization and protection, water quality improvement, nutrient cycling, and carbon sequestration [@Geselbracht2024; @Grabowski2012; @Barnes2007]. Aditionally, they provide numerous economic benefits such as supporting oyster fisheries, recreational harvesting, tourism, along with the associated employment that goes along with those  industries [@Geselbracht2024; @LaPeyre2021]. In one study, @Grabowski2012 estimated the average annual value to range from $10,325 to $99,421 per hectare (2011 Dollars).   
+The eastern oyster (*Crassostrea virginica*) are viewed as a foundational species as they are directly responsible for creating and providing numerous ecosystem goods and services such as food and habitat production, shoreline stabilization and protection, water quality improvement, nutrient cycling, and carbon sequestration [@Geselbracht2024; @Grabowski2012; @Barnes2007]. Additionally, they provide numerous economic benefits such as supporting oyster fisheries, recreational harvesting, tourism, along with the associated employment that goes along with those  industries [@Geselbracht2024; @LaPeyre2021]. In one study, @Grabowski2012 estimated the average annual value to range from $10,325 to $99,421 per hectare (2011 Dollars).   
 
-In recent decades, oyster reefs have experienced substantial declines, with only an estimated 15% remaining worldwide, and 50 to 80% being lost within the Gulf of (America) alone [@Pollack2012; @LaPeyre2021]. The decline is largely attributed to a combination of anthropogenic activities such us over harvesting, habitat alteration, sedimentation and water quality decline, disease and changing hydrology [@LaPeyre2021; @Geselbracht2024]. In response to these sharp declines, many restoration efforts have been undertaken with varying strategies and success rates; recently, planning documents released by the Deepwater Horizon Natural resource Damage Assessment Trustees called for largescale development of reef networks to increase resilience [@Geselbracht2024]. 
+In recent decades, oyster reefs have experienced substantial declines, with only an estimated 15% remaining worldwide, and 50 to 80% being lost within the Gulf of (America) alone [@Pollack2012; @LaPeyre2021]. The decline is largely attributed to a combination of anthropogenic activities such us over harvesting, habitat alteration, sedimentation and water quality decline, disease and changing hydrology [@LaPeyre2021; @Geselbracht2024]. In response to these sharp declines, many restoration efforts have been undertaken with varying strategies and success rates; recently, planning documents released by the Deepwater Horizon Natural resource Damage Assessment Trustees called for large-scale development of reef networks to increase resilience [@Geselbracht2024]. 
 
 **Oyster decline in the Pensacola Bay System**
 
-On such system to experience oyster decline is the Pensacola Bay System (PBS). The PBS is a large estuarine system located in Escambia and Santa Rosa counties in northwest Florida. The system is comprised of multiple waterbodies including Pensacola Bay, Escambia Bay, Blackwater Bay, East Bay, and Santa Rosa Sound; and is influenced heavily by freshwater input from the Escambia, BLackwater and Yellow Rivers [@Christensen1997]. Historically, the PBS supported extensive oyster reefs that provided critical habitat for a variety of species and substatial economic value to the surrounding communities [@Christensen1997]. However, over the past several decades, the extent of oyster habitat within the PBS has declined significantly due to a combination of factors including overharvesting, habitat degradation, and water quality issues. With some estimates indicating a decline of 15,000ha to just 91.5 ha of oyster habitat between the years of 1883 and 2021 [@Geselbracht2024]. This decline has prompted efforts to restore oyster reefs within the PBS [@PPBEP_OysterRestoration; @TNC2021OysterRestoration], with multiple studies aiming to identify the most suitable areas within the estuary to focus restoration efforts [@Geselbracht2024; @Christensen1997; @PPBEP_OysterRestoration].
+On such system to experience oyster decline is the Pensacola Bay System (PBS). The PBS is a large estuarine system located in Escambia and Santa Rosa counties in northwest Florida. The system is comprised of multiple waterbody's including Pensacola Bay, Escambia Bay, Blackwater Bay, East Bay, and Santa Rosa Sound; and is influenced heavily by freshwater input from the Escambia, BLackwater and Yellow Rivers [@Christensen1997]. Historically, the PBS supported extensive oyster reefs that provided critical habitat for a variety of species and substantial economic value to the surrounding communities [@Christensen1997]. However, over the past several decades, the extent of oyster habitat within the PBS has declined significantly due to a combination of factors including over harvesting, habitat degradation, and water quality issues. With some estimates indicating a decline of 15,000ha to just 91.5 ha of oyster habitat between the years of 1883 and 2021 [@Geselbracht2024]. This decline has prompted efforts to restore oyster reefs within the PBS [@PPBEP_OysterRestoration; @TNC2021OysterRestoration], with multiple studies aiming to identify the most suitable areas within the estuary to focus restoration efforts [@Geselbracht2024; @Christensen1997; @PPBEP_OysterRestoration].
 
-With limited resources available for restoration, it is critical to identify areas where chances of oyster survival and long-term reef establishment are at their highest, and where poor site selection could ultimately lead to unsastisfactory results. As with any ecosystem, the environmental conditions within the PBS vary greatly in time and space, and such variations can have great impacts on oyster survival and establishment. Therefore, it is important to understand the environmental factors that drive oyster occurrence so that scientist and policy makers can make informed decisions regarding said restoration site selection [@Pollack2012; @Barnes2007; @Geselbracht2024].
+With limited resources available for restoration, it is critical to identify areas where chances of oyster survival and long-term reef establishment are at their highest, and where poor site selection could ultimately lead to unsatisfactory results. As with any ecosystem, the environmental conditions within the PBS vary greatly in time and space, and such variations can have great impacts on oyster survival and establishment. Therefore, it is important to understand the environmental factors that drive oyster occurrence so that scientist and policy makers can make informed decisions regarding said restoration site selection [@Pollack2012; @Barnes2007; @Geselbracht2024].
 
 **Environmental controls on Eastern oyster habitat**
 
-Oyster recruitment, survival, and reef establishment are influenced by complex interactions between numerous physical, chemical, and biological environmental factors. As such, determining the most influential factors is a mutlivariate problem that requires careful consideration of each factor and its interactions with others [@LaPeyre2021; @Pollack2012; @Barnes2007; @Christensen1997]. To help narrow the focus, the most commonly cited environmental factors were examined in the literature and are summarized here. 
+Oyster recruitment, survival, and reef establishment are influenced by complex interactions between numerous physical, chemical, and biological environmental factors. As such, determining the most influential factors is a multivariate problem that requires careful consideration of each factor and its interactions with others [@LaPeyre2021; @Pollack2012; @Barnes2007; @Christensen1997]. To help narrow the focus, the most commonly cited environmental factors were examined in the literature and are summarized here. 
    
-Perhaps the most influential and widely reported environmental driver of oyster suitability is salnity. Representing an important environmental gradient within estuarine systems that influences physiology, recruitment, disease, predation, and survival. Other important characteristics often reported can be seen in Table 1 and include: dissolved oxygen, temperature, depth, turbidity, and bottom type (substrate) [@LaPeyre2021; @Pollack2012; @Barnes2007; @Geselbracht2024; @Christensen1997]. 
+Perhaps the most influential and widely reported environmental driver of oyster suitability is salinity. Representing an important environmental gradient within estuarine systems that influences physiology, recruitment, disease, predation, and survival. Other important characteristics often reported can be seen in @tbl-environmental-drivers and include: dissolved oxygen, temperature, depth, turbidity, and bottom type (substrate) [@LaPeyre2021; @Pollack2012; @Barnes2007; @Geselbracht2024; @Christensen1997]. 
 
-   3. Additional important habitat variables include dissolved oxygen, temperature, depth, turbidity, and substrate.
-      - Dissolved oxygen influences physiological stress and mortality.
-      - Temperature affects growth, reproduction, and physiological stress.
-      - Depth influences physical habitat availability and environmental conditions.
-      - Turbidity and sedimentation may influence feeding and reef persistence.
-      - Suitable substrate is required for settlement and reef formation.
-      - Citations: [@LaPeyre2021; @Pollack2012; @Barnes2007; @Geselbracht2024]
-   
-   4. Environmental predictors used in this study will therefore be selected based on both ecological relevance and available spatial data coverage.
-      - Not every ecologically important parameter will necessarily provide adequate spatial data for predictive modeling.
-      - Citations: [@LaPeyre2021; @Geselbracht2024]
+::: {.landscape} 
 
-4. **Habitat Suitability Indices as restoration decision-support tools**
-   
-   1. Introduce Habitat Suitability Indices (HSIs).
-      - Describe HSIs as methods that transform environmental characteristics into standardized estimates of habitat suitability.
-      - Explain their use as spatial decision-support tools for restoration.
-      - Citations: [@Barnes2007; @Pollack2012; @Geselbracht2024]
-   
-   2. HSIs have been applied specifically to Eastern oyster restoration.
-      - Caloosahatchee Estuary, Florida.
-      - Mission-Aransas Estuary, Texas.
-      - Pensacola Bay System, Florida.
-      - Citations: [@Barnes2007; @Pollack2012; @Geselbracht2024]
-   
-   3. Describe the existing Pensacola Bay HSI.
-      - GIS-based and estuary-specific.
-      - Integrates biological, physical, chemical, and management-related factors.
-      - Developed to identify candidate restoration areas within PBS.
-      - Citation: [@Geselbracht2024]
-   
-   4. Describe the strengths and limitations of HSI approaches.
-      - Strengths include interpretability, adaptability, and integration of established ecological knowledge.
-      - Results depend on decisions regarding variable selection, suitability functions, scoring, weighting, and aggregation.
-      - Avoid characterizing HSI approaches as inherently inferior to statistical SDMs.
-      - Citations: [@Geselbracht2024; @Johnson2005]
+```{r}
+#| label: tbl-environmental-drivers
+#| tbl-cap: "Common environmental drivers of Eastern Oyster habitat suitability."
 
-5. **Species distribution models as an empirical alternative or complement**
+
+oyster_drivers <- read_csv(
+  "4-report/table_1_oyster_environmental_drivers.csv",
+  show_col_types = FALSE
+)
+
+kable(
+  oyster_drivers,
+  format = "pipe",
+  align = c("l", "l", "l", "c")
+)
+```
+
+:::
+
+It should be recognized that not all environmental factors are adequately spatially distributed or represented within the available datasets, and therefore careful consideration should be given when selecting the final dataset used for modeling habitat suitability [@LaPeyre2021; @Geselbracht2024; @Christensen1997].
+
+**Environmentally Driven Habitat Modeling**
+
+Quantifying the relationships between the distribution of species and the species-environment interactions have a long history in ecological research, having been described as far back as the late 17th early 18th century in which researchers observed biological patterns in terms of their relationships with geographical and/or environmental gradients [@Rushton2004; @Elith2009]. Since then, the propagation of large-scale spatial datasets, the development and integration of GIS, increased access to statistical packages and computational power have allowed for much more development in modeling complex species-environment interactions [@Johnson2005].  
+
+**Habitat Suitability Indices (HSIs)**   
+
+HSIs use expert-driven variable selection and classification methods that transform environmental characteristics into standardized estimates of habitat suitability, and have often been used as decision support tools in restoration frameworks due to their relatively low cost and flexibility [@Barnes2007; @Pollack2012; @Geselbracht2024]. 
+
+Further, such models have already been used substantially in Eastern oyster restoration through out the Gulf Coast region in multiple different systems showing there applicability across spatial scales  [@Barnes2007; @Pollack2012; @Geselbracht2024; @Christensen1997]
+
+Within the PBS, HSIs have been used to develop GIS-based and estuary-specific HSMs that integrate biological, physical, chemical, and management-related variables in order to identify suitable restoration areas with the system. In the mid 1990's @Christensen1997 developed a HSI for the eastern oyster in the PBS to demonstrate the model frameworks usefulness in illustrating species suitability in a system wide approach. @Geselbracht2024 then followed and further expanded on the approach incorporating management factors into the model, adding a layer of regulatory influence to the model output versus the purely environmental analysis of the prior. Additionally, the Pensacola and Perdido Bay Estuary Program recently built on-top of @Geselbracht2024 by incorporating some of their own data and refining some of the weighting [@PPBEP_OysterRestoration]. 
+
+These previous studies alone highlight the strengths and weakness of the HSI approaches. Some of the strengths include interoperability, adaptability, and the integration of ecological knowledge, but the results entirely rely on expert decisions regarding variable selection, suitability functions, weighting and scoring, and how to aggregate the results. All of these present opportunity for differing outputs even if the same inputs were used by different groups [@Geselbracht2024; @Johnson2005].
+
+**Species Distribution Modeling**
+
+Species distribution models (SDMs) can be broadly defined as numerical tools that combine observations of species occurrence or abundance with environmental estimates [@Elith2009]. When combined with Geographic Information Systems (GIS), these predictive models have the ability to visualize the distribution and infer the suitability of species habitats. Further, these maps allow conservation professionals to concentrate and target their efforts in the hope to make more effective decisions [@Johnson2005]. 
+
+**Species distribution models as an empirical alternative or complement**
    
    1. Introduce species distribution models (SDMs).
       - SDMs quantitatively relate known species distributions to environmental conditions.
@@ -152,3 +164,4 @@ Perhaps the most influential and widely reported environmental driver of oyster 
       - Citations: [@Johnson2005; @Geselbracht2024]
 
 
+# References

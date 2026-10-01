@@ -1,0 +1,9 @@
+Factor,Description ,Sources
+Salinity,"Controls feeding, growth, reproduction, recruitment, disease, predation, and survival.",[@Barnes2007; @Birch2021; @Christensen1997; @Geselbracht2024; @LaPeyre2021; @Pollack2012]
+Temperature,"Regulates metabolism, filtration, growth, spawning, and larval development.",[@Barnes2007; @Christensen1997; @Geselbracht2024; @LaPeyre2021; @Pollack2012]
+Substrate type,"Stable hard substrate supports larval attachment and reef persistence, whereas soft or rapidly accumulating sediments can bury or destabilize oysters.",[@Barnes2007; @Birch2021; @Christensen1997; @Geselbracht2024; @LaPeyre2021]
+Dissolved oxygen,"Adequate oxygen supports respiration, feeding, and growth.",[@Christensen1997; @Geselbracht2024; @LaPeyre2021; @Pollack2012]
+Hydrology / water movement,"Water movement regulates salinity and transports larvae, oxygen, and food.",[@Barnes2007; @Geselbracht2024; @LaPeyre2021]
+Depth / bathymetry,"Depth influences exposure, temperature, oxygen conditions, and restoration feasibility.",[@Christensen1997; @Geselbracht2024; @Pollack2012]
+Turbidity / sedimentation,High suspended-sediment loads can interfere with filtration and settlement. Sediment deposition can smoother oyster reefs.,[@LaPeyre2021; @Pollack2012]
+Food availability / chlorophyll a,Chlorophyll a is often used as a proxy for food availability.,[@Geselbracht2024; @LaPeyre2021]

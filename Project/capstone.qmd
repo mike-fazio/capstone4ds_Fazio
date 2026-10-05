@@ -1,0 +1,32 @@
+---
+title: "Species Distribution Modeling for Eastern Oyster Habitat"
+author: "M. Fazio"
+date: today
+
+bibliography: references.bib
+#csl: apa.csl
+
+format:
+  pdf:
+    toc: true
+    number-sections: true
+
+execute:
+  echo: false
+  warning: false
+---
+
+{{< include 4-report/_1-introduction.qmd >}}
+
+{{< include 4-report/_2-methods.qmd >}}
+
+{{< include 4-report/_3-results.qmd >}}
+
+{{< include 4-report/_4-discussion.qmd >}}
+
+{{< include 4-report/_5-conclusion.qmd >}}
+
+# References
+
+::: {#refs}
+:::

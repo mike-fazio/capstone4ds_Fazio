@@ -1,37 +1,9 @@
----
-title: "Capstone Proposal"
-subtitle: "Methods and Data"
-
-author: 
-  name: "Mike Fazio"
-  course: "Capstone Projects in Data Science"
-
-date: today
-date-format: "MMMM DD, YYYY"
-
-format: pdf
-
-bibliography: ../1-initiating/references.bib # file contains bibtex for references
-citeproc: true
-
-always_allow_html: true # this allows to get PDF with HTML features
-self-contained: true
-
-execute:
-  cache: false
-  freeze: false 
-  warning: false
-  message: false
-
-editor: 
-  markdown: 
-    wrap: 72
-
----
+# Methods
 
 ```{r}
-#| label: load-packages and package configs
+#| label: 2-load-packages-configs
 #| echo: false
+
 library(sf)
 library(tidyverse)
 library(tmap)
@@ -46,9 +18,9 @@ tmap_mode("plot")
 
 ```
 
-# Data Processing and Analysis
+## Data Processing and Analysis
 
-## Software and Packages
+### Software and Packages
 
 All data processing, analysis, and modeling will be conducted using free
 open source software and packages to maximize accessibility and
@@ -63,7 +35,7 @@ development environment developed by Posit that supports R, Python,
 scripts, notebooks, integrated consoles, along with interactive plots
 and data viewers.
 
-## Study Area
+### Study Area
 
 The study area for this project is the Pensacola Bay System which
 includes portions of Pensacola Bay, Escambia Bay, East Bay and
@@ -79,7 +51,7 @@ first step as it will be needed to extract relevant environmental data
 from much larger datasets in the coming data gathering.
 
 ```{r}
-#| label: create-study-area
+#| label: 2-create-study-area
 #| output: false
 
 study_area <- get_study_area()
@@ -91,7 +63,7 @@ tm_shape(study_area) +
 
 ```
 
-## Water Quality Portal Data
+### Water Quality Portal Data
 
 Water quality data is widely available for the entire United States via
 the EPA's Water Quality Portal (WQP) which allows for a wide range of
@@ -100,7 +72,7 @@ programs (@wqp_2026). For this analysis, site data for Escambia and Santa Rosa C
 
 ```{r}
 #| echo: false
-#| label: fig-study-area
+#| label: 2-fig-study-area
 #| fig-cap: "Pensacola Bay System with monitoring sites"
 #| fig-align: center
 
@@ -122,11 +94,11 @@ tm_basemap("Esri.WorldStreetMap") +
 tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
 ```
 
-## Water Quality Data
+### Water Quality Data
 
 Water quality data was selected based off of availability and relevance within literature. Each parameter was filtered to include just those measurements 
 ```{r}
-#| label: retrieve-process-wq-data
+#| label: 2-retrieve-process-wq-data
 
 salinity <- get_wq_data(
   param = "Salinity",
@@ -178,7 +150,7 @@ turbidity <- get_wq_data(
 
 ```{r}
 #| echo: false
-#| label: tbl-candidate-variables
+#| label: 2-tbl-candidate-variables
 #| tbl-cap: "Preliminary Environmental Variables Considered for the Eastern Oyster SDM"
 
 data_dict <- read_csv("2-processing/data/data_dictionary.csv") 
@@ -191,7 +163,7 @@ kable(
 
 
 ```{r}
-#| label: process-wq-data
+#| label: 2-process-wq-data
 
 sal <- proc_wq_data(salinity)
 do <- proc_wq_data(do_mgL)
@@ -202,7 +174,7 @@ temp <- proc_wq_data(water_temp)
 
 
 ```{r}
-#| label: create-histogram-and-maps-to-view-distribution
+#| label: 2-create-histogram-and-maps-to-view-distribution
 
 wq_summary <- bind_rows(
   sal  %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
@@ -294,6 +266,7 @@ ggplot() +
 
 ::: {.landscape}
 ```{r}
+#|label: 2-summary-table
 
 wq_summary_table <- wq_summary %>%
   group_by(parameter) %>%
@@ -338,8 +311,7 @@ kable(
 
 :::
 
-# Spatial interpolation
+## Spatial interpolation
 
 Points are interpolated into prediction rasters using inverse path distance weighting  (IPDW) (package idpw). Blah blah blah blah
 
-# References

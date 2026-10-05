@@ -1,40 +1,10 @@
----
-title: "Capstone Proposal"
-subtitle: "Introduction"
 
-author: 
-  name: "M. Fazio"
-  course: "Capstone Projects in Data Science"
-
-date: today
-date-format: "MMMM DD, YYYY"
-
-format: pdf
-    
-bibliography: ../1-initiating/references.bib # file contains bibtex for references
-citeproc: true
-
-always_allow_html: true # this allows to get PDF with HTML features
-self-contained: true
-
-execute:
-  cache: false
-  freeze: false 
-  warning: false
-  message: false
-  echo: false
-
-editor: 
-  markdown: 
-    wrap: 72
-
-
----
 ```{r}
+#|label: load-packages 
+
 library(knitr)
 library(reader)
 library(tidyverse)
-
 ```
 
 # Introduction
@@ -43,13 +13,13 @@ The eastern oyster (*Crassostrea virginica*) are viewed as a foundational specie
 
 In recent decades, oyster reefs have experienced substantial declines, with only an estimated 15% remaining worldwide, and 50 to 80% being lost within the Gulf of (America) alone [@Pollack2012; @LaPeyre2021]. The decline is largely attributed to a combination of anthropogenic activities such us over harvesting, habitat alteration, sedimentation and water quality decline, disease and changing hydrology [@LaPeyre2021; @Geselbracht2024]. In response to these sharp declines, many restoration efforts have been undertaken with varying strategies and success rates; recently, planning documents released by the Deepwater Horizon Natural resource Damage Assessment Trustees called for large-scale development of reef networks to increase resilience [@Geselbracht2024]. 
 
-**Oyster decline in the Pensacola Bay System**
+## Oyster decline in the Pensacola Bay System
 
 On such system to experience oyster decline is the Pensacola Bay System (PBS). The PBS is a large estuarine system located in Escambia and Santa Rosa counties in northwest Florida. The system is comprised of multiple waterbody's including Pensacola Bay, Escambia Bay, Blackwater Bay, East Bay, and Santa Rosa Sound; and is influenced heavily by freshwater input from the Escambia, BLackwater and Yellow Rivers [@Christensen1997]. Historically, the PBS supported extensive oyster reefs that provided critical habitat for a variety of species and substantial economic value to the surrounding communities [@Christensen1997]. However, over the past several decades, the extent of oyster habitat within the PBS has declined significantly due to a combination of factors including over harvesting, habitat degradation, and water quality issues. With some estimates indicating a decline of 15,000ha to just 91.5 ha of oyster habitat between the years of 1883 and 2021 [@Geselbracht2024]. This decline has prompted efforts to restore oyster reefs within the PBS [@PPBEP_OysterRestoration; @TNC2021OysterRestoration], with multiple studies aiming to identify the most suitable areas within the estuary to focus restoration efforts [@Geselbracht2024; @Christensen1997; @PPBEP_OysterRestoration].
 
 With limited resources available for restoration, it is critical to identify areas where chances of oyster survival and long-term reef establishment are at their highest, and where poor site selection could ultimately lead to unsatisfactory results. As with any ecosystem, the environmental conditions within the PBS vary greatly in time and space, and such variations can have great impacts on oyster survival and establishment. Therefore, it is important to understand the environmental factors that drive oyster occurrence so that scientist and policy makers can make informed decisions regarding said restoration site selection [@Pollack2012; @Barnes2007; @Geselbracht2024].
 
-**Environmental controls on Eastern oyster habitat**
+## Environmental controls on Eastern oyster habitat
 
 Oyster recruitment, survival, and reef establishment are influenced by complex interactions between numerous physical, chemical, and biological environmental factors. As such, determining the most influential factors is a multivariate problem that requires careful consideration of each factor and its interactions with others [@LaPeyre2021; @Pollack2012; @Barnes2007; @Christensen1997]. To help narrow the focus, the most commonly cited environmental factors were examined in the literature and are summarized here. 
    
@@ -58,7 +28,7 @@ Perhaps the most influential and widely reported environmental driver of oyster 
 ::: {.landscape} 
 
 ```{r}
-#| label: tbl-environmental-drivers
+#| label: 1-tbl-environmental-drivers
 #| tbl-cap: "Common environmental drivers of Eastern Oyster habitat suitability."
 
 
@@ -164,4 +134,3 @@ Species distribution models (SDMs) can be broadly defined as numerical tools tha
       - Citations: [@Johnson2005; @Geselbracht2024]
 
 
-# References

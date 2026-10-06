@@ -1,5 +1,5 @@
 ---
-title: "Species Distribution Modeling for Eastern Oyster Habitat"
+title: "Evaluating Different Habitat Suitability Modeling for the Eastern Oyster in the Pensacola Bay System"
 author: "M. Fazio"
 date: today
 
@@ -16,15 +16,15 @@ execute:
   warning: false
 ---
 
-{{< include 4-report/_1-introduction.qmd >}}
+{{< include 5-report/_1-introduction.qmd >}}
 
-{{< include 4-report/_2-methods.qmd >}}
+{{< include 5-report/_2-methods.qmd >}}
 
-{{< include 4-report/_3-results.qmd >}}
+{{< include 5-report/_3-results.qmd >}}
 
-{{< include 4-report/_4-discussion.qmd >}}
+{{< include 5-report/_4-discussion.qmd >}}
 
-{{< include 4-report/_5-conclusion.qmd >}}
+{{< include 5-report/_5-conclusion.qmd >}}
 
 # References
 

@@ -5,12 +5,12 @@ library(tidyverse)
 ### CREATE OR LOAD STUDY AREA ----
 
 get_study_area <- function() {
-  file_path <- "2-processing/data/processed/study_area.rds"
+  file_path <- "2-data/processed/study_area.rds"
 
   if (file.exists(file_path)) {
     study_area <- readRDS(file_path)
   } else {
-    wbid <- st_read("2-processing/data/raw/Waterbody_IDs.shp")
+    wbid <- st_read("2-data/raw/Waterbody_IDs.shp")
 
     # List of relevant WBIDs
     study_area_wbid_list <- c(
@@ -39,7 +39,7 @@ get_study_area <- function() {
 
 get_wq_sites <- function(study_area) {
   # file path to check
-  out_path <- "2-processing/data/processed/wq_sites.rds"
+  out_path <- "2-data/processed/wq_sites.rds"
 
   # Load data if exists, else proceed to download
   if (file.exists(out_path)) {
@@ -94,7 +94,7 @@ get_wq_data <- function(
   file_name <- paste0(output_name, ".rds")
 
   # Build output path
-  out_path <- file.path("2-processing/data/raw", file_name)
+  out_path <- file.path("2-data/raw", file_name)
 
   if (file.exists(out_path) && !force) {
     # load processed data
@@ -129,35 +129,33 @@ get_wq_data <- function(
 
 ### PROCESS WQ DATA ----
 
-proc_wq_data <- function(input_data){
-  
+proc_wq_data <- function(input_data) {
   #get name of data set
   input_name <- deparse(substitute(input_data))
 
-  df <- input_data %>% 
+  df <- input_data %>%
     mutate(
       Result_Measure = as.numeric(Result_Measure)
     ) %>%
     filter(
-      month(Activity_StartDate, label = TRUE) 
-        %in% 
+      month(Activity_StartDate, label = TRUE) %in%
         c("May", "Jun", "Jul", "Aug", "Sep", "Oct"), # select warm season
       !is.na(Result_Measure), # remove any potential null results
       !is.na(Location_Latitude), # remove any y location agnostic data
       !is.na(Location_Longitude) # remove any x location agnostic data
-    ) %>% 
+    ) %>%
     group_by(Location_Identifier) %>%
     summarise(
       # Although all values should be the same, we take the first of each for our summary data
       location_name = first(Location_Name),
       latitude = first(Location_Latitude),
       longitude = first(Location_Longitude),
-      
+
       # create basic stats for each
       mean = mean(Result_Measure, na.rm = TRUE),
       sd = sd(Result_Measure, na.rm = TRUE),
       n = n(),
-      
+
       # include date range for qc and reference
       first_date = min(Activity_StartDate, na.rm = TRUE),
       last_date = max(Activity_StartDate, na.rm = TRUE),
@@ -166,17 +164,15 @@ proc_wq_data <- function(input_data){
     # make data spatially aware for interpolation
     st_as_sf(
       coords = c("longitude", "latitude"),
-      crs = 4326, 
+      crs = 4326,
       remove = FALSE
-    ) %>% 
+    ) %>%
     # Convert to NAD 1983 (2011) StatePlane Florida North FIPS 0903 (Meters)
     st_transform("ESRI:103021")
 
-  # save data for later use   
+  # save data for later use
   outname <- paste0(input_name, "_0903.rds")
-  saveRDS(df, 
-    file.path("2-processing/data/processed", outname)
-    )
-  
+  saveRDS(df, file.path("2-data/processed", outname))
+
   return(df)
 }

@@ -1,10 +1,15 @@
+---
 
+bibliography: .../references.bib
+
+---
 ```{r}
-#|label: load-packages 
+#| label: load-packages 
 
 library(knitr)
 library(reader)
 library(tidyverse)
+
 ```
 
 # Introduction
@@ -33,7 +38,7 @@ Perhaps the most influential and widely reported environmental driver of oyster 
 
 
 oyster_drivers <- read_csv(
-  "4-report/table_1_oyster_environmental_drivers.csv",
+  "4-tables-and-figures/table_1_oyster_env_vars.csv",
   show_col_types = FALSE
 )
 
@@ -48,78 +53,27 @@ kable(
 
 It should be recognized that not all environmental factors are adequately spatially distributed or represented within the available datasets, and therefore careful consideration should be given when selecting the final dataset used for modeling habitat suitability [@LaPeyre2021; @Geselbracht2024; @Christensen1997].
 
-**Environmentally Driven Habitat Modeling**
+## Species Distribution Modelling
 
-Quantifying the relationships between the distribution of species and the species-environment interactions have a long history in ecological research, having been described as far back as the late 17th early 18th century in which researchers observed biological patterns in terms of their relationships with geographical and/or environmental gradients [@Rushton2004; @Elith2009]. Since then, the propagation of large-scale spatial datasets, the development and integration of GIS, increased access to statistical packages and computational power have allowed for much more development in modeling complex species-environment interactions [@Johnson2005].  
+Quantifying the relationships between the distribution of species and the species-environment interactions have a long history in ecological research, having been described as far back as the late 17th early 18th century in which researchers observed biological patterns in terms of their relationships with geographical and/or environmental gradients [@Rushton2004; @Elith2009]. Since then, the propagation of large-scale spatial datasets, the development and integration of GIS, increased access to statistical packages and computational power have allowed for much more development in modeling complex species-environment interactions [@Johnson2005]. Out of such developments has arisen a technique known as Species Distribution Modeling (SDM), which can be loosely defined as numerical tools that combine observations of species occurrence or abundance with environmental estimates [@Elith2009]. According to @Elith2009, SDMs can be largely classified within several families of models: expert-driven or heuristic, environmental-envelope, environmental-similarity, regression-based, Bayesian and hierarchical, machine-learning and data mining, and ensemble or multimodal. Additionally, the selection of an SDM approach largely depends on a multitude of factors such as: the study's objective, quality and quantity of available data, ecological characteristics of the species, spatial and temporal scale, whether input data includes absence data or presence-only data [@Elith2009]. With so many choices of modeling technique and the driving factors behind that choice, deciding on one model can be quite difficult and the choice usually defaults to a standard technique depending on the subject matter. 
 
-**Habitat Suitability Indices (HSIs)**   
-
-HSIs use expert-driven variable selection and classification methods that transform environmental characteristics into standardized estimates of habitat suitability, and have often been used as decision support tools in restoration frameworks due to their relatively low cost and flexibility [@Barnes2007; @Pollack2012; @Geselbracht2024]. 
-
-Further, such models have already been used substantially in Eastern oyster restoration through out the Gulf Coast region in multiple different systems showing there applicability across spatial scales  [@Barnes2007; @Pollack2012; @Geselbracht2024; @Christensen1997]
+*Habitat Suitability Indices*
+One popular approach used in many studies involving the Eastern oyster throughout the gulf region is that of the expert-driven Habitat Suitability Index [@Barnes2007; @Pollack2012; @Geselbracht2024; @Christensen1997]. HSIs are typically used in situations where quantitative data on species distributions is difficult to collect or non-existant, relying on expert-driven variable selection, meta-analysis, and classification methods that transform environmental characteristics into standardized estimates of habitat suitability [@Barnes2007; @Pollack2012; @Geselbracht2024; @Johnson2005]. 
 
 Within the PBS, HSIs have been used to develop GIS-based and estuary-specific HSMs that integrate biological, physical, chemical, and management-related variables in order to identify suitable restoration areas with the system. In the mid 1990's @Christensen1997 developed a HSI for the eastern oyster in the PBS to demonstrate the model frameworks usefulness in illustrating species suitability in a system wide approach. @Geselbracht2024 then followed and further expanded on the approach incorporating management factors into the model, adding a layer of regulatory influence to the model output versus the purely environmental analysis of the prior. Additionally, the Pensacola and Perdido Bay Estuary Program recently built on-top of @Geselbracht2024 by incorporating some of their own data and refining some of the weighting [@PPBEP_OysterRestoration]. 
 
 These previous studies alone highlight the strengths and weakness of the HSI approaches. Some of the strengths include interoperability, adaptability, and the integration of ecological knowledge, but the results entirely rely on expert decisions regarding variable selection, suitability functions, weighting and scoring, and how to aggregate the results. All of these present opportunity for differing outputs even if the same inputs were used by different groups [@Geselbracht2024; @Johnson2005].
 
-**Species Distribution Modeling**
+*Maximum Entropy Modelling (MaxEnt)*
+MaxEnt is a presence-background SDM framework based on general-purpose machine learning methods that are useful for making predictions using incomplete information by relating environmental conditions at known occurrence locations to the environmental conditions throughout the study area [@Phillips2006; @Elith2011]. Some of the main benefits of MaxEnt is that it uses presence-only data, reducing the need for the often un-available absence data, it has the ability to model complex interactions between environmental conditions, and it has demonstrated high predictive performance while limiting over fitting through regularization [@Phillips2009; @Merow2013; @Elith2011]. An added benefit to this particular study is the fact that MaxEnt is tailored towards presence-only species occurrence data, making it highly suitable for the data set used here in which the @FWC2026Oysters datasets explicitly collected occurrence data without including absence locations.  
 
-Species distribution models (SDMs) can be broadly defined as numerical tools that combine observations of species occurrence or abundance with environmental estimates [@Elith2009]. When combined with Geographic Information Systems (GIS), these predictive models have the ability to visualize the distribution and infer the suitability of species habitats. Further, these maps allow conservation professionals to concentrate and target their efforts in the hope to make more effective decisions [@Johnson2005]. 
+However, the use of such algorithms should not be made blindly as many issues can arise if careful precautions are not taken. Due to the nature of ecological many biases in the data samples can arise such as spatial and temporal autocorrelation, group dependence structures, hierarchical structures and multicollinearity leading to overfitting model parameters and over-optimistic prediction confidence [@Dormann2013; @Kass2021; @Roberts2017]. Thankfully, significant work has been put into this through cross-validation techniques and the development of model evaluation software packages such as ENMeval 2.0 implemented through the R statistical language [@Kass2021; @Roberts2017] 
 
-**Species distribution models as an empirical alternative or complement**
-   
-   1. Introduce species distribution models (SDMs).
-      - SDMs quantitatively relate known species distributions to environmental conditions.
-      - They can be used for ecological explanation and spatial prediction.
-      - Citation: [@Elith2009]
-   
-   2. Different habitat-modeling approaches can produce different spatial predictions.
-      - Model selection and environmental-variable selection can influence areas identified as suitable.
-      - Comparing modeling approaches can reveal areas of agreement and disagreement.
-      - Citation: [@Johnson2005]
-   
-   3. Empirical SDMs provide an alternative method of estimating habitat relationships directly from observed species occurrence.
-      - Establish the conceptual transition from HSI approaches to MaxEnt.
-      - Citations: [@Elith2009; @Johnson2005]
+## Research rationale, objectives, and hypotheses
 
-6. **Maximum Entropy species distribution modeling**
-   
-   1. Introduce MaxEnt as a presence-background species distribution modeling framework.
-      - Particularly useful where reliable absence observations are unavailable.
-      - Relates environmental conditions at known occurrence locations to environmental conditions available throughout the modeling region.
-      - Citations: [@Phillips2006; @Elith2011]
-   
-   2. Explain why MaxEnt is appropriate for Eastern oyster occurrence data in PBS.
-      - FWC oyster-bed data provide known oyster occurrences without systematically sampled absence locations.
-      - Presence-background modeling therefore fits the available data structure.
-      - Citations: [@Phillips2006; @FWC2026Oysters]
-   
-   3. Explain important considerations when implementing MaxEnt.
-      - Background extent and sampling.
-      - Spatial sampling bias.
-      - Predictor selection.
-      - Regularization.
-      - Feature classes and model complexity.
-      - Citations: [@Phillips2009; @Merow2013; @Elith2011]
-   
-   4. Explain the need for model tuning and spatial validation.
-      - MaxEnt should not be treated as an automated black-box model.
-      - Model configuration should be evaluated systematically.
-      - Spatially independent validation should be used where occurrence data exhibit spatial structure.
-      - Citations: [@Kass2021; @Roberts2017; @Valavi2019]
+In an effort to demonstrate how a MaxEnt SDM can be used as a complimentary tool to help researchers and practitioners leading ecological restoration activities, this study aims to develop an empirically fitted MaxEnt habitat-suitability model using observed oyster occurrence data and known environmental conditions. The primary objective will be to develop a spatially explicit SDM representing relative Eastern oyster habitat suitabiliy throughout the PBS. Next, the resulting suitability surface will be evaluated agains the existing Pensacola Bay HSI developed by @Geselbracht2024 and iterated upon by @PPBEP_OysterRestoration. 
 
-7. **Research rationale, objectives, and hypotheses**
-   
-   1. Establish the primary research problem.
-      - An estuary-specific HSI already exists for Eastern oyster restoration within PBS.
-      - This study will independently develop an empirically fitted MaxEnt habitat-suitability model using observed oyster occurrences and environmental conditions.
-      - Citations: [@Geselbracht2024; @Phillips2006]
-   
-   2. Primary objective.
-      - Develop a spatially explicit MaxEnt SDM representing relative Eastern oyster habitat suitability throughout PBS.
-   
-   3. Secondary objective.
-      - Quantitatively compare the MaxEnt suitability surface with the existing Pensacola Bay HSI.
+To achieve this, we will identify the environmental predictors that are commonly associated with oyster habitat success, 
    
    4. Supporting objectives.
       - Identify environmental predictors associated with observed oyster distribution.

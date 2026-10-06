@@ -11,7 +11,7 @@ library(knitr)
 library(tibble)
 
 #load functions from source script
-source("2-processing/scripts/process_wq_data.r")
+source("3-scripts/process_wq_data.r")
 
 # set tmap to static map
 tmap_mode("plot")
@@ -153,7 +153,7 @@ turbidity <- get_wq_data(
 #| label: 2-tbl-candidate-variables
 #| tbl-cap: "Preliminary Environmental Variables Considered for the Eastern Oyster SDM"
 
-data_dict <- read_csv("2-processing/data/data_dictionary.csv") 
+data_dict <- read_csv("2-data/data_dictionary.csv") 
   
 kable(
   data_dict,

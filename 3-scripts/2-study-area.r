@@ -1,15 +1,12 @@
-library(sf)
-library(tidyverse)
-library(tmap)
-library(knitr)
-library(tibble)
-
-#load functions from source script
-source("3-scripts/0-functions.r")
+# Load functions and packages from setup script
+source(
+  here::here(
+    "3-scripts",
+    "0-setup.r"
+  )
+)
 
 study_area <- get_study_area()
-
-tmap_mode("plot")
 
 study_map <-
   tm_basemap("Esri.WorldStreetMap") +
@@ -19,12 +16,17 @@ study_map <-
     col = "red",
     lwd = 2
   ) +
-  tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2)) +
+  tm_layout(
+    inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  ) +
   tm_title("Pensacola Bay System")
 
 tmap_save(
   tm = study_map,
-  filename = "Project/4-tables-and-figures/fig-1-study_area.png",
+  filename = here::here(
+    "4-tables-and-figures",
+    "fig-1-study_area.png"
+  ),
   width = 8,
   height = 6,
   units = "in",

@@ -1,17 +1,22 @@
-library(here)
-library(dataRetrieval)
-library(sf)
-library(tidyverse)
-
 ### CREATE OR LOAD STUDY AREA ----
 
 get_study_area <- function() {
-  file_path <- "/2-data/processed/study_area.rds"
+  file_path <- here::here(
+    "2-data",
+    "processed",
+    "study_area.rds"
+  )
 
   if (file.exists(file_path)) {
     study_area <- readRDS(file_path)
   } else {
-    wbid <- st_read("/2-data/raw/Waterbody_IDs.shp")
+    wbid <- st_read(
+      here::here(
+        "2-data",
+        "raw",
+        "Waterbody_IDs.shp"
+      )
+    )
 
     # List of relevant WBIDs
     study_area_wbid_list <- c(
@@ -27,8 +32,10 @@ get_study_area <- function() {
     )
 
     study_area <- wbid %>%
-      filter(WBID %in% study_area_wbid_list) %>% # Filter results to only include desired WBIDs
-      summarise() # dissolve all polygons into one singular geometry
+      # Filter results to only include desired WBIDs
+      filter(WBID %in% study_area_wbid_list) %>%
+      # Dissolve all polygons into one geometry
+      summarise()
 
     saveRDS(study_area, file_path)
   }
@@ -36,13 +43,17 @@ get_study_area <- function() {
   return(study_area)
 }
 
+
 ### CREATE OR LOAD SITES ----
 
 get_wq_sites <- function(study_area) {
-  # file path to check
-  out_path <- "/2-data/processed/wq_sites.rds"
+  out_path <- here::here(
+    "2-data",
+    "processed",
+    "wq_sites.rds"
+  )
 
-  # Load data if exists, else proceed to download
+  # Load data if it exists; otherwise download
   if (file.exists(out_path)) {
     pbs_sites <- readRDS(out_path)
   } else {
@@ -53,7 +64,7 @@ get_wq_sites <- function(study_area) {
       legacy = FALSE
     )
 
-    # filter sites to Pensacola Bay System
+    # Filter sites to Pensacola Bay System
     pbs_sites <- wqp_sites %>%
       select(
         Org_Identifier,
@@ -67,19 +78,26 @@ get_wq_sites <- function(study_area) {
         !is.na(Location_Latitude)
       ) %>%
       st_as_sf(
-        coords = c("Location_Longitude", "Location_Latitude"),
+        coords = c(
+          "Location_Longitude",
+          "Location_Latitude"
+        ),
         crs = 4326,
         remove = TRUE
       ) %>%
       st_transform(st_crs(study_area)) %>%
-      st_filter(study_area, .predicate = st_within)
+      st_filter(
+        study_area,
+        .predicate = st_within
+      )
 
-    # save to file
+    # Save to file
     saveRDS(pbs_sites, out_path)
   }
 
   return(pbs_sites)
 }
+
 
 ### RETRIEVE OR LOAD WQ DATA ----
 
@@ -91,20 +109,24 @@ get_wq_data <- function(
   output_name,
   force = FALSE
 ) {
-  # create file name based on user provided input
+  # Create file name based on user-provided input
   file_name <- paste0(output_name, ".rds")
 
   # Build output path
-  out_path <- file.path("2-data/raw", file_name)
+  out_path <- here::here(
+    "2-data",
+    "raw",
+    file_name
+  )
 
   if (file.exists(out_path) && !force) {
-    # load processed data
+    # Load previously downloaded data
     pbs_df <- readRDS(out_path)
   } else {
-    # site list used to filter query results
+    # Site list used to filter query results
     site_list <- unique(sites$Location_Identifier)
 
-    # download data from WQP api
+    # Download data from WQP API
     wq_df <- readWQPdata(
       countycode = c("US:12:033", "US:12:113"),
       siteType = "Estuary",
@@ -115,7 +137,8 @@ get_wq_data <- function(
       service = "ResultWQX3",
       ignore_attributes = FALSE
     )
-    # filter out sites
+
+    # Filter results to sites within study area
     pbs_df <- wq_df %>%
       filter(Location_Identifier %in% site_list)
 
@@ -123,14 +146,14 @@ get_wq_data <- function(
     saveRDS(pbs_df, out_path)
   }
 
-  # return data
   return(pbs_df)
 }
+
 
 ### PROCESS WQ DATA ----
 
 proc_wq_data <- function(input_data) {
-  #get name of data set
+  # Get name of input dataset
   input_name <- deparse(substitute(input_data))
 
   df <- input_data %>%
@@ -138,42 +161,60 @@ proc_wq_data <- function(input_data) {
       Result_Measure = as.numeric(Result_Measure)
     ) %>%
     filter(
+      # Select warm season
       month(Activity_StartDate, label = TRUE) %in%
-        c("May", "Jun", "Jul", "Aug", "Sep", "Oct"), # select warm season
-      !is.na(Result_Measure), # remove any potential null results
-      !is.na(Location_Latitude), # remove any y location agnostic data
-      !is.na(Location_Longitude) # remove any x location agnostic data
+        c("May", "Jun", "Jul", "Aug", "Sep", "Oct"),
+
+      # Remove null results
+      !is.na(Result_Measure),
+
+      # Remove records without coordinates
+      !is.na(Location_Latitude),
+      !is.na(Location_Longitude)
     ) %>%
     group_by(Location_Identifier) %>%
     summarise(
-      # Although all values should be the same, we take the first of each for our summary data
+      # Station metadata
       location_name = first(Location_Name),
       latitude = first(Location_Latitude),
       longitude = first(Location_Longitude),
 
-      # create basic stats for each
+      # Summary statistics
       mean = mean(Result_Measure, na.rm = TRUE),
       sd = sd(Result_Measure, na.rm = TRUE),
       n = n(),
-      log = log(mean), #attempt to normalize data structure using log of mean
+      log = log(mean),
 
-      # include date range for qc and reference
+      # Date range for QC and reference
       first_date = min(Activity_StartDate, na.rm = TRUE),
       last_date = max(Activity_StartDate, na.rm = TRUE),
+
       .groups = "drop"
     ) %>%
-    # make data spatially aware for interpolation
+
+    # Make data spatially aware for interpolation
     st_as_sf(
       coords = c("longitude", "latitude"),
       crs = 4326,
       remove = FALSE
     ) %>%
-    # Convert to NAD 1983 (2011) StatePlane Florida North FIPS 0903 (Meters)
+
+    # NAD 1983 (2011) StatePlane Florida North FIPS 0903 (Meters)
     st_transform("ESRI:103021")
 
-  # save data for later use
-  outname <- paste0(input_name, "_0903.rds")
-  saveRDS(df, file.path("/2-data/processed", outname))
+  # Save processed data
+  outname <- paste0(
+    input_name,
+    "_0903.rds"
+  )
+
+  out_path <- here::here(
+    "2-data",
+    "processed",
+    outname
+  )
+
+  saveRDS(df, out_path)
 
   return(df)
 }

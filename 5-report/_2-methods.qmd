@@ -12,7 +12,7 @@ The study area for this project is the Pensacola Bay System which includes porti
 
 ![Study area for the Pensacola Bay System.](4-tables-and-figures/study-area.png){#fig-study-area}
 
-3. *Data acquisition and dataset inventory*
+*Data acquisition and dataset inventory*
    
    1. Eastern oyster occurrence data.
       - Source oyster occurrence data from the FWC-FWRI Oyster Beds in Florida dataset [@FWC2026Oysters].

@@ -6,12 +6,12 @@ library(tidyverse)
 ### CREATE OR LOAD STUDY AREA ----
 
 get_study_area <- function() {
-  file_path <- "Project/2-data/processed/study_area.rds"
+  file_path <- "/2-data/processed/study_area.rds"
 
   if (file.exists(file_path)) {
     study_area <- readRDS(file_path)
   } else {
-    wbid <- st_read("Project/2-data/raw/Waterbody_IDs.shp")
+    wbid <- st_read("/2-data/raw/Waterbody_IDs.shp")
 
     # List of relevant WBIDs
     study_area_wbid_list <- c(
@@ -40,7 +40,7 @@ get_study_area <- function() {
 
 get_wq_sites <- function(study_area) {
   # file path to check
-  out_path <- "Project/2-data/processed/wq_sites.rds"
+  out_path <- "/2-data/processed/wq_sites.rds"
 
   # Load data if exists, else proceed to download
   if (file.exists(out_path)) {
@@ -173,7 +173,7 @@ proc_wq_data <- function(input_data) {
 
   # save data for later use
   outname <- paste0(input_name, "_0903.rds")
-  saveRDS(df, file.path("Project/2-data/processed", outname))
+  saveRDS(df, file.path("/2-data/processed", outname))
 
   return(df)
 }

@@ -1,8 +1,8 @@
 Variable,Obtained? (Y/N),Data Type, Total Records,Data Source
 Salinity,Y,Points,6994,@WQP_salinity_2026
 Water temperature,Y,Points,7161,@wqp_2026
-Substrate / bottom type,Y,Raster,NA, @ppbep
-Water depth / bathymetry,N,Raster,@NOAA_2018
+Substrate / bottom type,Y,Raster,,@PPBEP_OysterRestoration
+Water depth / bathymetry,Y,Raster,,@NOAA_2018
 Dissolved oxygen,Y,Points,6261,@wqp_2026
 Chlorophyll-a,Y,Points,1847,@wqp_2026
-Oyster bed locations,,, @FWC2026Oysters
+Oyster bed locations,Y,Polygons ,, @FWC2026Oysters

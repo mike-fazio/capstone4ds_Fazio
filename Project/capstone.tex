@@ -1,0 +1,1555 @@
+% Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+
+
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
+
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\usepackage{pdflscape}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Evaluating Different Habitat Suitability Modeling for the Eastern Oyster in the Pensacola Bay System},
+  pdfauthor={M. Fazio},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{Evaluating Different Habitat Suitability Modeling for the Eastern
+Oyster in the Pensacola Bay System}
+\author{M. Fazio}
+\date{2026-10-07}
+\begin{document}
+\maketitle
+
+\renewcommand*\contentsname{Table of contents}
+{
+\hypersetup{linkcolor=}
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+bibliography: \ldots/references.bib
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{Introduction}\label{introduction}
+
+The eastern oyster (\emph{Crassostrea virginica}) are viewed as a
+foundational species as they are directly responsible for creating and
+providing numerous ecosystem goods and services such as food and habitat
+production, shoreline stabilization and protection, water quality
+improvement, nutrient cycling, and carbon sequestration (Geselbracht et
+al. 2024; Grabowski et al. 2012; Barnes et al. 2007). Additionally, they
+provide numerous economic benefits such as supporting oyster fisheries,
+recreational harvesting, tourism, along with the associated employment
+that goes along with those industries (Geselbracht et al. 2024; Peyre,
+Marshall, and Sable 2021). In one study, Grabowski et al. (2012)
+estimated the average annual value to range from \$10,325 to \$99,421
+per hectare (2011 Dollars).
+
+In recent decades, oyster reefs have experienced substantial declines,
+with only an estimated 15\% remaining worldwide, and 50 to 80\% being
+lost within the Gulf of (America) alone (Pollack et al. 2012; Peyre,
+Marshall, and Sable 2021). The decline is largely attributed to a
+combination of anthropogenic activities such us over harvesting, habitat
+alteration, sedimentation and water quality decline, disease and
+changing hydrology (Peyre, Marshall, and Sable 2021; Geselbracht et al.
+2024). In response to these sharp declines, many restoration efforts
+have been undertaken with varying strategies and success rates;
+recently, planning documents released by the Deepwater Horizon Natural
+resource Damage Assessment Trustees called for large-scale development
+of reef networks to increase resilience (Geselbracht et al. 2024).
+
+\subsection{Oyster decline in the Pensacola Bay
+System}\label{oyster-decline-in-the-pensacola-bay-system}
+
+On such system to experience oyster decline is the Pensacola Bay System
+(PBS). The PBS is a large estuarine system located in Escambia and Santa
+Rosa counties in northwest Florida. The system is comprised of multiple
+waterbody's including Pensacola Bay, Escambia Bay, Blackwater Bay, East
+Bay, and Santa Rosa Sound; and is influenced heavily by freshwater input
+from the Escambia, BLackwater and Yellow Rivers (Christensen et al.
+1997). Historically, the PBS supported extensive oyster reefs that
+provided critical habitat for a variety of species and substantial
+economic value to the surrounding communities (Christensen et al. 1997).
+However, over the past several decades, the extent of oyster habitat
+within the PBS has declined significantly due to a combination of
+factors including over harvesting, habitat degradation, and water
+quality issues. With some estimates indicating a decline of 15,000ha to
+just 91.5 ha of oyster habitat between the years of 1883 and 2021
+(Geselbracht et al. 2024). This decline has prompted efforts to restore
+oyster reefs within the PBS (Pensacola and Perdido Bays Estuary Program
+n.d.; The Nature Conservancy 2021), with multiple studies aiming to
+identify the most suitable areas within the estuary to focus restoration
+efforts (Geselbracht et al. 2024; Christensen et al. 1997; Pensacola and
+Perdido Bays Estuary Program n.d.).
+
+With limited resources available for restoration, it is critical to
+identify areas where chances of oyster survival and long-term reef
+establishment are at their highest, and where poor site selection could
+ultimately lead to unsatisfactory results. As with any ecosystem, the
+environmental conditions within the PBS vary greatly in time and space,
+and such variations can have great impacts on oyster survival and
+establishment. Therefore, it is important to understand the
+environmental factors that drive oyster occurrence so that scientist and
+policy makers can make informed decisions regarding said restoration
+site selection (Pollack et al. 2012; Barnes et al. 2007; Geselbracht et
+al. 2024).
+
+\subsection{Environmental controls on Eastern oyster
+habitat}\label{environmental-controls-on-eastern-oyster-habitat}
+
+Oyster recruitment, survival, and reef establishment are influenced by
+complex interactions between numerous physical, chemical, and biological
+environmental factors. As such, determining the most influential factors
+is a multivariate problem that requires careful consideration of each
+factor and its interactions with others (Peyre, Marshall, and Sable
+2021; Pollack et al. 2012; Barnes et al. 2007; Christensen et al. 1997).
+To help narrow the focus, the most commonly cited environmental factors
+were examined in the literature and are summarized here.
+
+Perhaps the most influential and widely reported environmental driver of
+oyster suitability is salinity. Representing an important environmental
+gradient within estuarine systems that influences physiology,
+recruitment, disease, predation, and survival. Other important
+characteristics often reported can be seen in
+\textbf{?@tbl-environmental-drivers} and include: dissolved oxygen,
+temperature, depth, turbidity, and bottom type (substrate) (Peyre,
+Marshall, and Sable 2021; Pollack et al. 2012; Barnes et al. 2007;
+Geselbracht et al. 2024; Christensen et al. 1997).
+
+\begin{landscape}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.1236}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5491}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3273}}@{}}
+\caption{Common environmental drivers of Eastern Oyster habitat
+suitability.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Factor
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Sources
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Factor
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Sources
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Salinity & Controls feeding, growth, reproduction, recruitment, disease,
+predation, and survival. & (Barnes et al. 2007; Birch et al. 2021;
+Christensen et al. 1997; Geselbracht et al. 2024; Peyre, Marshall, and
+Sable 2021; Pollack et al. 2012) \\
+Temperature & Regulates metabolism, filtration, growth, spawning, and
+larval development. & (Barnes et al. 2007; Christensen et al. 1997;
+Geselbracht et al. 2024; Peyre, Marshall, and Sable 2021; Pollack et al.
+2012) \\
+Substrate type & Stable hard substrate supports larval attachment and
+reef persistence, whereas soft or rapidly accumulating sediments can
+bury or destabilize oysters. & (Barnes et al. 2007; Birch et al. 2021;
+Christensen et al. 1997; Geselbracht et al. 2024; Peyre, Marshall, and
+Sable 2021) \\
+Dissolved oxygen & Adequate oxygen supports respiration, feeding, and
+growth. & (Christensen et al. 1997; Geselbracht et al. 2024; Peyre,
+Marshall, and Sable 2021; Pollack et al. 2012) \\
+Hydrology / water movement & Water movement regulates salinity and
+transports larvae, oxygen, and food. & (Barnes et al. 2007; Geselbracht
+et al. 2024; Peyre, Marshall, and Sable 2021) \\
+Depth / bathymetry & Depth influences exposure, temperature, oxygen
+conditions, and restoration feasibility. & (Christensen et al. 1997;
+Geselbracht et al. 2024; Pollack et al. 2012) \\
+Turbidity / sedimentation & High suspended-sediment loads can interfere
+with filtration and settlement. Sediment deposition can smoother oyster
+reefs. & (Peyre, Marshall, and Sable 2021; Pollack et al. 2012) \\
+Food availability / chlorophyll a & Chlorophyll a is often used as a
+proxy for food availability. & (Geselbracht et al. 2024; Peyre,
+Marshall, and Sable 2021) \\
+\end{longtable}
+
+\end{landscape}
+
+It should be recognized that not all environmental factors are
+adequately spatially distributed or represented within the available
+datasets, and therefore careful consideration should be given when
+selecting the final dataset used for modeling habitat suitability
+(Peyre, Marshall, and Sable 2021; Geselbracht et al. 2024; Christensen
+et al. 1997).
+
+\subsection{Species Distribution
+Modelling}\label{species-distribution-modelling}
+
+Quantifying the relationships between the distribution of species and
+the species-environment interactions have a long history in ecological
+research, having been described as far back as the late 17th early 18th
+century in which researchers observed biological patterns in terms of
+their relationships with geographical and/or environmental gradients
+(Rushton, Ormerod, and Kerby 2004; Elith and Leathwick 2009). Since
+then, the propagation of large-scale spatial datasets, the development
+and integration of GIS, increased access to statistical packages and
+computational power have allowed for much more development in modeling
+complex species-environment interactions (Johnson and Gillingham 2005).
+Out of such developments has arisen a technique known as Species
+Distribution Modeling (SDM), which can be loosely defined as numerical
+tools that combine observations of species occurrence or abundance with
+environmental estimates (Elith and Leathwick 2009). According to Elith
+and Leathwick (2009), SDMs can be largely classified within several
+families of models: expert-driven or heuristic, environmental-envelope,
+environmental-similarity, regression-based, Bayesian and hierarchical,
+machine-learning and data mining, and ensemble or multimodal.
+Additionally, the selection of an SDM approach largely depends on a
+multitude of factors such as: the study's objective, quality and
+quantity of available data, ecological characteristics of the species,
+spatial and temporal scale, whether input data includes absence data or
+presence-only data (Elith and Leathwick 2009). With so many choices of
+modeling technique and the driving factors behind that choice, deciding
+on one model can be quite difficult and the choice usually defaults to a
+standard technique depending on the subject matter.
+
+\emph{Habitat Suitability Indices} One popular approach used in many
+studies involving the Eastern oyster throughout the gulf region is that
+of the expert-driven Habitat Suitability Index (Barnes et al. 2007;
+Pollack et al. 2012; Geselbracht et al. 2024; Christensen et al. 1997).
+HSIs are typically used in situations where quantitative data on species
+distributions is difficult to collect or non-existant, relying on
+expert-driven variable selection, meta-analysis, and classification
+methods that transform environmental characteristics into standardized
+estimates of habitat suitability (Barnes et al. 2007; Pollack et al.
+2012; Geselbracht et al. 2024; Johnson and Gillingham 2005).
+
+Within the PBS, HSIs have been used to develop GIS-based and
+estuary-specific HSMs that integrate biological, physical, chemical, and
+management-related variables in order to identify suitable restoration
+areas with the system. In the mid 1990's Christensen et al. (1997)
+developed a HSI for the eastern oyster in the PBS to demonstrate the
+model frameworks usefulness in illustrating species suitability in a
+system wide approach. Geselbracht et al. (2024) then followed and
+further expanded on the approach incorporating management factors into
+the model, adding a layer of regulatory influence to the model output
+versus the purely environmental analysis of the prior. Additionally, the
+Pensacola and Perdido Bay Estuary Program recently built on-top of
+Geselbracht et al. (2024) by incorporating some of their own data and
+refining some of the weighting (Pensacola and Perdido Bays Estuary
+Program n.d.).
+
+These previous studies alone highlight the strengths and weakness of the
+HSI approaches. Some of the strengths include interoperability,
+adaptability, and the integration of ecological knowledge, but the
+results entirely rely on expert decisions regarding variable selection,
+suitability functions, weighting and scoring, and how to aggregate the
+results. All of these present opportunity for differing outputs even if
+the same inputs were used by different groups (Geselbracht et al. 2024;
+Johnson and Gillingham 2005).
+
+\emph{Maximum Entropy Modelling (MaxEnt)} MaxEnt is a
+presence-background SDM framework based on general-purpose machine
+learning methods that are useful for making predictions using incomplete
+information by relating environmental conditions at known occurrence
+locations to the environmental conditions throughout the study area
+(Phillips, Anderson, and Schapire 2006; Elith et al. 2011). Some of the
+main benefits of MaxEnt is that it uses presence-only data, reducing the
+need for the often un-available absence data, it has the ability to
+model complex interactions between environmental conditions, and it has
+demonstrated high predictive performance while limiting over fitting
+through regularization (Phillips et al. 2009; Merow, Smith, and Silander
+2013; Elith et al. 2011). An added benefit to this particular study is
+the fact that MaxEnt is tailored towards presence-only species
+occurrence data, making it highly suitable for the data set used here in
+which the FWC-FWRI (2026) datasets explicitly collected occurrence data
+without including absence locations.
+
+However, the use of such algorithms should not be made blindly as many
+issues can arise if careful precautions are not taken. Due to the nature
+of ecological many biases in the data samples can arise such as spatial
+and temporal autocorrelation, group dependence structures, hierarchical
+structures and multicollinearity leading to overfitting model parameters
+and over-optimistic prediction confidence (Dormann et al. 2013; Kass et
+al. 2021; Roberts et al. 2017). Thankfully, significant work has been
+put into this through cross-validation techniques and the development of
+model evaluation software packages such as ENMeval 2.0 implemented
+through the R statistical language (Kass et al. 2021; Roberts et al.
+2017)
+
+\subsection{Research rationale, objectives, and
+hypotheses}\label{research-rationale-objectives-and-hypotheses}
+
+In an effort to demonstrate how a MaxEnt SDM can be used as a
+complimentary tool to help researchers and practitioners leading
+ecological restoration activities, this study aims to develop an
+empirically fitted MaxEnt habitat-suitability model using observed
+oyster occurrence data and known environmental conditions. The primary
+objective will be to develop a spatially explicit SDM representing
+relative Eastern oyster habitat suitabiliy throughout the PBS. Next, the
+resulting suitability surface will be evaluated agains the existing
+Pensacola Bay HSI developed by Geselbracht et al. (2024) and iterated
+upon by Pensacola and Perdido Bays Estuary Program (n.d.).
+
+To achieve this, we will identify the environmental predictors that are
+commonly associated with oyster habitat success,
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  Supporting objectives.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Identify environmental predictors associated with observed oyster
+    distribution.
+  \item
+    Evaluate MaxEnt predictive performance using spatially separated
+    validation data.
+  \item
+    Identify geographic areas where MaxEnt and the HSI agree or
+    disagree.
+  \item
+    Evaluate whether MaxEnt provides a reproducible empirical complement
+    to HSI-based restoration planning.
+  \item
+    Citations: (Johnson and Gillingham 2005; Geselbracht et al. 2024;
+    Merow, Smith, and Silander 2013)
+  \end{itemize}
+\item
+  Research hypothesis.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    The MaxEnt model is expected to identify patterns of habitat
+    suitability consistent with established Eastern oyster habitat
+    requirements.
+  \item
+    Measurable agreement is expected between MaxEnt and the existing
+    HSI, with spatial disagreement arising from differences between
+    empirically fitted environmental relationships and predefined HSI
+    suitability relationships.
+  \item
+    Citations: (Johnson and Gillingham 2005; Geselbracht et al. 2024)
+  \end{itemize}
+\end{enumerate}
+
+\section{Methods}\label{methods}
+
+\emph{Study design and team status}
+
+This capstone is being completed as an individual project. As such, all
+data acquisition, processing, modeling, and interpretations will be
+produced soley by the author.
+
+All data analysis and processing will be performed using the R
+programming language (R Core Team 2024). Environmental observation data
+will be acquired from the EPA's Water Quality Portal via the
+dataRetrieval r-package (USGS 2026; DeCicco et al. 2026). Data QA/QC and
+preprocessing will be completed utilizing the Tidyverse package and any
+spatially aware data processing will be conducted using the package sf
+(Wickham et al. 2019; Pebesma 2018). Environmental data will be
+processed to create continuous surface rasters for model input using the
+
+\subsubsection{Study Area}\label{study-area}
+
+The study area for this project is the Pensacola Bay System which
+includes portions of Pensacola Bay, Escambia Bay, East Bay and
+Blackwater Bay. Boundaries of this study area were achieved by accessing
+Florida Department of Protections (FDEP) Waterbod IDs feature layer
+hosted on ArcGIS Online (FDEP 2005). ArcGIS allows direct access to
+hosted feature services via several formats. To avoid any potential
+compatibility issues, the GeoJSON format was chosen as this format is
+non-proprietary. Once retrieved, the dataset was filtered to include
+only relevant WBIDs (WBID = 548) and then combined to create a singular
+study area polygon. Creating the study area polygon is an important
+first step as it will be needed to extract relevant environmental data
+from much larger datasets in the coming data gathering.
+
+\begin{figure}[H]
+
+{\centering \pandocbounded{\includegraphics[keepaspectratio]{"../4-tables-and-figures/fig-1-study_area.png"}}
+
+}
+
+\caption{Study Area}
+
+\end{figure}%
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\item
+  Describe the overall analytical workflow.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Environmental and occurrence data acquisition.
+  \item
+    Data QA/QC and preprocessing.
+  \item
+    Creation of continuous environmental predictor surfaces.
+  \item
+    Oyster occurrence preparation.
+  \item
+    Background sampling.
+  \item
+    Predictor screening.
+  \item
+    MaxEnt tuning and fitting (Phillips, Anderson, and Schapire 2006;
+    Merow, Smith, and Silander 2013; Kass et al. 2021).
+  \item
+    Spatial model validation (Roberts et al. 2017; Valavi et al. 2019).
+  \item
+    HSI comparison (Johnson and Gillingham 2005; Geselbracht et al.
+    2024).
+  \end{itemize}
+\item
+  \textbf{Study area}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Define the Pensacola Bay System modeling extent.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Delineate the study area using selected Florida Department of
+      Environmental Protection Waterbody Identification (WBID) polygons
+      (FDEP 2005).
+    \item
+      Describe the primary embayments included within the analysis and
+      their relationship to the Pensacola Bay System (Geselbracht et al.
+      2024).
+    \end{itemize}
+  \item
+    Restrict the modeling domain to aquatic habitat.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Background and prediction locations should represent environments
+      potentially available to Eastern oysters (Merow, Smith, and
+      Silander 2013).
+    \item
+      Terrestrial areas should therefore be excluded from the
+      accessible/background modeling domain (Phillips et al. 2009;
+      Merow, Smith, and Silander 2013).
+    \end{itemize}
+  \item
+    Maintain spatial compatibility with the existing Pensacola Bay HSI
+    where possible.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      A comparable geographic extent will support subsequent spatial
+      comparison with the HSI developed for PBS (Geselbracht et al.
+      2024).
+    \end{itemize}
+  \item
+    Develop a study-area map.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      PBS boundary (FDEP 2005).
+    \item
+      Major embayments (Geselbracht et al. 2024).
+    \item
+      Oyster occurrence locations (FWC-FWRI 2026).
+    \item
+      Environmental monitoring locations (USGS 2026).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Data acquisition and dataset inventory}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Eastern oyster occurrence data.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Source oyster occurrence data from the FWC-FWRI Oyster Beds in
+      Florida dataset (FWC-FWRI 2026).
+    \item
+      Record dataset version and acquisition date (FWC-FWRI 2026).
+    \item
+      Document original geometry type.
+    \item
+      Document number of source features and number retained within the
+      study area.
+    \item
+      Document temporal and source-data information where available
+      (FWC-FWRI 2026).
+    \end{itemize}
+  \item
+    Water-quality observations.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Retrieve water-quality observations from the Water Quality Portal
+      (USGS 2026).
+    \item
+      Use the \texttt{dataRetrieval} package and associated WQP services
+      for programmatic data acquisition (DeCicco et al. 2026).
+    \item
+      Restrict queries to relevant counties, estuarine monitoring
+      locations, selected parameters, and the study period.
+    \end{itemize}
+  \item
+    Document water-quality dataset size and temporal coverage.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Dissolved oxygen: approximately 145 stations and 3,072
+      observations (USGS 2026).
+    \item
+      Salinity: approximately 135 stations and 3,401 observations (USGS
+      2026).
+    \item
+      Temperature: approximately 145 stations and 3,442 observations
+      (USGS 2026).
+    \item
+      Turbidity: approximately 122 stations and 1,563 observations (USGS
+      2026).
+    \item
+      Chlorophyll-a: approximately 48 stations and 754 observations
+      (USGS 2026).
+    \item
+      Current temporal coverage is approximately 2005--2024 (USGS 2026).
+    \end{itemize}
+  \item
+    Evaluate candidate predictors based on spatial coverage.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Chlorophyll-a is expected to be excluded from interpolation
+      because available monitoring stations do not provide adequate
+      system-wide spatial coverage.
+    \item
+      Salinity, dissolved oxygen, temperature, and turbidity currently
+      provide substantially stronger monitoring coverage.
+    \item
+      These variables have previously been identified as relevant
+      environmental characteristics for Eastern oyster habitat and
+      restoration modeling (Peyre, Marshall, and Sable 2021; Barnes et
+      al. 2007; Pollack et al. 2012; Geselbracht et al. 2024).
+    \end{itemize}
+  \item
+    Bathymetry.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Obtain Pensacola Bay estuarine bathymetry from NOAA (National
+      Centers for Environmental Information 2018).
+    \item
+      Document raster resolution, vertical datum, geographic extent, and
+      preprocessing requirements (National Centers for Environmental
+      Information 2018).
+    \end{itemize}
+  \item
+    Substrate or bottom type.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Identify and acquire a suitable spatial dataset describing bottom
+      characteristics.
+    \item
+      Document spatial resolution, substrate classes, temporal source,
+      and geographic coverage.
+    \item
+      Suitable substrate is an important constraint on Eastern oyster
+      settlement and reef development (Barnes et al. 2007; Geselbracht
+      et al. 2024).
+    \item
+      \textbf{Add a citation for the final substrate dataset once
+      selected.}
+    \end{itemize}
+  \item
+    Existing Pensacola Bay HSI.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Obtain the original GIS/raster output associated with the
+      Pensacola Bay HSI developed by Geselbracht et al. (Geselbracht et
+      al. 2024).
+    \item
+      Document raster score range, coordinate reference system, extent,
+      resolution, and NoData handling.
+    \item
+      The HSI will provide the comparison surface for evaluating
+      agreement with the MaxEnt model (Geselbracht et al. 2024).
+    \item
+      \textbf{Add a separate dataset citation once the original HSI GIS
+      product is acquired.}
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Water-quality preprocessing}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Standardize measurement characteristics and units.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Avoid combining fundamentally different measurement types that
+      share similar WQP characteristic names (USGS 2026).
+    \item
+      Retain comparable measurement units and analytical forms for each
+      environmental predictor (USGS 2026; DeCicco et al. 2026).
+    \end{itemize}
+  \item
+    Restrict observations to warm-season conditions.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Define the warm season as May through October.
+    \item
+      Use seasonal filtering to characterize environmental conditions
+      during the portion of the year most relevant to warm-season oyster
+      habitat conditions.
+    \item
+      Seasonal environmental summaries have also been incorporated into
+      previous Pensacola Bay oyster suitability modeling (Geselbracht et
+      al. 2024).
+    \end{itemize}
+  \item
+    Generate station-level environmental summaries.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Calculate the warm-season mean for each monitoring location.
+    \item
+      Calculate the standard deviation for each monitoring location.
+    \item
+      Record total observation count.
+    \item
+      Record the number of unique years represented.
+    \item
+      Record first and last sample dates.
+    \item
+      Consider calculating site-year warm-season means before
+      calculating long-term site means to prevent heavily sampled
+      individual years from disproportionately influencing long-term
+      conditions.
+    \end{itemize}
+  \item
+    Perform QA/QC.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Identify potential unit inconsistencies.
+    \item
+      Investigate implausible or extreme values.
+    \item
+      Document removal or correction criteria.
+    \item
+      Retain original raw data separately from processed datasets.
+    \end{itemize}
+  \item
+    Convert monitoring data to spatial features.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Use the \texttt{sf} package for spatial-vector processing (Pebesma
+      2018).
+    \item
+      Project monitoring locations to NAD 1983 (2011) StatePlane Florida
+      North FIPS 0903 in meters.
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Generation of continuous environmental predictor surfaces}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Assess monitoring-station spatial coverage prior to interpolation.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Map station distributions for each environmental parameter.
+    \item
+      Identify spatial clustering.
+    \item
+      Identify portions of PBS lacking observations.
+    \item
+      Exclude variables where development of a continuous surface would
+      consist primarily of spatial extrapolation.
+    \end{itemize}
+  \item
+    Account for coastal barriers and complex estuarine geometry.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Straight-line Euclidean distance can incorrectly represent spatial
+      relationships between monitoring locations separated by
+      peninsulas, islands, and other land barriers (Stachelek and Madden
+      2015).
+    \item
+      Barrier-aware interpolation will therefore be evaluated for the
+      PBS environmental surfaces (Stachelek and Madden 2015).
+    \end{itemize}
+  \item
+    Evaluate inverse path distance weighting (IPDW) as a candidate
+    interpolation method.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      IPDW uses aquatic-path distance rather than straight-line
+      Euclidean distance when determining spatial relationships among
+      observations (Stachelek and Madden 2015).
+    \item
+      This approach was developed for coastal water-quality
+      interpolation where land barriers influence spatial connectivity
+      (Stachelek and Madden 2015).
+    \end{itemize}
+  \item
+    Compare candidate interpolation approaches.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Evaluate inverse path distance weighting (IPDW) (Stachelek and
+      Madden 2015).
+    \item
+      Evaluate conventional inverse distance weighting (IDW).
+    \item
+      Evaluate ordinary kriging.
+    \item
+      Use spatially withheld monitoring locations to evaluate predictive
+      performance and reduce bias associated with spatial dependence
+      (Roberts et al. 2017; Valavi et al. 2019).
+    \item
+      Compare root mean square error (RMSE), mean absolute error (MAE),
+      and prediction bias among interpolation methods.
+    \item
+      Select the final interpolation method based on predictive
+      performance and ecological appropriateness.
+    \end{itemize}
+  \item
+    Produce final environmental predictor rasters.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Use a common projected coordinate reference system.
+    \item
+      Use a common cell size.
+    \item
+      Use a common raster origin and alignment.
+    \item
+      Mask predictions to aquatic habitat.
+    \item
+      Document the final raster resolution.
+    \item
+      Maintain spatial compatibility with the existing PBS
+      habitat-suitability framework where appropriate (Geselbracht et
+      al. 2024).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Oyster occurrence preparation}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Clip FWC oyster-bed features to the study area.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Remove oyster occurrences outside the PBS modeling extent
+      (FWC-FWRI 2026).
+    \end{itemize}
+  \item
+    Convert mapped oyster-bed polygons into representative MaxEnt
+    presence observations.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Use a reproducible procedure that avoids disproportionately
+      representing large or densely mapped oyster polygons (Phillips et
+      al. 2009; Merow, Smith, and Silander 2013).
+    \item
+      Document the initial number of oyster polygons and final number of
+      presence observations.
+    \end{itemize}
+  \item
+    Evaluate spatial clustering of presence observations.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Apply spatial thinning where necessary to reduce clustering and
+      sampling bias (Phillips et al. 2009).
+    \item
+      Base thinning decisions on spatial dependence and sampling
+      structure rather than arbitrary data reduction (Phillips et al.
+      2009; Merow, Smith, and Silander 2013).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Background sampling}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Define the accessible/background modeling region.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Restrict background sampling to aquatic habitat within the
+      Pensacola Bay System (Merow, Smith, and Silander 2013).
+    \item
+      Require complete environmental predictor coverage within the
+      background domain.
+    \item
+      Exclude terrestrial areas and locations outside the modeled
+      environmental domain (Phillips et al. 2009; Merow, Smith, and
+      Silander 2013).
+    \end{itemize}
+  \item
+    Generate MaxEnt background locations.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Document the final number of background points.
+    \item
+      Sample background locations from the defined accessible region
+      rather than from an arbitrary rectangular geographic extent
+      (Phillips et al. 2009; Merow, Smith, and Silander 2013).
+    \end{itemize}
+  \item
+    Address occurrence-sampling bias.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Evaluate whether spatial thinning, bias weighting, or restricted
+      background sampling is necessary (Phillips et al. 2009).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Predictor screening}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Assemble the final candidate predictor stack.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Salinity (Peyre, Marshall, and Sable 2021; Barnes et al. 2007;
+      Pollack et al. 2012; Geselbracht et al. 2024).
+    \item
+      Dissolved oxygen (Peyre, Marshall, and Sable 2021; Pollack et al.
+      2012; Geselbracht et al. 2024).
+    \item
+      Temperature (Peyre, Marshall, and Sable 2021; Barnes et al. 2007;
+      Pollack et al. 2012).
+    \item
+      Turbidity (Peyre, Marshall, and Sable 2021; Pollack et al. 2012).
+    \item
+      Bathymetry/depth (Peyre, Marshall, and Sable 2021; Barnes et al.
+      2007; Pollack et al. 2012).
+    \item
+      Substrate/bottom type, if suitable data are obtained (Peyre,
+      Marshall, and Sable 2021; Barnes et al. 2007; Geselbracht et al.
+      2024).
+    \end{itemize}
+  \item
+    Evaluate correlation and redundancy among predictors.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Calculate pairwise correlations among candidate environmental
+      variables (Dormann et al. 2013).
+    \item
+      Identify highly correlated or ecologically redundant predictors
+      (Dormann et al. 2013).
+    \item
+      Retain predictors based on ecological relevance, data quality, and
+      interpretability while limiting problematic collinearity (Dormann
+      et al. 2013).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{MaxEnt model fitting and tuning}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \item
+    Fit MaxEnt using oyster occurrence locations, background samples,
+    and the finalized environmental predictor stack (Phillips, Anderson,
+    and Schapire 2006; Elith et al. 2011).
+  \item
+    Tune model complexity rather than relying exclusively on default
+    settings.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Evaluate multiple regularization multipliers (Merow, Smith, and
+      Silander 2013; Kass et al. 2021).
+    \item
+      Evaluate multiple feature-class combinations (Merow, Smith, and
+      Silander 2013; Kass et al. 2021).
+    \end{itemize}
+  \item
+    Use the \texttt{ENMeval} framework for model tuning and evaluation
+    (Kass et al. 2021).
+  \item
+    Select the final MaxEnt configuration.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Consider predictive performance (Kass et al. 2021).
+    \item
+      Consider omission rates (Kass et al. 2021).
+    \item
+      Consider model complexity and overfitting (Merow, Smith, and
+      Silander 2013; Kass et al. 2021).
+    \end{itemize}
+  \item
+    Generate the final continuous habitat-suitability surface.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Retain continuous predictions for the primary spatial comparison
+      with the HSI (Elith et al. 2011; Merow, Smith, and Silander 2013).
+    \end{itemize}
+  \item
+    Evaluate environmental-variable influence.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Examine permutation importance (Merow, Smith, and Silander 2013).
+    \item
+      Examine model response curves (Elith et al. 2011; Merow, Smith,
+      and Silander 2013).
+    \item
+      Evaluate other supported measures of predictor contribution
+      (Merow, Smith, and Silander 2013).
+    \item
+      Interpret these associations as predictive relationships rather
+      than direct evidence of ecological causation (Elith et al. 2011).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Spatial model validation}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Use spatial rather than purely random cross-validation.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Nearby oyster occurrences may experience highly similar
+      environmental conditions, violating assumptions of independence
+      (Roberts et al. 2017).
+    \item
+      Random training/test partitions may therefore produce overly
+      optimistic estimates of predictive performance (Roberts et al.
+      2017; Valavi et al. 2019).
+    \end{itemize}
+  \item
+    Divide oyster occurrences into spatially separated validation folds.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Select spatial-block dimensions based on observed spatial
+      structure rather than arbitrary distances (Valavi et al. 2019).
+    \end{itemize}
+  \item
+    Evaluate candidate models against withheld spatial folds.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Report appropriate presence-background model-performance metrics
+      (Phillips, Anderson, and Schapire 2006; Kass et al. 2021).
+    \item
+      Evaluate omission rates and AUC where appropriate (Phillips,
+      Anderson, and Schapire 2006; Kass et al. 2021).
+    \item
+      Report variation in model performance among spatial folds (Valavi
+      et al. 2019; Kass et al. 2021).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Comparison with the existing Habitat Suitability Index}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \item
+    Harmonize the MaxEnt and HSI raster surfaces.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Match geographic extent to permit spatial comparison (Johnson and
+      Gillingham 2005; Geselbracht et al. 2024).
+    \item
+      Match coordinate reference systems.
+    \item
+      Match cell size and raster alignment.
+    \item
+      Ensure suitability scores are represented on directly comparable
+      scales where possible (Johnson and Gillingham 2005).
+    \end{itemize}
+  \item
+    Compare continuous habitat-suitability predictions.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Calculate cell-by-cell correlation between HSI and MaxEnt
+      predictions (Johnson and Gillingham 2005).
+    \item
+      Consider Pearson and/or Spearman correlation depending on the
+      characteristics of the model-output distributions (Johnson and
+      Gillingham 2005).
+    \end{itemize}
+  \item
+    Generate a spatial difference surface (Johnson and Gillingham 2005).
+
+    \[
+    D_i = S_{MaxEnt,i} - S_{HSI,i}
+    \]
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Values near zero represent relatively strong agreement between the
+      two suitability estimates.
+    \item
+      Positive values identify locations where MaxEnt predicts
+      relatively greater suitability.
+    \item
+      Negative values identify locations where the HSI predicts
+      relatively greater suitability.
+    \end{itemize}
+  \item
+    Evaluate categorical agreement if suitability classes are created.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Identify locations where both models predict high suitability
+      (Johnson and Gillingham 2005).
+    \item
+      Identify locations where both models predict low suitability
+      (Johnson and Gillingham 2005).
+    \item
+      Identify locations where MaxEnt predicts high suitability while
+      the HSI predicts low suitability (Johnson and Gillingham 2005).
+    \item
+      Identify locations where the HSI predicts high suitability while
+      MaxEnt predicts low suitability (Johnson and Gillingham 2005).
+    \item
+      Consider an agreement statistic such as Kappa if categorical
+      suitability classes are used (Johnson and Gillingham 2005).
+    \end{itemize}
+  \item
+    Interpret disagreement between models.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Determine whether disagreement is geographically concentrated
+      (Johnson and Gillingham 2005).
+    \item
+      Evaluate whether disagreement corresponds with particular
+      environmental predictors.
+    \item
+      Consider differences in data availability and modeling assumptions
+      between MaxEnt and the HSI (Johnson and Gillingham 2005;
+      Geselbracht et al. 2024).
+    \item
+      Avoid treating either modeling approach as automatically
+      representing ground truth (Johnson and Gillingham 2005).
+    \end{itemize}
+  \end{enumerate}
+\item
+  \textbf{Software and reproducibility}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \item
+    Conduct data processing, statistical analysis, and modeling in R (R
+    Core Team 2024).
+  \item
+    Use scripted workflows for data transformation and spatial
+    processing.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Use \texttt{tidyverse} for data manipulation (Wickham et al.
+      2019).
+    \item
+      Use \texttt{sf} for vector spatial processing (Pebesma 2018).
+    \end{itemize}
+  \item
+    Maintain reproducibility throughout the workflow.
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Record package versions.
+    \item
+      Set random seeds where applicable.
+    \item
+      Record data-acquisition dates for dynamically updated datasets
+      (DeCicco et al. 2026; USGS 2026; FWC-FWRI 2026).
+    \item
+      Document model settings and tuning parameters (Merow, Smith, and
+      Silander 2013; Kass et al. 2021).
+    \item
+      Preserve raw data separately from processed analytical datasets.
+    \end{itemize}
+  \end{enumerate}
+\end{enumerate}
+
+\section{Results}\label{results}
+
+In progress\ldots{}
+
+\section{Discussion}\label{discussion}
+
+In progress\ldots{}
+
+\section{Conclusion}\label{conclusion}
+
+In progress\ldots{}
+
+\section{References}\label{references}
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-Barnes2007}
+Barnes, T. K., A. K. Volety, K. Chartier, F. J. Mazzotti, and L.
+Pearlstine. 2007. {``A Habitat Suitability Index Model for the Eastern
+Oyster ({Crassostrea virginica}), a Tool for Restoration of the
+Caloosahatchee Estuary, Florida.''} \emph{Journal of Shellfish Research}
+26 (4): 949--59.
+\url{https://doi.org/10.2983/0730-8000(2007)26\%5B949:AHSIMF\%5D2.0.CO;2}.
+
+\bibitem[\citeproctext]{ref-Birch2021}
+Birch, A., R. Brumbaugh, B. DeAngelis, L. Geselbracht, A. Graves, J.
+Blair, and R. Jones. 2021. {``Oyster Fisheries and Habitat Management
+Plan for the Pensacola Bay System.''} The Nature Conservancy.
+\url{https://www.nature.org/content/dam/tnc/nature/en/documents/PBS_FloridaOyster-Fisheries-Habitat-Mgt-Plan_18May2021_Final.pdf}.
+
+\bibitem[\citeproctext]{ref-Christensen1997}
+Christensen, J D, T A Battista, M E Monaco, and C J Klein. 1997.
+{``Habitat Suitability Index Modeling and GIS Technology to Support
+Habitat Management: Pensacola Bay, Florida Case Study.''} U.S. National
+Oceanic; Atmospheric Administration.
+\url{https://repository.library.noaa.gov/view/noaa/55683}.
+
+\bibitem[\citeproctext]{ref-dataRetrieval2026}
+DeCicco, Laura, Robert Hirsch, David Lorenz, Jordan Read, Jordan Walker,
+Lindsay Platt, David Watkins, et al. 2026. {``dataRetrieval: R Packages
+for Discovering and Retrieving Water Data Available from u.s. Federal
+Hydrologic Web Services.''} Reston, VA: U.S. Geological Survey; U.S.
+Geological Survey. \url{https://doi.org/10.5066/P9X4L3GE}.
+
+\bibitem[\citeproctext]{ref-Dormann2013}
+Dormann, Carsten F., Jane Elith, Sven Bacher, Carsten Buchmann, Gudrun
+Carl, Gabriel Carré, Jaime R.García Marquéz, et al. 2013.
+{``Collinearity: A Review of Methods to Deal with It and a Simulation
+Study Evaluating Their Performance.''} \emph{Ecography} 36: 27--46.
+\url{https://doi.org/10.1111/j.1600-0587.2012.07348.x}.
+
+\bibitem[\citeproctext]{ref-Elith2009}
+Elith, Jane, and John R. Leathwick. 2009. {``Species Distribution
+Models: Ecological Explanation and Prediction Across Space and Time.''}
+\emph{Annual Review of Ecology, Evolution, and Systematics} 40
+(December): 677--97.
+\url{https://doi.org/10.1146/annurev.ecolsys.110308.120159}.
+
+\bibitem[\citeproctext]{ref-Elith2011}
+Elith, Jane, Steven J. Phillips, Trevor Hastie, Miroslav Dudík, Yung En
+Chee, and Colin J. Yates. 2011. {``A Statistical Explanation of MaxEnt
+for Ecologists.''} \emph{Diversity and Distributions} 17 (January):
+43--57. \url{https://doi.org/10.1111/j.1472-4642.2010.00725.x}.
+
+\bibitem[\citeproctext]{ref-FDEP2005WBIDs}
+FDEP. 2005. {``Waterbody IDs (WBIDs).''} Geospatial Open Data; Florida
+Department of Environmental Protection.
+\url{https://geodata.dep.state.fl.us/datasets/FDEP::waterbody-ids-wbids/about}.
+
+\bibitem[\citeproctext]{ref-FWC2026Oysters}
+FWC-FWRI. 2026. {``Oyster Beds in Florida.''} Geospatial Open Data;
+Florida Fish; Wildlife Conservation Commission, Fish; Wildlife Research
+Institute.
+\url{https://geodata.myfwc.com/datasets/myfwc::oyster-beds-in-florida/about}.
+
+\bibitem[\citeproctext]{ref-Geselbracht2024}
+Geselbracht, L., M. Johnston, B. M. DeAngelis, and A. Birch. 2024.
+{``Estuary-Specific and Adaptive Habitat Suitability Index Model for the
+Eastern Oyster Crassostrea Virginica in the Pensacola Bay System,
+Florida, USA.''} \emph{Coastal Management} 52: 17--34.
+\url{https://doi.org/10.1080/08920753.2024.2335129}.
+
+\bibitem[\citeproctext]{ref-Grabowski2012}
+Grabowski, Jonathan H., Robert D. Brumbaugh, Robert F. Conrad, Andrew G.
+Keeler, James J. Opaluch, Charles H. Peterson, Michael F. Piehler, Sean
+P. Powers, and Ashley R. Smyth. 2012. {``Economic Valuation of Ecosystem
+Services Provided by Oyster Reefs.''} \emph{BioScience} 62 (October):
+900--909. \url{https://doi.org/10.1525/bio.2012.62.10.10}.
+
+\bibitem[\citeproctext]{ref-Johnson2005}
+Johnson, Chris J., and Michael P. Gillingham. 2005. {``An Evaluation of
+Mapped Species Distribution Models Used for Conservation Planning.''}
+\emph{Environmental Conservation} 32 (June): 117--28.
+\url{https://doi.org/10.1017/S0376892905002171}.
+
+\bibitem[\citeproctext]{ref-Kass2021}
+Kass, Jamie M., Robert Muscarella, Peter J. Galante, Corentin L. Bohl,
+Gonzalo E. Pinilla-Buitrago, Robert A. Boria, Mariano Soley-Guardia, and
+Robert P. Anderson. 2021. {``ENMeval 2.0: Redesigned for Customizable
+and Reproducible Modeling of Species' Niches and Distributions.''}
+\emph{Methods in Ecology and Evolution} 12 (September): 1602--8.
+\url{https://doi.org/10.1111/2041-210X.13628}.
+
+\bibitem[\citeproctext]{ref-Merow2013}
+Merow, Cory, Matthew J. Smith, and John A. Silander. 2013. {``A
+Practical Guide to MaxEnt for Modeling Species' Distributions: What It
+Does, and Why Inputs and Settings Matter.''} \emph{Ecography} 36
+(October): 1058--69.
+\url{https://doi.org/10.1111/j.1600-0587.2013.07872.x}.
+
+\bibitem[\citeproctext]{ref-NOAA_2018}
+National Centers for Environmental Information. 2018. {``NOAA NOS
+Estuarine Bathymetry - Pensacola Bay (G130).''}
+\url{https://doi.org/10.7289/V5XK8CWK}.
+
+\bibitem[\citeproctext]{ref-sf}
+Pebesma, Edzer. 2018. {``{Simple Features for R: Standardized Support
+for Spatial Vector Data}.''} \emph{{The R Journal}} 10 (1): 439--46.
+\url{https://doi.org/10.32614/RJ-2018-009}.
+
+\bibitem[\citeproctext]{ref-PPBEP_OysterRestoration}
+Pensacola and Perdido Bays Estuary Program. n.d. {``Pensacola Bay Oyster
+Restoration Initiative.''}
+\url{https://www.ppbep.org/what-we-do/restoration/pensacola-bay-oyster-restoration-initiative}.
+
+\bibitem[\citeproctext]{ref-LaPeyre2021}
+Peyre, Megan K. La, Danielle A. Marshall, and Shaye E. Sable. 2021.
+{``Oyster Model Inventory: Identifying Critical Data and Modeling
+Approaches to Support Restoration of Oyster Reefs in Coastal u.s. Gulf
+of Mexico Waters.''} \emph{Diversity and Distributions}. Vol. 17. U.S.
+Geological Survey. \url{https://doi.org/10.3133/ofr20211063}.
+
+\bibitem[\citeproctext]{ref-Phillips2006}
+Phillips, Steven J., Robert P. Anderson, and Robert E. Schapire. 2006.
+{``Maximum Entropy Modeling of Species Geographic Distributions.''}
+\emph{Ecological Modelling} 190 (January): 231--59.
+\url{https://doi.org/10.1016/j.ecolmodel.2005.03.026}.
+
+\bibitem[\citeproctext]{ref-Phillips2009}
+Phillips, Steven J., Miroslav Dudík, Jane Elith, Catherine H. Graham,
+Anthony Lehmann, John Leathwick, and Simon Ferrier. 2009. {``Sample
+Selection Bias and Presence-Only Distribution Models: Implications for
+Background and Pseudo-Absence Data.''} \emph{Ecological Applications} 19
+(January): 181--97. \url{https://doi.org/10.1890/07-2153.1}.
+
+\bibitem[\citeproctext]{ref-Pollack2012}
+Pollack, Jennifer Beseres, Andrew Cleveland, Terence A. Palmer, Anthony
+S. Reisinger, and Paul A. Montagna. 2012. {``A Restoration Suitability
+Index Model for the Eastern Oyster (Crassostrea Virginica) in the
+Mission-Aransas Estuary, TX, USA.''} \emph{PLoS ONE} 7 (July).
+\url{https://doi.org/10.1371/journal.pone.0040839}.
+
+\bibitem[\citeproctext]{ref-r}
+R Core Team. 2024. \emph{R: A Language and Environment for Statistical
+Computing}. Vienna, Austria: R Foundation for Statistical Computing.
+\url{https://www.R-project.org/}.
+
+\bibitem[\citeproctext]{ref-Roberts2017}
+Roberts, David R., Volker Bahn, Simone Ciuti, Mark S. Boyce, Jane Elith,
+Gurutzeta Guillera-Arroita, Severin Hauenstein, et al. 2017.
+{``Cross-Validation Strategies for Data with Temporal, Spatial,
+Hierarchical, or Phylogenetic Structure.''} \emph{Ecography}. Blackwell
+Publishing Ltd. \url{https://doi.org/10.1111/ecog.02881}.
+
+\bibitem[\citeproctext]{ref-Rushton2004}
+Rushton, S. P., S. J. Ormerod, and G. Kerby. 2004. {``New Paradigms for
+Modelling Species Distributions?''} \emph{Journal of Applied Ecology}.
+\url{https://doi.org/10.1111/j.0021-8901.2004.00903.x}.
+
+\bibitem[\citeproctext]{ref-Stachelek2015}
+Stachelek, Joseph, and Christopher J. Madden. 2015. {``Application of
+Inverse Path Distance Weighting for High-Density Spatial Mapping of
+Coastal Water Quality Patterns.''} \emph{International Journal of
+Geographical Information Science} 29 (7): 1240--50.
+\url{https://doi.org/10.1080/13658816.2015.1018833}.
+
+\bibitem[\citeproctext]{ref-TNC2021OysterRestoration}
+The Nature Conservancy. 2021. {``Pensacola East Bay Oyster Habitat
+Restoration Project.''} The Nature Conservancy.
+\url{https://www.nature.org/content/dam/tnc/nature/en/documents/PEB-Oyster-Habitat-Restoration-Fact-Sheet-FINAL-7-13-21.pdf}.
+
+\bibitem[\citeproctext]{ref-wqp_2026}
+USGS, USDA, USEPA. 2026. {``Water Quality Portal.''} {U.S. Geological
+Survey}; {U.S. Environmental Protection Agency}; {U.S. Department of
+Agriculture}. \url{https://www.waterqualitydata.us/}.
+
+\bibitem[\citeproctext]{ref-Valavi2019}
+Valavi, Roozbeh, Jane Elith, José J. Lahoz-Monfort, and Gurutzeta
+Guillera-Arroita. 2019. {``blockCV: An r Package for Generating
+Spatially or Environmentally Separated Folds for k-Fold Cross-Validation
+of Species Distribution Models.''} \emph{Methods in Ecology and
+Evolution} 10 (February): 225--32.
+\url{https://doi.org/10.1111/2041-210X.13107}.
+
+\bibitem[\citeproctext]{ref-tidyverse}
+Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy
+D'Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019.
+{``Welcome to the {tidyverse}.''} \emph{Journal of Open Source Software}
+4 (43): 1686. \url{https://doi.org/10.21105/joss.01686}.
+
+\end{CSLReferences}
+
+
+
+
+\end{document}

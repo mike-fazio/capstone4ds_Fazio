@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>methods</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="_2-methods_files/libs/clipboard/clipboard.min.js"></script>
+<script src="_2-methods_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="_2-methods_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="_2-methods_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="_2-methods_files/libs/quarto-html/popper.min.js"></script>
+<script src="_2-methods_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="_2-methods_files/libs/quarto-html/anchor.min.js"></script>
+<link href="_2-methods_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="_2-methods_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="_2-methods_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="_2-methods_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="_2-methods_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="methods" class="level1">
+<h1>Methods</h1>
+<p><em>Study design and team status</em></p>
+<p>This capstone is being completed as an individual project. As such, all data acquisition, processing, modeling, and interpretations will be produced soley by the author.</p>
+<p>All data analysis and processing will be performed using the R programming language <span class="citation" data-cites="r">[@r]</span>. Environmental observation data will be acquired from the EPA’s Water Quality Portal via the dataRetrieval r-package <span class="citation" data-cites="wqp_2026 dataRetrieval2026">[@wqp_2026; @dataRetrieval2026]</span>. Data QA/QC and preprocessing will be completed utilizing the Tidyverse package and any spatially aware data processing will be conducted using the package sf <span class="citation" data-cites="tidyverse sf">[@tidyverse; @sf]</span>. Environmental data will be processed to create continuous surface rasters for model input using the</p>
+<section id="study-area" class="level3">
+<h3 class="anchored" data-anchor-id="study-area">Study Area</h3>
+<p>The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>. ArcGIS allows direct access to hosted feature services via several formats. To avoid any potential compatibility issues, the GeoJSON format was chosen as this format is non-proprietary. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it will be needed to extract relevant environmental data from much larger datasets in the coming data gathering.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%22../4-tables-and-figures/fig-1-study_area.png%22" class="img-fluid figure-img"></p>
+<figcaption>Study Area</figcaption>
+</figure>
+</div>
+<ol start="2" type="1">
+<li><p>Describe the overall analytical workflow.</p>
+<ul>
+<li>Environmental and occurrence data acquisition.</li>
+<li>Data QA/QC and preprocessing.</li>
+<li>Creation of continuous environmental predictor surfaces.</li>
+<li>Oyster occurrence preparation.</li>
+<li>Background sampling.</li>
+<li>Predictor screening.</li>
+<li>MaxEnt tuning and fitting <span class="citation" data-cites="Phillips2006 Merow2013 Kass2021">[@Phillips2006; @Merow2013; @Kass2021]</span>.</li>
+<li>Spatial model validation <span class="citation" data-cites="Roberts2017 Valavi2019">[@Roberts2017; @Valavi2019]</span>.</li>
+<li>HSI comparison <span class="citation" data-cites="Johnson2005 Geselbracht2024">[@Johnson2005; @Geselbracht2024]</span>.</li>
+</ul></li>
+<li><p><strong>Study area</strong></p>
+<ol type="1">
+<li>Define the Pensacola Bay System modeling extent.
+<ul>
+<li>Delineate the study area using selected Florida Department of Environmental Protection Waterbody Identification (WBID) polygons <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>.</li>
+<li>Describe the primary embayments included within the analysis and their relationship to the Pensacola Bay System <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+</ul></li>
+<li>Restrict the modeling domain to aquatic habitat.
+<ul>
+<li>Background and prediction locations should represent environments potentially available to Eastern oysters <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
+<li>Terrestrial areas should therefore be excluded from the accessible/background modeling domain <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
+</ul></li>
+<li>Maintain spatial compatibility with the existing Pensacola Bay HSI where possible.
+<ul>
+<li>A comparable geographic extent will support subsequent spatial comparison with the HSI developed for PBS <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+</ul></li>
+<li>Develop a study-area map.
+<ul>
+<li>PBS boundary <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>.</li>
+<li>Major embayments <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+<li>Oyster occurrence locations <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
+<li>Environmental monitoring locations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Data acquisition and dataset inventory</strong></p>
+<ol type="1">
+<li>Eastern oyster occurrence data.
+<ul>
+<li>Source oyster occurrence data from the FWC-FWRI Oyster Beds in Florida dataset <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
+<li>Record dataset version and acquisition date <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
+<li>Document original geometry type.</li>
+<li>Document number of source features and number retained within the study area.</li>
+<li>Document temporal and source-data information where available <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
+</ul></li>
+<li>Water-quality observations.
+<ul>
+<li>Retrieve water-quality observations from the Water Quality Portal <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Use the <code>dataRetrieval</code> package and associated WQP services for programmatic data acquisition <span class="citation" data-cites="dataRetrieval2026">[@dataRetrieval2026]</span>.</li>
+<li>Restrict queries to relevant counties, estuarine monitoring locations, selected parameters, and the study period.</li>
+</ul></li>
+<li>Document water-quality dataset size and temporal coverage.
+<ul>
+<li>Dissolved oxygen: approximately 145 stations and 3,072 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Salinity: approximately 135 stations and 3,401 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Temperature: approximately 145 stations and 3,442 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Turbidity: approximately 122 stations and 1,563 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Chlorophyll-a: approximately 48 stations and 754 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Current temporal coverage is approximately 2005–2024 <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+</ul></li>
+<li>Evaluate candidate predictors based on spatial coverage.
+<ul>
+<li>Chlorophyll-a is expected to be excluded from interpolation because available monitoring stations do not provide adequate system-wide spatial coverage.</li>
+<li>Salinity, dissolved oxygen, temperature, and turbidity currently provide substantially stronger monitoring coverage.</li>
+<li>These variables have previously been identified as relevant environmental characteristics for Eastern oyster habitat and restoration modeling <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>.</li>
+</ul></li>
+<li>Bathymetry.
+<ul>
+<li>Obtain Pensacola Bay estuarine bathymetry from NOAA <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>.</li>
+<li>Document raster resolution, vertical datum, geographic extent, and preprocessing requirements <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>.</li>
+</ul></li>
+<li>Substrate or bottom type.
+<ul>
+<li>Identify and acquire a suitable spatial dataset describing bottom characteristics.</li>
+<li>Document spatial resolution, substrate classes, temporal source, and geographic coverage.</li>
+<li>Suitable substrate is an important constraint on Eastern oyster settlement and reef development <span class="citation" data-cites="Barnes2007 Geselbracht2024">[@Barnes2007; @Geselbracht2024]</span>.</li>
+<li><strong>Add a citation for the final substrate dataset once selected.</strong></li>
+</ul></li>
+<li>Existing Pensacola Bay HSI.
+<ul>
+<li>Obtain the original GIS/raster output associated with the Pensacola Bay HSI developed by Geselbracht et al. <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+<li>Document raster score range, coordinate reference system, extent, resolution, and NoData handling.</li>
+<li>The HSI will provide the comparison surface for evaluating agreement with the MaxEnt model <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+<li><strong>Add a separate dataset citation once the original HSI GIS product is acquired.</strong></li>
+</ul></li>
+</ol></li>
+<li><p><strong>Water-quality preprocessing</strong></p>
+<ol type="1">
+<li>Standardize measurement characteristics and units.
+<ul>
+<li>Avoid combining fundamentally different measurement types that share similar WQP characteristic names <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
+<li>Retain comparable measurement units and analytical forms for each environmental predictor <span class="citation" data-cites="wqp_2026 dataRetrieval2026">[@wqp_2026; @dataRetrieval2026]</span>.</li>
+</ul></li>
+<li>Restrict observations to warm-season conditions.
+<ul>
+<li>Define the warm season as May through October.</li>
+<li>Use seasonal filtering to characterize environmental conditions during the portion of the year most relevant to warm-season oyster habitat conditions.</li>
+<li>Seasonal environmental summaries have also been incorporated into previous Pensacola Bay oyster suitability modeling <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+</ul></li>
+<li>Generate station-level environmental summaries.
+<ul>
+<li>Calculate the warm-season mean for each monitoring location.</li>
+<li>Calculate the standard deviation for each monitoring location.</li>
+<li>Record total observation count.</li>
+<li>Record the number of unique years represented.</li>
+<li>Record first and last sample dates.</li>
+<li>Consider calculating site-year warm-season means before calculating long-term site means to prevent heavily sampled individual years from disproportionately influencing long-term conditions.</li>
+</ul></li>
+<li>Perform QA/QC.
+<ul>
+<li>Identify potential unit inconsistencies.</li>
+<li>Investigate implausible or extreme values.</li>
+<li>Document removal or correction criteria.</li>
+<li>Retain original raw data separately from processed datasets.</li>
+</ul></li>
+<li>Convert monitoring data to spatial features.
+<ul>
+<li>Use the <code>sf</code> package for spatial-vector processing <span class="citation" data-cites="sf">[@sf]</span>.</li>
+<li>Project monitoring locations to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Generation of continuous environmental predictor surfaces</strong></p>
+<ol type="1">
+<li>Assess monitoring-station spatial coverage prior to interpolation.
+<ul>
+<li>Map station distributions for each environmental parameter.</li>
+<li>Identify spatial clustering.</li>
+<li>Identify portions of PBS lacking observations.</li>
+<li>Exclude variables where development of a continuous surface would consist primarily of spatial extrapolation.</li>
+</ul></li>
+<li>Account for coastal barriers and complex estuarine geometry.
+<ul>
+<li>Straight-line Euclidean distance can incorrectly represent spatial relationships between monitoring locations separated by peninsulas, islands, and other land barriers <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
+<li>Barrier-aware interpolation will therefore be evaluated for the PBS environmental surfaces <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
+</ul></li>
+<li>Evaluate inverse path distance weighting (IPDW) as a candidate interpolation method.
+<ul>
+<li>IPDW uses aquatic-path distance rather than straight-line Euclidean distance when determining spatial relationships among observations <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
+<li>This approach was developed for coastal water-quality interpolation where land barriers influence spatial connectivity <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
+</ul></li>
+<li>Compare candidate interpolation approaches.
+<ul>
+<li>Evaluate inverse path distance weighting (IPDW) <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
+<li>Evaluate conventional inverse distance weighting (IDW).</li>
+<li>Evaluate ordinary kriging.</li>
+<li>Use spatially withheld monitoring locations to evaluate predictive performance and reduce bias associated with spatial dependence <span class="citation" data-cites="Roberts2017 Valavi2019">[@Roberts2017; @Valavi2019]</span>.</li>
+<li>Compare root mean square error (RMSE), mean absolute error (MAE), and prediction bias among interpolation methods.</li>
+<li>Select the final interpolation method based on predictive performance and ecological appropriateness.</li>
+</ul></li>
+<li>Produce final environmental predictor rasters.
+<ul>
+<li>Use a common projected coordinate reference system.</li>
+<li>Use a common cell size.</li>
+<li>Use a common raster origin and alignment.</li>
+<li>Mask predictions to aquatic habitat.</li>
+<li>Document the final raster resolution.</li>
+<li>Maintain spatial compatibility with the existing PBS habitat-suitability framework where appropriate <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Oyster occurrence preparation</strong></p>
+<ol type="1">
+<li>Clip FWC oyster-bed features to the study area.
+<ul>
+<li>Remove oyster occurrences outside the PBS modeling extent <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
+</ul></li>
+<li>Convert mapped oyster-bed polygons into representative MaxEnt presence observations.
+<ul>
+<li>Use a reproducible procedure that avoids disproportionately representing large or densely mapped oyster polygons <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
+<li>Document the initial number of oyster polygons and final number of presence observations.</li>
+</ul></li>
+<li>Evaluate spatial clustering of presence observations.
+<ul>
+<li>Apply spatial thinning where necessary to reduce clustering and sampling bias <span class="citation" data-cites="Phillips2009">[@Phillips2009]</span>.</li>
+<li>Base thinning decisions on spatial dependence and sampling structure rather than arbitrary data reduction <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Background sampling</strong></p>
+<ol type="1">
+<li>Define the accessible/background modeling region.
+<ul>
+<li>Restrict background sampling to aquatic habitat within the Pensacola Bay System <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
+<li>Require complete environmental predictor coverage within the background domain.</li>
+<li>Exclude terrestrial areas and locations outside the modeled environmental domain <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
+</ul></li>
+<li>Generate MaxEnt background locations.
+<ul>
+<li>Document the final number of background points.</li>
+<li>Sample background locations from the defined accessible region rather than from an arbitrary rectangular geographic extent <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
+</ul></li>
+<li>Address occurrence-sampling bias.
+<ul>
+<li>Evaluate whether spatial thinning, bias weighting, or restricted background sampling is necessary <span class="citation" data-cites="Phillips2009">[@Phillips2009]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Predictor screening</strong></p>
+<ol type="1">
+<li>Assemble the final candidate predictor stack.
+<ul>
+<li>Salinity <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>.</li>
+<li>Dissolved oxygen <span class="citation" data-cites="LaPeyre2021 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Pollack2012; @Geselbracht2024]</span>.</li>
+<li>Temperature <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012">[@LaPeyre2021; @Barnes2007; @Pollack2012]</span>.</li>
+<li>Turbidity <span class="citation" data-cites="LaPeyre2021 Pollack2012">[@LaPeyre2021; @Pollack2012]</span>.</li>
+<li>Bathymetry/depth <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012">[@LaPeyre2021; @Barnes2007; @Pollack2012]</span>.</li>
+<li>Substrate/bottom type, if suitable data are obtained <span class="citation" data-cites="LaPeyre2021 Barnes2007 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Geselbracht2024]</span>.</li>
+</ul></li>
+<li>Evaluate correlation and redundancy among predictors.
+<ul>
+<li>Calculate pairwise correlations among candidate environmental variables <span class="citation" data-cites="Dormann2013">[@Dormann2013]</span>.</li>
+<li>Identify highly correlated or ecologically redundant predictors <span class="citation" data-cites="Dormann2013">[@Dormann2013]</span>.</li>
+<li>Retain predictors based on ecological relevance, data quality, and interpretability while limiting problematic collinearity <span class="citation" data-cites="Dormann2013">[@Dormann2013]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>MaxEnt model fitting and tuning</strong></p>
+<ol type="1">
+<li><p>Fit MaxEnt using oyster occurrence locations, background samples, and the finalized environmental predictor stack <span class="citation" data-cites="Phillips2006 Elith2011">[@Phillips2006; @Elith2011]</span>.</p></li>
+<li><p>Tune model complexity rather than relying exclusively on default settings.</p>
+<ul>
+<li>Evaluate multiple regularization multipliers <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
+<li>Evaluate multiple feature-class combinations <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
+</ul></li>
+<li><p>Use the <code>ENMeval</code> framework for model tuning and evaluation <span class="citation" data-cites="Kass2021">[@Kass2021]</span>.</p></li>
+<li><p>Select the final MaxEnt configuration.</p>
+<ul>
+<li>Consider predictive performance <span class="citation" data-cites="Kass2021">[@Kass2021]</span>.</li>
+<li>Consider omission rates <span class="citation" data-cites="Kass2021">[@Kass2021]</span>.</li>
+<li>Consider model complexity and overfitting <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
+</ul></li>
+<li><p>Generate the final continuous habitat-suitability surface.</p>
+<ul>
+<li>Retain continuous predictions for the primary spatial comparison with the HSI <span class="citation" data-cites="Elith2011 Merow2013">[@Elith2011; @Merow2013]</span>.</li>
+</ul></li>
+<li><p>Evaluate environmental-variable influence.</p>
+<ul>
+<li>Examine permutation importance <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
+<li>Examine model response curves <span class="citation" data-cites="Elith2011 Merow2013">[@Elith2011; @Merow2013]</span>.</li>
+<li>Evaluate other supported measures of predictor contribution <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
+<li>Interpret these associations as predictive relationships rather than direct evidence of ecological causation <span class="citation" data-cites="Elith2011">[@Elith2011]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Spatial model validation</strong></p>
+<ol type="1">
+<li>Use spatial rather than purely random cross-validation.
+<ul>
+<li>Nearby oyster occurrences may experience highly similar environmental conditions, violating assumptions of independence <span class="citation" data-cites="Roberts2017">[@Roberts2017]</span>.</li>
+<li>Random training/test partitions may therefore produce overly optimistic estimates of predictive performance <span class="citation" data-cites="Roberts2017 Valavi2019">[@Roberts2017; @Valavi2019]</span>.</li>
+</ul></li>
+<li>Divide oyster occurrences into spatially separated validation folds.
+<ul>
+<li>Select spatial-block dimensions based on observed spatial structure rather than arbitrary distances <span class="citation" data-cites="Valavi2019">[@Valavi2019]</span>.</li>
+</ul></li>
+<li>Evaluate candidate models against withheld spatial folds.
+<ul>
+<li>Report appropriate presence-background model-performance metrics <span class="citation" data-cites="Phillips2006 Kass2021">[@Phillips2006; @Kass2021]</span>.</li>
+<li>Evaluate omission rates and AUC where appropriate <span class="citation" data-cites="Phillips2006 Kass2021">[@Phillips2006; @Kass2021]</span>.</li>
+<li>Report variation in model performance among spatial folds <span class="citation" data-cites="Valavi2019 Kass2021">[@Valavi2019; @Kass2021]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Comparison with the existing Habitat Suitability Index</strong></p>
+<ol type="1">
+<li><p>Harmonize the MaxEnt and HSI raster surfaces.</p>
+<ul>
+<li>Match geographic extent to permit spatial comparison <span class="citation" data-cites="Johnson2005 Geselbracht2024">[@Johnson2005; @Geselbracht2024]</span>.</li>
+<li>Match coordinate reference systems.</li>
+<li>Match cell size and raster alignment.</li>
+<li>Ensure suitability scores are represented on directly comparable scales where possible <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+</ul></li>
+<li><p>Compare continuous habitat-suitability predictions.</p>
+<ul>
+<li>Calculate cell-by-cell correlation between HSI and MaxEnt predictions <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+<li>Consider Pearson and/or Spearman correlation depending on the characteristics of the model-output distributions <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+</ul></li>
+<li><p>Generate a spatial difference surface <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</p>
+<p><span class="math display">\[
+D_i = S_{MaxEnt,i} - S_{HSI,i}
+\]</span></p>
+<ul>
+<li>Values near zero represent relatively strong agreement between the two suitability estimates.</li>
+<li>Positive values identify locations where MaxEnt predicts relatively greater suitability.</li>
+<li>Negative values identify locations where the HSI predicts relatively greater suitability.</li>
+</ul></li>
+<li><p>Evaluate categorical agreement if suitability classes are created.</p>
+<ul>
+<li>Identify locations where both models predict high suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+<li>Identify locations where both models predict low suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+<li>Identify locations where MaxEnt predicts high suitability while the HSI predicts low suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+<li>Identify locations where the HSI predicts high suitability while MaxEnt predicts low suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+<li>Consider an agreement statistic such as Kappa if categorical suitability classes are used <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+</ul></li>
+<li><p>Interpret disagreement between models.</p>
+<ul>
+<li>Determine whether disagreement is geographically concentrated <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+<li>Evaluate whether disagreement corresponds with particular environmental predictors.</li>
+<li>Consider differences in data availability and modeling assumptions between MaxEnt and the HSI <span class="citation" data-cites="Johnson2005 Geselbracht2024">[@Johnson2005; @Geselbracht2024]</span>.</li>
+<li>Avoid treating either modeling approach as automatically representing ground truth <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
+</ul></li>
+</ol></li>
+<li><p><strong>Software and reproducibility</strong></p>
+<ol type="1">
+<li><p>Conduct data processing, statistical analysis, and modeling in R <span class="citation" data-cites="r">[@r]</span>.</p></li>
+<li><p>Use scripted workflows for data transformation and spatial processing.</p>
+<ul>
+<li>Use <code>tidyverse</code> for data manipulation <span class="citation" data-cites="tidyverse">[@tidyverse]</span>.</li>
+<li>Use <code>sf</code> for vector spatial processing <span class="citation" data-cites="sf">[@sf]</span>.</li>
+</ul></li>
+<li><p>Maintain reproducibility throughout the workflow.</p>
+<ul>
+<li>Record package versions.</li>
+<li>Set random seeds where applicable.</li>
+<li>Record data-acquisition dates for dynamically updated datasets <span class="citation" data-cites="dataRetrieval2026 wqp_2026 FWC2026Oysters">[@dataRetrieval2026; @wqp_2026; @FWC2026Oysters]</span>.</li>
+<li>Document model settings and tuning parameters <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
+<li>Preserve raw data separately from processed analytical datasets.</li>
+</ul></li>
+</ol></li>
+</ol>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

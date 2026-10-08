@@ -1,0 +1,626 @@
+# Methods
+
+```{r}
+#| label: 2-load-packages-configs
+#| echo: false
+
+library(sf)
+library(tidyverse)
+library(tmap)
+library(knitr)
+library(tibble)
+
+#load functions from source script
+source("3-scripts/process_wq_data.r")
+
+# set tmap to static map
+tmap_mode("plot")
+
+```
+
+## Data Processing and Analysis
+
+### Software and Packages
+
+All data processing, analysis, and modeling will be conducted using free
+open source software and packages to maximize accessibility and
+reproducibility. The majority of data manipulation and processing will
+be performed in the R programming language using the tidyverse suite of
+packages [@tidyverse; @r]. Any data operations that need to be
+"spatially aware" will be performed using the Simple Features package
+[@sf].
+
+Analysis will be scripted and ran in Positron, an open-source integrated
+development environment developed by Posit that supports R, Python,
+scripts, notebooks, integrated consoles, along with interactive plots
+and data viewers.
+
+### Study Area
+
+The study area for this project is the Pensacola Bay System which
+includes portions of Pensacola Bay, Escambia Bay, East Bay and
+Blackwater Bay. Boundaries of this study area were achieved by accessing
+Florida Department of Protections (FDEP) Waterbod IDs feature layer
+hosted on ArcGIS Online [@FDEP2005WBIDs]. ArcGIS allows direct access to
+hosted feature services via several formats. To avoid any potential
+compatibility issues, the GeoJSON format was chosen as this format is
+non-proprietary. Once retrieved, the dataset was filtered to include
+only relevant WBIDs (WBID = 548) and then combined to create a singular
+study area polygon. Creating the study area polygon is an important
+first step as it will be needed to extract relevant environmental data
+from much larger datasets in the coming data gathering.
+
+```{r}
+#| label: 2-create-study-area
+#| output: false
+
+study_area <- get_study_area()
+
+tm_shape(study_area) +
+  tm_polygons(fill_alpha = 0, col = "red", lwd = 2) +
+  tm_basemap("Esri.WorldStreetMap") +
+  tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
+
+```
+
+### Water Quality Portal Data
+
+Water quality data is widely available for the entire United States via
+the EPA's Water Quality Portal (WQP) which allows for a wide range of
+data querying for any data as it relates to Water Quality Monitoring
+programs (@wqp_2026). For this analysis, site data for Escambia and Santa Rosa County was queried using the WQP API then the study area polygon was used to extract only the relevent sites:
+
+```{r}
+#| echo: false
+#| label: 2-fig-study-area
+#| fig-cap: "Pensacola Bay System with monitoring sites"
+#| fig-align: center
+
+pbs_sites <- get_wq_sites(study_area)
+
+## Add sites to map for visualization
+tm_shape(pbs_sites) +
+  tm_dots(
+     fill = "red",
+     size = 0.3
+     ) +
+tm_shape(study_area) +
+  tm_polygons(
+    fill_alpha = 0, 
+    col = "black", 
+    lwd = 2
+    ) +
+tm_basemap("Esri.WorldStreetMap") +
+tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
+```
+
+### Water Quality Data
+
+Water quality data was selected based off of availability and relevance within literature. Each parameter was filtered to include just those measurements 
+```{r}
+#| label: 2-retrieve-process-wq-data
+
+salinity <- get_wq_data(
+  param = "Salinity",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "salinity",
+  force = FALSE
+  )
+
+water_temp <- get_wq_data(
+  param = "Temperature, water",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "water_temp",
+  force = FALSE
+  )
+
+do_mgL <- get_wq_data(
+  param = "Dissolved oxygen (DO)",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "do_mgL",
+  force = FALSE
+  )
+
+chl_a_mgL <- get_wq_data(
+  param = "Chlorophyll a, corrected for pheophytin",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "chl_a_mgL",
+  force = FALSE
+  )
+
+turbidity <- get_wq_data(
+  param = "Turbidity",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "turbidity",
+  force = FALSE
+  )  
+
+```
+
+
+```{r}
+#| echo: false
+#| label: 2-tbl-candidate-variables
+#| tbl-cap: "Preliminary Environmental Variables Considered for the Eastern Oyster SDM"
+
+data_dict <- read_csv("2-data/data_dictionary.csv") 
+  
+kable(
+  data_dict,
+  align = c("l", "l", "l","l")
+)
+```
+
+
+```{r}
+#| label: 2-process-wq-data
+
+sal <- proc_wq_data(salinity)
+do <- proc_wq_data(do_mgL)
+chla <- proc_wq_data(chl_a_mgL)
+turb <- proc_wq_data(turbidity)
+temp <- proc_wq_data(water_temp)
+```
+
+
+```{r}
+#| label: 2-create-histogram-and-maps-to-view-distribution
+
+wq_summary <- bind_rows(
+  sal  %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
+  do   %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
+  chla %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
+  turb %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
+  temp %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
+)
+
+ggplot(wq_summary, aes(x = mean)) +
+  geom_histogram(
+    bins = 20,
+    color = "white",
+    linewidth = 0.3
+  ) +
+  facet_wrap(
+    ~ parameter,
+    scales = "free",
+    ncol = 2
+  ) +
+  labs(
+    title = "Distribution of Warm-Season Water Quality Conditions",
+    subtitle = "Site-level means for monitoring locations in the Pensacola Bay System",
+    x = "Site Mean",
+    y = "Number of Monitoring Locations"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10),
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+
+# map points for each variable
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = sal, aes(size = n, fill = mean),
+  shape = 21,
+    color = "white",
+    stroke = 0.25
+  ) +
+  scale_fill_viridis_c(
+    option = "viridis"
+  ) +
+  labs(
+    title = "Warm-Season Salinity Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = temp, aes(size = n)) +
+  labs(
+    title = "Warm-Season Temperature Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = chla, aes(size = n)) +
+  labs(
+    title = "Warm-Season Chloraphyll-a Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = do, aes(size = n)) +
+  labs(
+    title = "Warm-Season Dissolved Oxygen Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+
+ggplot() +
+  geom_sf(data = study_area, fill = "grey95") +
+  geom_sf(data = turb, aes(size = n)) +
+  labs(
+    title = "Warm-Season Turbidity Monitoring Locations",
+    subtitle = "Point size represents number of observations"
+  ) +
+  theme_minimal() 
+```
+
+
+::: {.landscape}
+```{r}
+#|label: 2-summary-table
+
+wq_summary_table <- wq_summary %>%
+  group_by(parameter) %>%
+  summarise(
+    stations = n(),
+    observations = sum(n),
+    overall_mean = mean(mean, na.rm = TRUE),
+    overall_sd = sd(mean, na.rm = TRUE),
+    min = min(mean, na.rm = TRUE),
+    q1 = quantile(mean, 0.25, na.rm = TRUE),
+    median = median(mean, na.rm = TRUE),
+    q3 = quantile(mean, 0.75, na.rm = TRUE),
+    max = max(mean, na.rm = TRUE),
+    first_date = min(first_date, na.rm = TRUE),
+    last_date = max(last_date, na.rm = TRUE),
+    .groups = "drop"
+  )
+  
+
+kable(
+  wq_summary_table,
+  caption = "Summary Statistics for Warm-Season Water Quality Data",
+  col.names = c(
+    "Parameter",
+    "Stations",
+    "Observations",
+    "Mean",
+    "SD",
+    "Min",
+    "Q1",
+    "Median",
+    "Q3",
+    "Max",
+    "First Sample",
+    "Last Sample"
+  ),
+  align = c("l", "c", "c", "c"),
+  digits = 2,
+  booktabs = TRUE
+) 
+```
+
+:::
+
+## Spatial interpolation
+
+Points are interpolated into prediction rasters using inverse path distance weighting  (IPDW) (package idpw). Blah blah blah blah
+
+# Methods 
+
+**Study design and team status**
+
+This capstone is being completed as an individual project, an all data acquisition, processing, analysis and interpolation will be completed by the author. 
+
+
+   2. Describe the overall analytical workflow.
+      - Environmental and occurrence data acquisition.
+      - Data QA/QC and preprocessing.
+      - Creation of continuous environmental predictor surfaces.
+      - Oyster occurrence preparation.
+      - Background sampling.
+      - Predictor screening.
+      - MaxEnt tuning and fitting.
+      - Spatial model validation.
+      - HSI comparison.
+      - Citations: [@Phillips2006; @Merow2013; @Kass2021]
+
+2. **Study area**
+   
+   1. Define the Pensacola Bay System modeling extent.
+      - Delineate the study area using selected Florida Department of Environmental Protection Waterbody Identification (WBID) polygons.
+      - Describe the primary embayments included within the analysis.
+      - Citations: [@FDEP2005WBIDs; @Geselbracht2024]
+   
+   2. Restrict the modeling domain to aquatic habitat.
+      - Background and prediction locations should represent environments potentially available to Eastern oysters.
+      - Terrestrial areas should be excluded from the modeling domain.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   3. Maintain spatial compatibility with the existing Pensacola Bay HSI where possible.
+      - A comparable geographic extent will support subsequent spatial comparison.
+      - Citation: [@Geselbracht2024]
+   
+   4. Develop a study-area map.
+      - PBS boundary.
+      - Major embayments.
+      - Oyster occurrence locations.
+      - Environmental monitoring locations.
+
+3. **Data acquisition and dataset inventory**
+   
+   1. Eastern oyster occurrence data.
+      - Source data from the FWC-FWRI Oyster Beds in Florida dataset.
+      - Record dataset version and acquisition date.
+      - Document original geometry type.
+      - Document number of source features and number retained within the study area.
+      - Document temporal/source-data information where available.
+      - Citation: [@FWC2026Oysters]
+   
+   2. Water-quality observations.
+      - Retrieve observations from the Water Quality Portal.
+      - Use the `dataRetrieval` package and associated WQP services.
+      - Restrict queries to relevant counties, estuarine monitoring locations, selected parameters, and the study period.
+      - Citations: [@wqp_2026; @dataRetrieval2026]
+   
+   3. Document water-quality dataset size and temporal coverage.
+      - Dissolved oxygen: approximately 145 stations and 3,072 observations.
+      - Salinity: approximately 135 stations and 3,401 observations.
+      - Temperature: approximately 145 stations and 3,442 observations.
+      - Turbidity: approximately 122 stations and 1,563 observations.
+      - Chlorophyll-a: approximately 48 stations and 754 observations.
+      - Current temporal coverage is approximately 2005--2024.
+      - Citations for source data: [@wqp_2026; @dataRetrieval2026]
+   
+   4. Evaluate candidate predictors based on spatial coverage.
+      - Chlorophyll-a is currently expected to be excluded from interpolation because available stations do not provide adequate system-wide spatial coverage.
+      - Salinity, dissolved oxygen, temperature, and turbidity currently provide substantially stronger monitoring coverage.
+      - Ecological rationale for candidate variables: [@LaPeyre2021; @Geselbracht2024]
+   
+   5. Bathymetry.
+      - Obtain Pensacola Bay estuarine bathymetry from NOAA.
+      - Document raster resolution, vertical datum, geographic extent, and preprocessing requirements.
+      - Citation: [@NOAA_2018]
+   
+   6. Substrate or bottom type.
+      - Identify and acquire a suitable spatial dataset describing bottom characteristics.
+      - Document spatial resolution, classes, temporal source, and coverage.
+      - Ecological justification: [@Barnes2007; @Geselbracht2024]
+      - **Citation needed for final substrate dataset.**
+   
+   7. Existing Pensacola Bay HSI.
+      - Obtain the original GIS/raster output used by Geselbracht et al.
+      - Document raster score range, projection, extent, resolution, and NoData handling.
+      - Citation for methodology: [@Geselbracht2024]
+      - **Add a separate dataset citation once the original HSI GIS product is acquired.**
+
+4. **Water-quality preprocessing**
+   
+   1. Standardize measurement characteristics and units.
+      - Avoid combining fundamentally different measurement types that share similar characteristic names.
+      - Retain comparable units and analytical forms for each predictor.
+      - Citations: [@wqp_2026; @dataRetrieval2026]
+   
+   2. Restrict observations to warm-season conditions.
+      - Current working definition: May through October.
+      - Use seasonal filtering to characterize environmental conditions relevant to warm-season oyster stress and habitat suitability.
+      - Citation for Pensacola seasonal precedent: [@Geselbracht2024]
+   
+   3. Generate station-level environmental summaries.
+      - Calculate warm-season mean.
+      - Calculate standard deviation.
+      - Record total observation count.
+      - Record number of unique years represented.
+      - Record first and last sample date.
+      - Consider calculating site-year warm-season means prior to calculating long-term site means to avoid over-weighting heavily sampled individual years.
+   
+   4. Perform QA/QC.
+      - Identify potential unit inconsistencies.
+      - Investigate implausible or extreme values.
+      - Document removal or correction criteria.
+      - Retain original raw data separately from processed datasets.
+   
+   5. Convert monitoring data to spatial features.
+      - Use `sf` for spatial-vector processing.
+      - Project observations to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters.
+      - Citation: [@sf]
+
+5. **Generation of continuous environmental predictor surfaces**
+   
+   1. Assess monitoring-station spatial coverage prior to interpolation.
+      - Map station distribution for each parameter.
+      - Identify spatial clustering.
+      - Identify portions of PBS lacking observations.
+      - Exclude variables where prediction would consist primarily of spatial extrapolation.
+   
+   2. Account for coastal barriers and complex estuarine geometry.
+      - Straight-line Euclidean distance may incorrectly represent spatial relationships between monitoring locations separated by peninsulas, islands, or narrow water connections.
+      - Barrier-aware interpolation will be evaluated where feasible.
+      - **Suggested citation: Stachelek and Madden (2015).**
+   
+   3. Evaluate inverse path distance weighting (IPDW) as a candidate interpolation method.
+      - IPDW uses aquatic path distance rather than straight-line Euclidean distance.
+      - This approach is specifically suited to coastal water-quality interpolation where land barriers affect connectivity.
+      - **Suggested citation: Stachelek and Madden (2015).**
+   
+   4. Compare candidate interpolation approaches.
+      - Potential methods include:
+        - Inverse path distance weighting.
+        - Conventional inverse distance weighting.
+        - Ordinary kriging.
+      - Use spatially withheld monitoring locations to evaluate predictive performance.
+      - Compare RMSE, MAE, and bias.
+      - Select the final interpolation method based on predictive performance and ecological appropriateness.
+      - Citations: [@Roberts2017; @Valavi2019]
+   
+   5. Produce final environmental predictor rasters.
+      - Use a common projected coordinate system.
+      - Use a common cell size.
+      - Use common raster origin and alignment.
+      - Mask predictions to aquatic habitat.
+      - Document final raster resolution.
+      - Citation for Pensacola spatial-modeling precedent: [@Geselbracht2024]
+
+6. **Oyster occurrence preparation**
+   
+   1. Clip FWC oyster-bed features to the study area.
+      - Remove occurrences outside the PBS modeling extent.
+      - Citation: [@FWC2026Oysters]
+   
+   2. Convert mapped oyster-bed polygons into representative MaxEnt presence observations.
+      - Use a reproducible procedure to avoid overrepresenting large or heavily mapped oyster polygons.
+      - Document the initial number of oyster polygons and final number of presence observations.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   3. Evaluate spatial clustering of presence observations.
+      - Apply spatial thinning where necessary.
+      - Thinning should be based on sampling bias and spatial dependence rather than arbitrary data reduction.
+      - Citations: [@Phillips2009; @Merow2013]
+
+7. **Background sampling**
+   
+   1. Define the accessible/background modeling region.
+      - Restrict background sampling to aquatic habitat within PBS.
+      - Require complete environmental predictor coverage.
+      - Exclude terrestrial areas and locations outside the modeled environmental domain.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   2. Generate MaxEnt background locations.
+      - Document the number of background points.
+      - Sample from the defined accessible region rather than an arbitrary rectangular extent.
+      - Citations: [@Phillips2009; @Merow2013]
+   
+   3. Address occurrence-sampling bias.
+      - Evaluate whether spatial thinning, bias weighting, or restricted background sampling is necessary.
+      - Citation: [@Phillips2009]
+
+8. **Predictor screening**
+   
+   1. Assemble final candidate predictor stack.
+      - Salinity.
+      - Dissolved oxygen.
+      - Temperature.
+      - Turbidity.
+      - Bathymetry/depth.
+      - Substrate/bottom type, if suitable data are obtained.
+      - Citations: [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]
+   
+   2. Evaluate correlation and redundancy among predictors.
+      - Calculate pairwise correlations.
+      - Identify highly correlated environmental variables.
+      - Retain predictors based on ecological relevance, data quality, and interpretability.
+      - **Suggested citation: Dormann et al. (2013).**
+
+9. **MaxEnt model fitting and tuning**
+   
+   1. Fit MaxEnt using occurrence locations, background samples, and the finalized environmental predictor stack.
+      - Citations: [@Phillips2006; @Elith2011]
+   
+   2. Tune model complexity rather than relying exclusively on default settings.
+      - Evaluate multiple regularization multipliers.
+      - Evaluate multiple feature-class combinations.
+      - Citations: [@Merow2013; @Kass2021]
+   
+   3. Use the `ENMeval` framework for model tuning and evaluation.
+      - Citation: [@Kass2021]
+   
+   4. Select the final MaxEnt configuration.
+      - Consider predictive performance.
+      - Consider omission rates.
+      - Consider model complexity.
+      - Citations: [@Kass2021; @Merow2013]
+   
+   5. Generate the final continuous habitat-suitability surface.
+      - Retain continuous predictions for primary comparison with the HSI.
+      - Citations: [@Elith2011; @Merow2013]
+   
+   6. Evaluate environmental-variable influence.
+      - Examine permutation importance.
+      - Examine response curves.
+      - Evaluate other supported measures of predictor contribution.
+      - Interpret associations as predictive relationships rather than direct causal effects.
+      - Citations: [@Elith2011; @Merow2013]
+
+10. **Spatial model validation**
+    
+    1. Use spatial rather than purely random cross-validation.
+       - Nearby oyster occurrences may experience highly similar environmental conditions.
+       - Random partitions may therefore produce overly optimistic estimates of predictive performance.
+       - Citations: [@Roberts2017; @Valavi2019]
+    
+    2. Divide oyster occurrences into spatially separated validation folds.
+       - Select spatial-block dimensions based on observed spatial structure.
+       - Citation: [@Valavi2019]
+    
+    3. Evaluate models against withheld spatial folds.
+       - Report appropriate presence-background performance metrics.
+       - Consider omission rate and AUC where appropriate.
+       - Report variation in model performance among folds.
+       - Citations: [@Phillips2006; @Kass2021]
+
+11. **Comparison with the existing Habitat Suitability Index**
+    
+    1. Harmonize the MaxEnt and HSI raster surfaces.
+       - Match geographic extent.
+       - Match coordinate reference system.
+       - Match cell size and alignment.
+       - Ensure suitability values are directly comparable.
+       - Citations: [@Geselbracht2024; @Johnson2005]
+    
+    2. Compare continuous habitat-suitability predictions.
+       - Calculate cell-by-cell correlation.
+       - Consider Pearson and/or Spearman correlation depending on model-output distributions.
+       - Citation: [@Johnson2005]
+    
+    3. Generate a spatial difference surface.
+       
+       $$
+       D_i = S_{MaxEnt,i} - S_{HSI,i}
+       $$
+       
+       - Values near zero represent agreement.
+       - Positive values identify locations where MaxEnt predicts relatively greater suitability.
+       - Negative values identify locations where the HSI predicts relatively greater suitability.
+       - Citation: [@Johnson2005]
+    
+    4. Evaluate categorical agreement if suitability classes are created.
+       - Both models predict high suitability.
+       - Both models predict low suitability.
+       - MaxEnt predicts high suitability while HSI predicts low suitability.
+       - HSI predicts high suitability while MaxEnt predicts low suitability.
+       - Consider an agreement statistic if appropriate.
+       - Citation: [@Johnson2005]
+    
+    5. Interpret disagreement between models.
+       - Determine whether disagreement is geographically concentrated.
+       - Evaluate whether disagreement corresponds with particular environmental predictors.
+       - Consider differences in data availability and modeling assumptions.
+       - Avoid treating either model as automatically representing ground truth.
+       - Citations: [@Johnson2005; @Geselbracht2024]
+
+12. **Software and reproducibility**
+    
+    1. Conduct data processing, statistical analysis, and modeling in R.
+       - Citation: [@r]
+    
+    2. Use scripted workflows for data transformation and spatial processing.
+       - `tidyverse` for data manipulation.
+       - `sf` for vector spatial processing.
+       - Citations: [@tidyverse; @sf]
+    
+    3. Maintain reproducibility throughout the workflow.
+       - Record package versions.
+       - Set random seeds where applicable.
+       - Record data-acquisition dates.
+       - Document model settings and tuning parameters.
+       - Preserve raw data separately from processed data.
+       - Citations for dynamic data sources: [@dataRetrieval2026; @wqp_2026; @FWC2026Oysters]

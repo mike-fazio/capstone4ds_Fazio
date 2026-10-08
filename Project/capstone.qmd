@@ -1,7 +1,9 @@
 ---
-title: "Evaluating Different Habitat Suitability Modeling for the Eastern Oyster in the Pensacola Bay System"
+title: "Comparing Habitat Suitability Modeling Approaches for the Eastern Oyster in the Pensacola Bay System"
 author: "M. Fazio"
-date: today
+
+date: today 
+date-format: "MM/DD/YYYY"
 
 bibliography: references.bib
 #csl: apa.csl

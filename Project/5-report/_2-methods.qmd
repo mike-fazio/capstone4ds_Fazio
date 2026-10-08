@@ -20,7 +20,7 @@ tmap_mode("plot")
 
 ## Data Processing and Analysis
 
-### Software and Packages
+*Software and Packages*
 
 All data processing, analysis, and modeling will be conducted using free
 open source software and packages to maximize accessibility and
@@ -35,7 +35,7 @@ development environment developed by Posit that supports R, Python,
 scripts, notebooks, integrated consoles, along with interactive plots
 and data viewers.
 
-### Study Area
+*Study Area*
 
 The study area for this project is the Pensacola Bay System which
 includes portions of Pensacola Bay, Escambia Bay, East Bay and
@@ -63,7 +63,7 @@ tm_shape(study_area) +
 
 ```
 
-### Water Quality Portal Data
+*Water Quality Portal Data*
 
 Water quality data is widely available for the entire United States via
 the EPA's Water Quality Portal (WQP) which allows for a wide range of
@@ -94,7 +94,7 @@ tm_basemap("Esri.WorldStreetMap") +
 tm_layout(inner.margins = c(0.2, 0.2, 0.2, 0.2))
 ```
 
-### Water Quality Data
+*Water Quality Data*
 
 Water quality data was selected based off of availability and relevance within literature. Each parameter was filtered to include just those measurements 
 ```{r}
@@ -311,7 +311,7 @@ kable(
 
 :::
 
-## Spatial interpolation
+*Spatial interpolation*
 
-Points are interpolated into prediction rasters using inverse path distance weighting  (IPDW) (package idpw). Blah blah blah blah
+Points are interpolated into prediction rasters using inverse path distance weighting  (IPDW) (package idpw).... 
 

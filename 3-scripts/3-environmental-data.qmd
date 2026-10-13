@@ -14,7 +14,7 @@ pbs_sites <- get_wq_sites(study_area)
 Retrieve WQ data using study-area sites and selected parameters
 
 ```{r}
-salinity <- get_wq_data(
+salinity_raw <- get_wq_data(
   param = "Salinity",
   from_date = "2005-01-01",
   to_date = "2025-01-01",
@@ -23,7 +23,7 @@ salinity <- get_wq_data(
   force = FALSE
 )
 
-water_temp <- get_wq_data(
+water_temp_raw <- get_wq_data(
   param = "Temperature, water",
   from_date = "2005-01-01",
   to_date = "2025-01-01",
@@ -32,7 +32,7 @@ water_temp <- get_wq_data(
   force = FALSE
 )
 
-do_mgL <- get_wq_data(
+do_raw <- get_wq_data(
   param = "Dissolved oxygen (DO)",
   from_date = "2005-01-01",
   to_date = "2025-01-01",
@@ -41,16 +41,16 @@ do_mgL <- get_wq_data(
   force = FALSE
 )
 
-chl_a_mgL <- get_wq_data(
+chl_a_raw <- get_wq_data(
   param = "Chlorophyll a, corrected for pheophytin",
-  from_date = "2005-01-01",
+  from_date = "1995-01-01",
   to_date = "2025-01-01",
   sites = pbs_sites,
   output_name = "chl_a_mgL",
-  force = FALSE
+  force = TRUE
 )
 
-turbidity <- get_wq_data(
+turbidity_raw <- get_wq_data(
   param = "Turbidity",
   from_date = "2005-01-01",
   to_date = "2025-01-01",
@@ -64,176 +64,138 @@ turbidity <- get_wq_data(
 
 # Process WQ datasets
 
-sal <- proc_wq_data(salinity)
-do <- proc_wq_data(do_mgL)
-chla <- proc_wq_data(chl_a_mgL)
-turb <- proc_wq_data(turbidity)
-temp <- proc_wq_data(water_temp)
+salinity_proc <- proc_wq_data(salinity_raw)
+do_proc <- proc_wq_data(do_raw)
+
+turbidity_proc <- proc_wq_data(turbidity_raw)
+water_temp_proc <- proc_wq_data(water_temp_raw)
+
 ```
 
 Check histogram and spatial distribution
 
 ```{r}
 wq_summary <- bind_rows(
-  sal %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
-  do %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
-  chla %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
-  turb %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
-  temp %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
+  salinity_proc %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
+  do_proc %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
+  chla_proc %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
+  turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
+  water_temp_raw %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
 )
 ```
 
-```{r}
-ggplot(wq_summary, aes(x = mean)) +
-  geom_histogram(
-    bins = 20,
-    color = "white",
-    linewidth = 0.3
-  ) +
-  facet_wrap(
-    ~parameter,
-    scales = "free_x",
-    ncol = 2
-  ) +
-  labs(
-    title = "Distribution of Warm-Season Water Quality Conditions",
-    subtitle = "Site-level means for monitoring locations in the Pensacola Bay System",
-    x = "Site Mean",
-    y = "Number of Monitoring Locations"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(size = 10),
-    strip.text = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
-  )
-
-```
-
-Next view distribution of sample sizes
-
-```{r}
-ggplot(wq_summary, aes(x = n)) +
-  geom_histogram(
-    bins = 20,
-    color = "white",
-    linewidth = 0.3
-  ) +
-  facet_wrap(
-    ~parameter,
-    scales = "free_x",
-    ncol = 2
-  ) +
-  labs(
-    title = "Distribution of Warm-Season Water Quality Conditions",
-    subtitle = "Sample Counts for monitoring locations in the Pensacola Bay System",
-    x = "Sample Count",
-    y = "Number of Monitoring Locations"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(size = 10),
-    strip.text = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
-  )
-```
-
-```{}
-```
 
 ## Chlorophyll-a
 
 TODO: Investigate new cleaning method to remove sampling bias. Look to require minimum number of sampling years to remove one off sampling events.
 
 ```{r}
-site_year_summary <- chl_a_mgL %>%
-  mutate(
-    Result_Measure = as.numeric(Result_Measure),
-    year = lubridate::year(Activity_StartDate)
-  ) %>%
-  filter(
-    lubridate::month(Activity_StartDate) %in% 5:10,
-    !is.na(Result_Measure),
-    !is.na(Location_Latitude),
-    !is.na(Location_Longitude)
-  ) %>%
-  group_by(
-    Location_Identifier,
-    year
-  ) %>%
-  summarise(
-    annual_mean = mean(Result_Measure, na.rm = TRUE),
-    annual_n = n(),
-    .groups = "drop"
+# Retrieve Data 
+chl_a_raw <- get_wq_data(
+  param = "Chlorophyll a, corrected for pheophytin",
+  from_date = "1900-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "chl_a_mgL",
+  force = TRUE
+)
+
+# Process Data
+chl_a_proc <- proc_wq_data(chl_a_raw)
+
+# View Distribution of Mean
+ggplot(chla_proc, aes(x = mean)) +
+  geom_histogram(
+    bins = 20,
+    color = "white",
+    linewidth = 0.3
+  ) +
+  labs(
+    title = "Distribution of Warm-Season Chl-a Observations",
+    subtitle = "Sample Counts for monitoring locations in the Pensacola Bay System",
+    x = "Observed Mean",
+    y = "Number of Monitoring Locations"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10),
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
   )
 
-site_summary <- site_year_summary %>%
-  group_by(Location_Identifier) %>%
-  summarise(
-    mean = mean(annual_mean, na.rm = TRUE),
-    sd = sd(annual_mean, na.rm = TRUE),
-    years_sampled = n(),
-    total_n = sum(annual_n),
-    .groups = "drop"
-  )
+
+# View Spatial Distribution
+chl_a_map <-
+  tm_basemap("Esri.WorldGrayCanvas") +
+  tm_shape(chla_proc) +
+  tm_dots(
+    fill = "mean",
+    col = "black",
+    size = 0.5,
+    lwd = 0.5,
+    fill.scale = tm_scale_continuous(
+      values ="scico.imola"),
+  ) +
+  tm_legend(
+      position = c("left", "top")
+    ) +  
+  tm_layout(
+    inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  ) +
+  tm_title("Chlorophyll-a (mg/L) - Observed Means") +
+  tm_compass(type = "8star") 
+
+chl_a_map
+
 ```
+
+
+## Salinity
 
 ```{r}
-ggplot() +
-  geom_sf(data = study_area, fill = "grey95") +
-  geom_sf(
-    data = sal,
-    aes(size = n, fill = mean),
-    shape = 21,
-    color = "white",
-    stroke = 0.25
-  ) +
-  scale_fill_viridis_c(
-    option = "viridis"
-  ) +
-  labs(
-    title = "Warm-Season Salinity Monitoring Locations",
-    subtitle = "Point size represents number of observations"
-  ) +
-  theme_minimal()
+salinity_raw <- get_wq_data(
+  param = "Salinity",
+  from_date = "2005-01-01",
+  to_date = "2025-01-01",
+  sites = pbs_sites,
+  output_name = "salinity",
+  force = TRUE
+)
 
-ggplot() +
-  geom_sf(data = study_area, fill = "grey95") +
-  geom_sf(data = temp, aes(size = n)) +
-  labs(
-    title = "Warm-Season Temperature Monitoring Locations",
-    subtitle = "Point size represents number of observations"
-  ) +
-  theme_minimal()
-
-ggplot() +
-  geom_sf(data = study_area, fill = "grey95") +
-  geom_sf(data = chla, aes(size = n)) +
-  labs(
-    title = "Warm-Season Chloraphyll-a Monitoring Locations",
-    subtitle = "Point size represents number of observations"
-  ) +
-  theme_minimal()
-
-ggplot() +
-  geom_sf(data = study_area, fill = "grey95") +
-  geom_sf(data = do, aes(size = n)) +
-  labs(
-    title = "Warm-Season Dissolved Oxygen Monitoring Locations",
-    subtitle = "Point size represents number of observations"
-  ) +
-  theme_minimal()
-
-ggplot() +
-  geom_sf(data = study_area, fill = "grey95") +
-  geom_sf(data = turb, aes(size = n)) +
-  labs(
-    title = "Warm-Season Turbidity Monitoring Locations",
-    subtitle = "Point size represents number of observations"
-  ) +
-  theme_minimal()
 ```
+```{r}
+# Process Data
+sal_proc <- proc_wq_data(salinity_raw)
+
+# View Distribution of Mean
+ggplot(sal_proc, aes(x = mean)) +
+  geom_histogram(
+    bins = 20,
+    color = "white",
+    linewidth = 0.3
+  ) +
+  labs(
+    title = "Distribution of Warm-Season Salinity Observations",
+    subtitle = "Sample Counts for monitoring locations in the Pensacola Bay System",
+    x = "Observed Mean",
+    y = "Number of Monitoring Locations"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10),
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+
+
+# View Spatial Distribution
+
+param_means_map(sal_proc, "Salinity", "PPT")
+
+```
+
+
 
 #TODO: Load and process Oyster Beds

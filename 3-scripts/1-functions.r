@@ -149,21 +149,22 @@ get_wq_data <- function(
   return(pbs_df)
 }
 
-
 ### PROCESS WQ DATA ----
 
 proc_wq_data <- function(input_data) {
+
   # Get name of input dataset
   input_name <- deparse(substitute(input_data))
 
-  df <- input_data %>%
+  # Clean and filter raw observations
+  df_clean <- input_data %>%
     mutate(
-      Result_Measure = as.numeric(Result_Measure)
+      Result_Measure = as.numeric(Result_Measure),
+      year = year(Activity_StartDate)
     ) %>%
     filter(
-      # Select warm season
-      month(Activity_StartDate, label = TRUE) %in%
-        c("May", "Jun", "Jul", "Aug", "Sep", "Oct"),
+      # Select warm season (May-October)
+      month(Activity_StartDate) %in% 5:10,
 
       # Remove null results
       !is.na(Result_Measure),
@@ -171,23 +172,43 @@ proc_wq_data <- function(input_data) {
       # Remove records without coordinates
       !is.na(Location_Latitude),
       !is.na(Location_Longitude)
+    )
+
+  # Calculate annual warm-season means for each site
+  annual_summary <- df_clean %>%
+    group_by(
+      Location_Identifier,
+      year
     ) %>%
-    group_by(Location_Identifier) %>%
     summarise(
+      annual_mean = mean(Result_Measure, na.rm = TRUE),
+      annual_n = n(),
+
       # Station metadata
       location_name = first(Location_Name),
       latitude = first(Location_Latitude),
       longitude = first(Location_Longitude),
 
-      # Summary statistics
-      mean = mean(Result_Measure, na.rm = TRUE),
-      sd = sd(Result_Measure, na.rm = TRUE),
-      n = n(),
-      log = log(mean),
+      .groups = "drop"
+    )
 
-      # Date range for QC and reference
-      first_date = min(Activity_StartDate, na.rm = TRUE),
-      last_date = max(Activity_StartDate, na.rm = TRUE),
+  # Calculate long-term site-level conditions
+  df <- annual_summary %>%
+    group_by(Location_Identifier) %>%
+    summarise(
+      # Station metadata
+      location_name = first(location_name),
+      latitude = first(latitude),
+      longitude = first(longitude),
+
+      # Long-term summary statistics
+      mean = mean(annual_mean, na.rm = TRUE),
+      sd = sd(annual_mean, na.rm = TRUE),
+      years_sampled = n(),
+      total_n = sum(annual_n),
+
+      first_year = min(year),
+      last_year = max(year),
 
       .groups = "drop"
     ) %>%
@@ -217,4 +238,27 @@ proc_wq_data <- function(input_data) {
   saveRDS(df, out_path)
 
   return(df)
+}
+
+### PARAMETER MEANS MAP ----
+param_means_map <- function(x, param_name, param_units) {
+  tm_basemap("Esri.WorldGrayCanvas") +
+  tm_shape(x) +
+  tm_dots(
+    fill = "mean",
+    col = "black",
+    size = 0.5,
+    lwd = 0.5,
+    fill.scale = tm_scale_continuous(
+      values ="scico.imola"),
+  ) +
+  tm_legend(
+      position = c("left", "top"),
+      title = paste(param_name, param_units) # TODO: Fix legend title
+    ) +  
+  tm_layout(
+    inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  ) +
+  tm_title("Observed Site Mean Vaules") +
+  tm_compass(type = "8star") 
 }

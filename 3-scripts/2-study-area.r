@@ -9,7 +9,7 @@ source(
 study_area <- get_study_area()
 
 study_map <-
-  tm_basemap("Esri.WorldStreetMap") +
+  tm_basemap("Esri.WorldGrayCanvas") +
   tm_shape(study_area) +
   tm_polygons(
     fill_alpha = 0,

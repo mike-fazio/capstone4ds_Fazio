@@ -84,10 +84,7 @@ wq_summary <- bind_rows(
 )
 ```
 
-
 ## Chlorophyll-a
-
-TODO: Investigate new cleaning method to remove sampling bias. Look to require minimum number of sampling years to remove one off sampling events.
 
 ```{r}
 # Retrieve Data 
@@ -100,56 +97,19 @@ chl_a_raw <- get_wq_data(
   force = TRUE
 )
 
+```
+
+```{r}
 # Process Data
 chl_a_proc <- proc_wq_data(chl_a_raw)
 
-# View Distribution of Mean
-ggplot(chla_proc, aes(x = mean)) +
-  geom_histogram(
-    bins = 20,
-    color = "white",
-    linewidth = 0.3
-  ) +
-  labs(
-    title = "Distribution of Warm-Season Chl-a Observations",
-    subtitle = "Sample Counts for monitoring locations in the Pensacola Bay System",
-    x = "Observed Mean",
-    y = "Number of Monitoring Locations"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(size = 10),
-    strip.text = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
-  )
+# Plot Data Distribution
+param_means_hist(chl_a_proc, "Chlorophyll-a (µg/L)")
 
-
-# View Spatial Distribution
-chl_a_map <-
-  tm_basemap("Esri.WorldGrayCanvas") +
-  tm_shape(chla_proc) +
-  tm_dots(
-    fill = "mean",
-    col = "black",
-    size = 0.5,
-    lwd = 0.5,
-    fill.scale = tm_scale_continuous(
-      values ="scico.imola"),
-  ) +
-  tm_legend(
-      position = c("left", "top")
-    ) +  
-  tm_layout(
-    inner.margins = c(0.2, 0.2, 0.2, 0.2)
-  ) +
-  tm_title("Chlorophyll-a (mg/L) - Observed Means") +
-  tm_compass(type = "8star") 
-
-chl_a_map
+# Plot Spatial Distribution
+param_means_map(chl_a_proc, "Chlorophyll-a (µg/L)")
 
 ```
-
 
 ## Salinity
 
@@ -164,38 +124,17 @@ salinity_raw <- get_wq_data(
 )
 
 ```
+
 ```{r}
 # Process Data
 sal_proc <- proc_wq_data(salinity_raw)
 
-# View Distribution of Mean
-ggplot(sal_proc, aes(x = mean)) +
-  geom_histogram(
-    bins = 20,
-    color = "white",
-    linewidth = 0.3
-  ) +
-  labs(
-    title = "Distribution of Warm-Season Salinity Observations",
-    subtitle = "Sample Counts for monitoring locations in the Pensacola Bay System",
-    x = "Observed Mean",
-    y = "Number of Monitoring Locations"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(size = 10),
-    strip.text = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
-  )
-
+# Plot Data Distribution
+param_means_hist(sal_proc, "Salinity (ppt)")
 
 # View Spatial Distribution
-
-param_means_map(sal_proc, "Salinity", "PPT")
+param_means_map(sal_proc, "Salinity (ppt)")
 
 ```
-
-
 
 #TODO: Load and process Oyster Beds

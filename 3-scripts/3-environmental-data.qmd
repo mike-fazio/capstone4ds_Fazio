@@ -9,80 +9,16 @@ source(
 
 pbs_sites <- get_wq_sites(study_area)
 
-```
+start_date <- "2005-01-01" # Beginning date of WQ data
 
-Retrieve WQ data using study-area sites and selected parameters
+end_date <- "2025-01-01" # Ending date of WQ data
 
-```{r}
-salinity_raw <- get_wq_data(
-  param = "Salinity",
-  from_date = "2005-01-01",
-  to_date = "2025-01-01",
-  sites = pbs_sites,
-  output_name = "salinity",
-  force = FALSE
-)
+force_toggle <- TRUE # TRUE or FALSE, determines if new API download occurs
 
-water_temp_raw <- get_wq_data(
-  param = "Temperature, water",
-  from_date = "2005-01-01",
-  to_date = "2025-01-01",
-  sites = pbs_sites,
-  output_name = "water_temp",
-  force = FALSE
-)
-
-do_raw <- get_wq_data(
-  param = "Dissolved oxygen (DO)",
-  from_date = "2005-01-01",
-  to_date = "2025-01-01",
-  sites = pbs_sites,
-  output_name = "do_mgL",
-  force = FALSE
-)
-
-chl_a_raw <- get_wq_data(
-  param = "Chlorophyll a, corrected for pheophytin",
-  from_date = "1995-01-01",
-  to_date = "2025-01-01",
-  sites = pbs_sites,
-  output_name = "chl_a_mgL",
-  force = TRUE
-)
-
-turbidity_raw <- get_wq_data(
-  param = "Turbidity",
-  from_date = "2005-01-01",
-  to_date = "2025-01-01",
-  sites = pbs_sites,
-  output_name = "turbidity",
-  force = FALSE
-)
-```
-
-```{r}
-
-# Process WQ datasets
-
-salinity_proc <- proc_wq_data(salinity_raw)
-do_proc <- proc_wq_data(do_raw)
-
-turbidity_proc <- proc_wq_data(turbidity_raw)
-water_temp_proc <- proc_wq_data(water_temp_raw)
 
 ```
 
-Check histogram and spatial distribution
-
-```{r}
-wq_summary <- bind_rows(
-  salinity_proc %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
-  do_proc %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
-  chla_proc %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
-  turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
-  water_temp_raw %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
-)
-```
+# Retrieve WQ data using study-area sites and selected parameters
 
 ## Chlorophyll-a
 
@@ -90,14 +26,26 @@ wq_summary <- bind_rows(
 # Retrieve Data 
 chl_a_raw <- get_wq_data(
   param = "Chlorophyll a, corrected for pheophytin",
-  from_date = "1900-01-01",
-  to_date = "2025-01-01",
+  from_date = start_date,
+  to_date = end_date,
   sites = pbs_sites,
   output_name = "chl_a_mgL",
-  force = TRUE
+  force = force_toggle
 )
 
 ```
+
+```{r}
+table(chl_a_raw$Result_MeasureUnit)
+
+chl_a_raw <- chl_a_raw %>%
+  filter(Result_MeasureUnit != "" & Result_ResultDetectionCondition != "Not Detected" & Result_Measure < 40) %>%
+  mutate(Result_Measure = as.numeric(Result_Measure))
+
+hist(chl_a_raw$Result_Measure)
+
+```
+
 
 ```{r}
 # Process Data
@@ -105,6 +53,8 @@ chl_a_proc <- proc_wq_data(chl_a_raw)
 
 # Plot Data Distribution
 param_means_hist(chl_a_proc, "Chlorophyll-a (µg/L)")
+hist(chl_a_proc$mean)
+
 
 # Plot Spatial Distribution
 param_means_map(chl_a_proc, "Chlorophyll-a (µg/L)")
@@ -116,12 +66,24 @@ param_means_map(chl_a_proc, "Chlorophyll-a (µg/L)")
 ```{r}
 salinity_raw <- get_wq_data(
   param = "Salinity",
-  from_date = "2005-01-01",
-  to_date = "2025-01-01",
+  from_date = start_date,
+  to_date = end_date,
   sites = pbs_sites,
   output_name = "salinity",
-  force = TRUE
+  force = force_toggle
 )
+
+```
+
+Clean data before processing for interpolation
+```{r}
+# check units to make sure all are comparable
+table(salinity_raw$Result_MeasureUnit)
+
+# drop unwanted measurements 
+salinity_raw <- salinity_raw %>%
+  filter(Result_Measure != 2190 & Result_Measure != 322) # Drop values that are not possible
+
 
 ```
 
@@ -137,4 +99,92 @@ param_means_map(sal_proc, "Salinity (ppt)")
 
 ```
 
+
+## Water Temperature
+
+```{r}
+water_temp_raw <- get_wq_data(
+  param = "Temperature, water",
+  from_date = start_date,
+  to_date = end_date,
+  sites = pbs_sites,
+  output_name = "water_temp",
+  force = force_toggle
+)
+```
+
+```{r}
+water_temp_proc <- proc_wq_data(water_temp_raw)
+
+# Plot Data Distribution
+param_means_hist(water_temp_proc, "Water Temperature (°C)")
+
+# View Spatial Distribution
+param_means_map(water_temp_proc, "Water Temperature (°C)")
+
+```
+
+
+## Dissolved Oxygen
+
+```{r}
+do_raw <- get_wq_data(
+  param = "Dissolved oxygen (DO)",
+  from_date = start_date,
+  to_date = end_date,
+  sites = pbs_sites,
+  output_name = "do_mgL",
+  force = force_toggle
+)
+```
+
+```{r}
+
+water_temp_proc <- proc_wq_data(do_raw)
+
+# Plot Data Distribution
+param_means_hist(do_proc, "Dissolved Oxygen (mg/L)")
+
+# View Spatial Distribution
+param_means_map(do_proc, "Dissolved Oxygen (mg/L)")
+
+```
+
+## Turbidity 
+```{r}
+
+turbidity_raw <- get_wq_data(
+  param = "Turbidity",
+  from_date = start_date,
+  to_date = end_date,
+  sites = pbs_sites,
+  output_name = "turbidity",
+  force = force_toggle
+)
+
+```
+
+```{r}
+turbidity_proc <- proc_wq_data(do_raw)
+
+# Plot Data Distribution
+param_means_hist(turbidity_proc, "Dissolved Oxygen (mg/L)")
+
+# View Spatial Distribution
+param_means_map(turbidity_proc, "Dissolved Oxygen (mg/L)")
+
+```
+
+
+
+
+```{r}
+wq_summary <- bind_rows(
+  salinity_proc %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
+  do_proc %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
+  chla_proc %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
+  turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
+  water_temp_raw %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
+)
+```
 #TODO: Load and process Oyster Beds

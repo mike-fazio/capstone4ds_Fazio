@@ -149,53 +149,87 @@ get_wq_data <- function(
   return(pbs_df)
 }
 
-### PROCESS WQ DATA ----
-
-proc_wq_data <- function(input_data) {
-  # Get name of input dataset
-  input_name <- deparse(substitute(input_data))
-
-  # Calculate Quantiles and IQR to remove statistical ouliers
-
-  Q1 <- quantile(input_data$Result_Measure, .25)
-  Q3 <- quantile(input_data$Result_Measure, .75)
-
-  # Clean and filter raw observations
-  df_clean <- input_data %>%
+### FLAG AND RETURN EXTREME OUTLIERS ----
+find_outliers <- function(df) {
+  # Ensure result values are numeric
+  df <- df %>%
     mutate(
-      Result_Measure = as.numeric(Result_Measure),
-      year = year(Activity_StartDate),
-      outlier = 
-        ifelse( 
-        (values >= (quantile(values, .25) - 1.5 * IQR(values)) &
-         values <= (quantile(values, .75) + 1.5 * IQR(values))), 
-        1,
-        0
-      ),
-      Result_Measure = ifelse(outlier = 1, NA, Result_Measure) #if outlier remove value to avoid statistics
+      Result_Measure = as.numeric(Result_Measure)
     ) %>%
     filter(
       # Select warm season (May-October)
-      month(Activity_StartDate) %in% 5:10,
+      month(Activity_StartDate) %in% 5:10
+    )
 
-      # Remove null results
+  # Calculate quantiles and IQR
+  Q1 <- quantile(
+    df$Result_Measure,
+    0.25,
+    na.rm = TRUE
+  )
+
+  Q3 <- quantile(
+    df$Result_Measure,
+    0.75,
+    na.rm = TRUE
+  )
+
+  iqr_value <- IQR(
+    df$Result_Measure,
+    na.rm = TRUE
+  )
+
+  # Flag outliers and perform initial filtering
+  df_flagged <- df %>%
+    mutate(
+      outlier = (Result_Measure < (Q1 - 1.5 * iqr_value) |
+        Result_Measure > (Q3 + 1.5 * iqr_value))
+    ) %>%
+    filter(
+      outlier
+    )
+
+  print(paste("Number of outliers detected: ", sum(df_flagged$outlier)))
+
+  return(df_flagged)
+}
+
+### PROCESS WQ DATA ----
+
+proc_wq_data <- function(df) {
+  # Get name of input dataset
+  input_name <- deparse(substitute(df))
+
+  df <- df %>%
+    filter(
+      # Select warm season (May-October)
+      month(Activity_StartDate) %in% 5:10,
+      # Remove records without measured values
       !is.na(Result_Measure),
 
       # Remove records without coordinates
       !is.na(Location_Latitude),
       !is.na(Location_Longitude)
+    ) %>%
+    mutate(
+      year = year(Activity_StartDate)
     )
 
   # Calculate annual warm-season means for each site
-  annual_summary <- df_clean %>%
+  annual_summary <- df %>%
     group_by(
       Location_Identifier,
       year
     ) %>%
     summarise(
-      annual_mean = mean(Result_Measure, na.rm = TRUE),
+      # Mean excluding statistical outliers
+      annual_mean = mean(
+        Result_Measure,
+        na.rm = TRUE
+      ),
+
+      # Number of observations retained
       annual_n = n(),
-      outlier_n = n(outlier, na.rm = TRUE) #count outliers
 
       # Station metadata
       location_name = first(Location_Name),
@@ -206,7 +240,7 @@ proc_wq_data <- function(input_data) {
     )
 
   # Calculate long-term site-level conditions
-  df <- annual_summary %>%
+  df_out <- annual_summary %>%
     group_by(Location_Identifier) %>%
     summarise(
       # Station metadata
@@ -248,15 +282,17 @@ proc_wq_data <- function(input_data) {
     outname
   )
 
-  saveRDS(df, out_path)
+  saveRDS(df_out, out_path)
 
-  return(df)
+  return(df_out)
 }
 
 ### PARAMETER MEANS MAP ----
 param_means_map <- function(x, param_label) {
+  my_bbox <- st_bbox(get_study_area())
+
   tm_basemap("Esri.WorldGrayCanvas") +
-    tm_shape(x) +
+    tm_shape(x, bbox = my_bbox) +
     tm_dots(
       fill = "mean",
       col = "black",
@@ -290,7 +326,7 @@ param_means_map <- function(x, param_label) {
 param_means_hist <- function(x, param_label) {
   ggplot(x, aes(x = mean)) +
     geom_histogram(
-      bins = 20,
+      binwidth = 0.5,
       color = "white",
       linewidth = 0.3
     ) +
@@ -305,6 +341,6 @@ param_means_hist <- function(x, param_label) {
       plot.title = element_text(face = "bold", size = 14),
       plot.subtitle = element_text(size = 10),
       strip.text = element_text(face = "bold"),
-      panel.grid.minor = element_blank()
+      #panel.grid.minor = element_blank()
     )
 }

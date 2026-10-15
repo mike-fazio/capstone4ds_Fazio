@@ -13,7 +13,7 @@ start_date <- "2005-01-01" # Beginning date of WQ data
 
 end_date <- "2025-01-01" # Ending date of WQ data
 
-force_toggle <- TRUE # TRUE or FALSE, determines if new API download occurs
+force_toggle <- FALSE # TRUE or FALSE, determines if new API download occurs
 
 
 ```
@@ -24,7 +24,7 @@ force_toggle <- TRUE # TRUE or FALSE, determines if new API download occurs
 
 ```{r}
 # Retrieve Data 
-chl_a_raw <- get_wq_data(
+chla_raw <- get_wq_data(
   param = "Chlorophyll a, corrected for pheophytin",
   from_date = start_date,
   to_date = end_date,
@@ -36,28 +36,31 @@ chl_a_raw <- get_wq_data(
 ```
 
 ```{r}
-table(chl_a_raw$Result_MeasureUnit)
+# check that all units are same
+table(chla_raw$Result_MeasureUnit)
 
-chl_a_raw <- chl_a_raw %>%
-  filter(Result_MeasureUnit != "" & Result_ResultDetectionCondition != "Not Detected" & Result_Measure < 40) %>%
+# open outlier table to inspect data for extreme outliers
+view(find_outliers(chla_raw))
+
+chla_raw <- chla_raw %>%
+  #filter(Result_MeasureUnit != "" & Result_ResultDetectionCondition != "Not Detected" & Result_Measure < 100) %>%
   mutate(Result_Measure = as.numeric(Result_Measure))
-
-hist(chl_a_raw$Result_Measure)
 
 ```
 
 
 ```{r}
 # Process Data
-chl_a_proc <- proc_wq_data(chl_a_raw)
+chla_clean <- proc_wq_data(chla_raw)
 
 # Plot Data Distribution
-param_means_hist(chl_a_proc, "Chlorophyll-a (µg/L)")
-hist(chl_a_proc$mean)
-
+param_means_hist(chla_clean, "Chlorophyll-a (µg/L)")
 
 # Plot Spatial Distribution
-param_means_map(chl_a_proc, "Chlorophyll-a (µg/L)")
+param_means_map(chla_clean, "Chlorophyll-a (µg/L)")
+
+hist(chla_clean$mean)
+
 
 ```
 
@@ -82,20 +85,20 @@ table(salinity_raw$Result_MeasureUnit)
 
 # drop unwanted measurements 
 salinity_raw <- salinity_raw %>%
-  filter(Result_Measure != 2190 & Result_Measure != 322) # Drop values that are not possible
+  filter(Result_Measure != 2190 & Result_Measure != 322) # Drop extreme outliers
 
 
 ```
 
 ```{r}
 # Process Data
-sal_proc <- proc_wq_data(salinity_raw)
+sal_clean <- proc_wq_data(salinity_raw)
 
 # Plot Data Distribution
-param_means_hist(sal_proc, "Salinity (ppt)")
+param_means_hist(sal_clean, "Salinity (ppt)")
 
 # View Spatial Distribution
-param_means_map(sal_proc, "Salinity (ppt)")
+param_means_map(sal_clean, "Salinity (ppt)")
 
 ```
 
@@ -114,13 +117,25 @@ water_temp_raw <- get_wq_data(
 ```
 
 ```{r}
-water_temp_proc <- proc_wq_data(water_temp_raw)
+# check units
+table(water_temp_raw$Result_MeasureUnit)
+
+view(find_outliers(water_temp_raw))
+
+# remove extreme outliers
+water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
+
+```
+
+
+```{r}
+water_temp_clean <- proc_wq_data(water_temp_raw)
 
 # Plot Data Distribution
-param_means_hist(water_temp_proc, "Water Temperature (°C)")
+param_means_hist(water_temp_clean, "Water Temperature (°C)")
 
 # View Spatial Distribution
-param_means_map(water_temp_proc, "Water Temperature (°C)")
+param_means_map(water_temp_clean, "Water Temperature (°C)")
 
 ```
 
@@ -139,14 +154,23 @@ do_raw <- get_wq_data(
 ```
 
 ```{r}
+# check units
+table(do_raw$Result_MeasureUnit)
 
-water_temp_proc <- proc_wq_data(do_raw)
+view(find_outliers(do_raw))
+
+
+```
+
+```{r}
+
+do_clean <- proc_wq_data(do_raw)
 
 # Plot Data Distribution
-param_means_hist(do_proc, "Dissolved Oxygen (mg/L)")
+param_means_hist(do_clean, "Dissolved Oxygen (mg/L)")
 
 # View Spatial Distribution
-param_means_map(do_proc, "Dissolved Oxygen (mg/L)")
+param_means_map(do_clean, "Dissolved Oxygen (mg/L)")
 
 ```
 
@@ -165,13 +189,22 @@ turbidity_raw <- get_wq_data(
 ```
 
 ```{r}
-turbidity_proc <- proc_wq_data(do_raw)
+# check units
+table(turbidity_raw$Result_MeasureUnit)
+
+view(find_outliers(turbidity_raw))
+
+
+```
+
+```{r}
+turbidity_clean <- proc_wq_data(turbidity_raw)
 
 # Plot Data Distribution
-param_means_hist(turbidity_proc, "Dissolved Oxygen (mg/L)")
+param_means_hist(turbidity_clean, "Turbidity (NTU)")
 
 # View Spatial Distribution
-param_means_map(turbidity_proc, "Dissolved Oxygen (mg/L)")
+param_means_map(turbidity_clean, "Turbidity (NTU)")
 
 ```
 
@@ -180,11 +213,59 @@ param_means_map(turbidity_proc, "Dissolved Oxygen (mg/L)")
 
 ```{r}
 wq_summary <- bind_rows(
-  salinity_proc %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
-  do_proc %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
-  chla_proc %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
-  turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
-  water_temp_raw %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
+  sal_clean %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
+  do_clean %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
+  chla_clean %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
+  turbidity_clean %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
+  water_temp_clean %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
 )
 ```
-#TODO: Load and process Oyster Beds
+
+Retrieve Oyster Data:
+
+https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson
+
+```{r}
+
+oysters <- read_sf("https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson")
+
+study_area <- get_study_area()
+
+oyster_pts_0903 <- oysters %>%
+  st_transform(st_crs(study_area)) %>%
+  st_make_valid() %>%
+  st_centroid() %>%
+  st_filter(
+    study_area,
+    .predicate = st_within
+  )
+
+out_path <- here::here(
+    "2-data",
+    "processed",
+    "oyster_pts_0903"
+  )
+
+saveRDS(oyster_pts_0903, out_path)  
+
+tm_basemap("Esri.WorldGrayCanvas") +
+    tm_shape(oyster_pts_0903, bbox = study_area) +
+    tm_dots(
+      col = "black",
+      size = 0.5,
+      lwd = 0.5,
+      fill.legend = tm_legend(
+        title = "PBS Oyster Beds",
+        title.fontface = 2,
+        #position = c("left", "bottom"),
+        position = tm_pos_out("center", "bottom", pos.h = "center"),
+        orientation = "landscape",
+        show = TRUE
+      )
+    ) +
+    tm_layout(
+      inner.margins = c(0.2, 0.2, 0.2, 0.2)
+    ) +
+    tm_title("Oyster Beds in Pensacola Bay System", fontface = 2) +
+    tm_compass(type = "8star")
+```

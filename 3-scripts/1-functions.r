@@ -152,7 +152,6 @@ get_wq_data <- function(
 ### PROCESS WQ DATA ----
 
 proc_wq_data <- function(input_data) {
-
   # Get name of input dataset
   input_name <- deparse(substitute(input_data))
 
@@ -255,24 +254,57 @@ proc_wq_data <- function(input_data) {
 }
 
 ### PARAMETER MEANS MAP ----
-param_means_map <- function(x, param_name, param_units) {
+param_means_map <- function(x, param_label) {
   tm_basemap("Esri.WorldGrayCanvas") +
-  tm_shape(x) +
-  tm_dots(
-    fill = "mean",
-    col = "black",
-    size = 0.5,
-    lwd = 0.5,
-    fill.scale = tm_scale_continuous(
-      values ="scico.imola"),
-  ) +
-  tm_legend(
-      position = c("left", "top"),
-      title = paste(param_name, param_units) # TODO: Fix legend title
-    ) +  
-  tm_layout(
-    inner.margins = c(0.2, 0.2, 0.2, 0.2)
-  ) +
-  tm_title("Observed Site Mean Vaules") +
-  tm_compass(type = "8star") 
+    tm_shape(x) +
+    tm_dots(
+      fill = "mean",
+      col = "black",
+      size = 0.5,
+      lwd = 0.5,
+      fill.scale = tm_scale_continuous(
+        values = "scico.imola"
+      ),
+      fill.legend = tm_legend(
+        title = param_label,
+        title.fontface = 2,
+        #position = c("left", "bottom"),
+        position = tm_pos_out("center", "bottom", pos.h = "center"),
+        orientation = "landscape",
+        show = TRUE
+      )
+    ) +
+    #tm_legend(
+    #position = c("left", "top"),
+    #title = param_label
+    #) +
+    tm_layout(
+      inner.margins = c(0.2, 0.2, 0.2, 0.2)
+    ) +
+    tm_title("Mean Observed Monitoring Location Values", fontface = 2) +
+    tm_compass(type = "8star")
+}
+
+### PARAMETER MEANS HISTOGRAM ----
+
+param_means_hist <- function(x, param_label) {
+  ggplot(x, aes(x = mean)) +
+    geom_histogram(
+      bins = 20,
+      color = "white",
+      linewidth = 0.3
+    ) +
+    labs(
+      title = paste("Distribution of Warm-Season Observations -", param_label),
+      subtitle = "Sample Counts for monitoring locations in the Pensacola Bay System",
+      x = "Observed Mean",
+      y = "Number of Monitoring Locations"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(face = "bold", size = 14),
+      plot.subtitle = element_text(size = 10),
+      strip.text = element_text(face = "bold"),
+      panel.grid.minor = element_blank()
+    )
 }

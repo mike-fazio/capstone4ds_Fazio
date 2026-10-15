@@ -156,11 +156,24 @@ proc_wq_data <- function(input_data) {
   # Get name of input dataset
   input_name <- deparse(substitute(input_data))
 
+  # Calculate Quantiles and IQR to remove statistical ouliers
+
+  Q1 <- quantile(input_data$Result_Measure, .25)
+  Q3 <- quantile(input_data$Result_Measure, .75)
+
   # Clean and filter raw observations
   df_clean <- input_data %>%
     mutate(
       Result_Measure = as.numeric(Result_Measure),
-      year = year(Activity_StartDate)
+      year = year(Activity_StartDate),
+      outlier = 
+        ifelse( 
+        (values >= (quantile(values, .25) - 1.5 * IQR(values)) &
+         values <= (quantile(values, .75) + 1.5 * IQR(values))), 
+        1,
+        0
+      ),
+      Result_Measure = ifelse(outlier = 1, NA, Result_Measure) #if outlier remove value to avoid statistics
     ) %>%
     filter(
       # Select warm season (May-October)
@@ -183,6 +196,7 @@ proc_wq_data <- function(input_data) {
     summarise(
       annual_mean = mean(Result_Measure, na.rm = TRUE),
       annual_n = n(),
+      outlier_n = n(outlier, na.rm = TRUE) #count outliers
 
       # Station metadata
       location_name = first(Location_Name),

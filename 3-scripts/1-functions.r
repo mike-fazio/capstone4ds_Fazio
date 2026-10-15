@@ -344,3 +344,43 @@ param_means_hist <- function(x, param_label) {
       #panel.grid.minor = element_blank()
     )
 }
+
+### GET OYSTER REEFS
+
+get_oyster_reefs <- function() {
+
+  file_path <- here::here(
+    "2-data",
+    "processed",
+    "oyster_pts_0903.rds"
+  )
+
+  if (file.exists(file_path)) {
+
+    oyster_reefs <- readRDS(file_path)
+
+  } else {
+
+    oysters <- read_sf(
+      "https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson"
+    )
+
+    study_area <- get_study_area()
+
+    oyster_reefs <- oysters %>%
+      st_transform(st_crs(study_area)) %>%
+      st_make_valid() %>%
+      st_centroid() %>%
+      st_filter(
+        study_area,
+        .predicate = st_within
+      )
+
+    saveRDS(
+      oyster_reefs,
+      file_path
+    )
+  }
+
+  return(oyster_reefs)
+}

@@ -227,35 +227,16 @@ https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapS
 
 ```{r}
 
-oysters <- read_sf("https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson")
-
-study_area <- get_study_area()
-
-oyster_pts_0903 <- oysters %>%
-  st_transform(st_crs(study_area)) %>%
-  st_make_valid() %>%
-  st_centroid() %>%
-  st_filter(
-    study_area,
-    .predicate = st_within
-  )
-
-out_path <- here::here(
-    "2-data",
-    "processed",
-    "oyster_pts_0903"
-  )
-
-saveRDS(oyster_pts_0903, out_path)  
+oyster_reefs <- get_oyster_reefs()
 
 tm_basemap("Esri.WorldGrayCanvas") +
-    tm_shape(oyster_pts_0903, bbox = study_area) +
+    tm_shape(oyster_reefs, bbox = study_area) +
     tm_dots(
       col = "black",
       size = 0.5,
       lwd = 0.5,
       fill.legend = tm_legend(
-        title = "PBS Oyster Beds",
+        title = "PBS Oyster Reefs",
         title.fontface = 2,
         #position = c("left", "bottom"),
         position = tm_pos_out("center", "bottom", pos.h = "center"),

@@ -18,3 +18,4 @@ source(
 )
 
 
+study_area <- get_study_area()

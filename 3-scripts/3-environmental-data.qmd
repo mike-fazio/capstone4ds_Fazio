@@ -244,6 +244,10 @@ tm_basemap("Esri.WorldGrayCanvas") +
         show = TRUE
       )
     ) +
+    tm_shape(study_area, bbox = study_area) +
+    tm_borders(
+      col = "red"
+    )
     tm_layout(
       inner.margins = c(0.2, 0.2, 0.2, 0.2)
     ) +

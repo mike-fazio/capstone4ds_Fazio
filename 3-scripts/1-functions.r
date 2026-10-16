@@ -4,18 +4,15 @@ get_study_area <- function() {
   file_path <- here::here(
     "2-data",
     "processed",
-    "study_area.rds"
+    "study_area_0903.rds"
   )
 
   if (file.exists(file_path)) {
     study_area <- readRDS(file_path)
   } else {
+    #wbid <- st_read(here::here("2-data","raw","Waterbody_IDs.shp"))
     wbid <- st_read(
-      here::here(
-        "2-data",
-        "raw",
-        "Waterbody_IDs.shp"
-      )
+      "https://ca.dep.state.fl.us/arcgis/rest/services/OpenData/WBIDS/MapServer/0/query?outFields=*&where=1%3D1&f=geojson"
     )
 
     # List of relevant WBIDs
@@ -35,7 +32,11 @@ get_study_area <- function() {
       # Filter results to only include desired WBIDs
       filter(WBID %in% study_area_wbid_list) %>%
       # Dissolve all polygons into one geometry
-      summarise()
+      summarise() %>%
+      st_transform(
+        # re-project to Florida Albers NAD 2011 State Plane North (EPSG: 0903)
+        crs = "+proj=lcc +lat_0=29 +lon_0=-84.5 +lat_1=29.5833333333333 +lat_2=30.75 +x_0=600000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+      )
 
     saveRDS(study_area, file_path)
   }
@@ -348,7 +349,6 @@ param_means_hist <- function(x, param_label) {
 ### GET OYSTER REEFS
 
 get_oyster_reefs <- function() {
-
   file_path <- here::here(
     "2-data",
     "processed",
@@ -356,11 +356,8 @@ get_oyster_reefs <- function() {
   )
 
   if (file.exists(file_path)) {
-
     oyster_reefs <- readRDS(file_path)
-
   } else {
-
     oysters <- read_sf(
       "https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson"
     )

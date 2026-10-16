@@ -39,6 +39,11 @@ sal <- readRDS(
     "salinity_0903.rds"
   ))
 
+sal <- sal %>%
+  filter(
+    mean < 50
+  )
+
 sal_ras <- ipdw(sal, cost_raster, range = 10000, paramlist = 'mean', trim_rstack = TRUE)
 
 path_dists <- pathdistGen(

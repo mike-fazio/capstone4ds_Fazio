@@ -4,6 +4,7 @@ library(tidyverse)
 library(tmap)
 library(knitr)
 library(tibble)
+library(ipdw)
 
 tmap_mode("plot")
 
@@ -15,3 +16,5 @@ source(
     "1-functions.r"
   )
 )
+
+

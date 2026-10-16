@@ -40,7 +40,7 @@ chla_raw <- get_wq_data(
 table(chla_raw$Result_MeasureUnit)
 
 # open outlier table to inspect data for extreme outliers
-view(find_outliers(chla_raw))
+# view(find_outliers(chla_raw))
 
 chla_raw <- chla_raw %>%
   #filter(Result_MeasureUnit != "" & Result_ResultDetectionCondition != "Not Detected" & Result_Measure < 100) %>%
@@ -120,7 +120,7 @@ water_temp_raw <- get_wq_data(
 # check units
 table(water_temp_raw$Result_MeasureUnit)
 
-view(find_outliers(water_temp_raw))
+#view(find_outliers(water_temp_raw))
 
 # remove extreme outliers
 water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
@@ -157,7 +157,7 @@ do_raw <- get_wq_data(
 # check units
 table(do_raw$Result_MeasureUnit)
 
-view(find_outliers(do_raw))
+#view(find_outliers(do_raw))
 
 
 ```
@@ -192,7 +192,7 @@ turbidity_raw <- get_wq_data(
 # check units
 table(turbidity_raw$Result_MeasureUnit)
 
-view(find_outliers(turbidity_raw))
+#view(find_outliers(turbidity_raw))
 
 
 ```

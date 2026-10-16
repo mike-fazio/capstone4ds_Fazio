@@ -5,9 +5,6 @@ source(
     "0-setup.r"
   )
 )
-study_area <- get_study_area() 
-
-study_area <- st_transform(study_area, crs = "ESRI:103021" ) #TODO: FIX STUDY AREA TO PROPER PROJECTION
 
 proj4 <- st_crs(study_area)$proj4string
 
@@ -18,7 +15,8 @@ study_extent <- study_area %>%
   st_buffer(1000)
 
 # Create land/barrier polygon:
-land_barrier <- st_difference( # everything within extent EXCEPT the water study area
+land_barrier <- st_difference(
+  # everything within extent EXCEPT the water study area
   study_extent,
   st_union(study_area)
 )
@@ -32,19 +30,53 @@ cost_raster <- costrasterGen(
   resolution = 100
 )
 
-sal <- readRDS( 
+sal <- readRDS(
   here::here(
     "2-data",
     "processed",
     "salinity_0903.rds"
-  ))
+  )
+)
 
-sal <- sal %>%
+sal <- sal %>% # TODO FIX Salinity outlier detection
   filter(
     mean < 50
   )
 
-sal_ras <- ipdw(sal, cost_raster, range = 10000, paramlist = 'mean', trim_rstack = TRUE)
+sal_ras <- ipdw(
+  sal,
+  cost_raster,
+  range = 10000,
+  paramlist = 'mean',
+  trim_rstack = TRUE
+)
+
+ipdw_manual <- function(sf, cost_ras, range, par_list, trim = TRUE) {
+  path_dists <- pathdistGen(
+    sf_ob = sf,
+    costras = cost_ras,
+    range = range,
+    progressbar = TRUE
+  )
+
+  interp <- ipdwInterp(
+    sf_ob = sf,
+    rstack = path_dists,
+    paramlist = par_list,
+    trim_rstack = trim
+  )
+
+  interp[
+    cost_raster != 1 |
+      coverage == 0
+  ] <- NA
+
+  return(interp)
+}
+
+
+sal_test <- ipdw_manual(sal, cost_raster, 10000, "mean")
+
 
 path_dists <- pathdistGen(
   sf_ob = sal,
@@ -64,10 +96,9 @@ sal_ras_clean <- sal_ras_test
 
 sal_ras_clean[
   cost_raster != 1 |
-  coverage == 0
+    coverage == 0
 ] <- NA
 
-raster::crs(sal_ras_clean) <- raster::crs(cost_raster)
 
 plot(
   sal_ras_clean,

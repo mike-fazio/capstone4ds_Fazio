@@ -51,7 +51,7 @@ chla_raw <- chla_raw %>%
 
 ```{r}
 # Process Data
-chla_clean <- proc_wq_data(chla_raw)
+chla_clean <- proc_wq_data(chla_raw, "chla")
 
 # Plot Data Distribution
 param_means_hist(chla_clean, "Chlorophyll-a (µg/L)")
@@ -92,7 +92,7 @@ salinity_raw <- salinity_raw %>%
 
 ```{r}
 # Process Data
-sal_clean <- proc_wq_data(salinity_raw)
+sal_clean <- proc_wq_data(salinity_raw, "salinity")
 
 # Plot Data Distribution
 param_means_hist(sal_clean, "Salinity (ppt)")
@@ -129,7 +129,7 @@ water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
 
 
 ```{r}
-water_temp_clean <- proc_wq_data(water_temp_raw)
+water_temp_clean <- proc_wq_data(water_temp_raw,"water_temp")
 
 # Plot Data Distribution
 param_means_hist(water_temp_clean, "Water Temperature (°C)")
@@ -164,7 +164,7 @@ table(do_raw$Result_MeasureUnit)
 
 ```{r}
 
-do_clean <- proc_wq_data(do_raw)
+do_clean <- proc_wq_data(do_raw, "do")
 
 # Plot Data Distribution
 param_means_hist(do_clean, "Dissolved Oxygen (mg/L)")
@@ -198,7 +198,7 @@ table(turbidity_raw$Result_MeasureUnit)
 ```
 
 ```{r}
-turbidity_clean <- proc_wq_data(turbidity_raw)
+turbidity_clean <- proc_wq_data(turbidity_raw, "turbidity")
 
 # Plot Data Distribution
 param_means_hist(turbidity_clean, "Turbidity (NTU)")

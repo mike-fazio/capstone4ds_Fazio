@@ -30,6 +30,9 @@ cost_raster <- costrasterGen(
   resolution = 100
 )
 
+
+# SALINITY
+
 sal <- readRDS(
   here::here(
     "2-data",
@@ -43,86 +46,78 @@ sal <- sal %>% # TODO FIX Salinity outlier detection
     mean < 50
   )
 
-sal_ras <- ipdw(
-  sal,
-  cost_raster,
-  range = 10000,
-  paramlist = 'mean',
-  trim_rstack = TRUE
-)
-
-ipdw_manual <- function(sf_ob, cost_ras, range, par_list, trim = FALSE) {
-
-  # Generate path-distance rasters
-  path_dists <- pathdistGen(
-    sf_ob = sf_ob,
-    costras = cost_ras,
-    range = range,
-    progressbar = TRUE
-  )
-
-  # Calculate number of contributing stations per cell
-  coverage <- raster::calc(
-    path_dists,
-    fun = function(x) {
-      sum(x > 0, na.rm = TRUE)
-    }
-  )
-
-  # Interpolate
-  interp <- ipdwInterp(
-    sf_ob = sf_ob,
-    rstack = path_dists,
-    paramlist = par_list,
-    trim_rstack = trim
-  )
-
-  # Remove barriers and cells with no interpolation support
-  interp[
-    cost_ras != 1 |
-      coverage == 0
-  ] <- NA
-
-  # Restore CRS
-  raster::crs(interp) <- raster::crs(cost_ras)
-
-  return(interp)
-}
-
-
-sal_test <- ipdw_manual(sal, cost_raster, 10000, "mean")
-
-
-path_dists <- pathdistGen(
-  sf_ob = sal,
-  costras = cost_raster,
-  range = 10000,
-  progressbar = TRUE
-)
-
-sal_ras_test <- ipdwInterp(
-  sf_ob = sal,
-  rstack = path_dists,
-  paramlist = "mean",
-  trim_rstack = FALSE
-)
-
-sal_ras_clean <- sal_ras_test
-
-sal_ras_clean[
-  cost_raster != 1 |
-    coverage == 0
-] <- NA
-
+sal_ipdw <- ipdw_manual(sal, cost_raster, 10000, "mean", dist_power = 0.25)
 
 plot(
-  sal_ras_clean,
+  sal_ipdw,
   main = "Salinity IPDW"
 )
 
+# DO
+
+do <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "do_0903.rds"
+  )
+)
+
+do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 0.25)
+
 plot(
-  st_geometry(sal),
-  add = TRUE,
-  pch = 20,
-  cex = 0.4
+  do_ipdw,
+  main = "Dissolved Oxygen IPDW"
+)
+
+# Chlorophyll-a
+
+chla <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "chla_0903.rds"
+  )
+)
+
+chla_ipdw <- ipdw_manual(chla, cost_raster, 10000, "mean", dist_power = 1)
+
+plot(
+  chla_ipdw,
+  main = "Chlorophyll-a IPDW"
+)
+
+# Turbidiity
+turb <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "turbidity_0903.rds"
+  )
+)
+
+turb_ipdw <- ipdw_manual(turb, cost_raster, 10000, "mean", dist_power = 0.25)
+
+plot(
+  turb_ipdw,
+  main = "Turbidity IPDW"
+)
+
+
+
+# Water Temp
+
+temp <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "water_temp_0903.rds"
+  )
+)
+
+water_temp_ipdw <- ipdw_manual(temp, cost_raster, 10000, "mean", dist_power = 0.50)
+
+plot(
+  water_temp_ipdw,
+  main = "Water Temperature IPDW"
 )

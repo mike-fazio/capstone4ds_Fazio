@@ -197,7 +197,7 @@ find_outliers <- function(df) {
 
 ### PROCESS WQ DATA ----
 
-proc_wq_data <- function(df) {
+proc_wq_data <- function(df, param_name) {
   # Get name of input dataset
   input_name <- deparse(substitute(df))
 
@@ -273,7 +273,7 @@ proc_wq_data <- function(df) {
 
   # Save processed data
   outname <- paste0(
-    input_name,
+    param_name,
     "_0903.rds"
   )
 
@@ -346,7 +346,7 @@ param_means_hist <- function(x, param_label) {
     )
 }
 
-### GET OYSTER REEFS
+### GET OYSTER REEFS ----
 
 get_oyster_reefs <- function() {
   file_path <- here::here(
@@ -380,4 +380,46 @@ get_oyster_reefs <- function() {
   }
 
   return(oyster_reefs)
+}
+
+
+#### Manual ipdw function for two-step interpolation process. Allows to mask un needed pixels 
+
+ipdw_manual <- function(sf_ob, cost_ras, range, par_list, dist_power = 1, trim = FALSE) {
+
+  # Generate path-distance rasters
+  path_dists <- pathdistGen(
+    sf_ob = sf_ob,
+    costras = cost_ras,
+    range = range,
+    progressbar = TRUE
+  )
+
+  # Calculate number of contributing stations per cell
+  coverage <- raster::calc(
+    path_dists,
+    fun = function(x) {
+      sum(x > 0, na.rm = TRUE)
+    }
+  )
+
+  # Interpolate
+  interp <- ipdwInterp(
+    sf_ob = sf_ob,
+    rstack = path_dists,
+    paramlist = par_list,
+    dist_power = dist_power,
+    trim_rstack = trim
+  )
+
+  # Remove barriers and cells with no interpolation support
+  interp[
+    cost_ras != 1 |
+      coverage == 0
+  ] <- NA
+
+  # Restore CRS
+  raster::crs(interp) <- raster::crs(cost_ras)
+
+  return(interp)
 }

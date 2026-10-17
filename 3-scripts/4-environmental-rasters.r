@@ -51,25 +51,40 @@ sal_ras <- ipdw(
   trim_rstack = TRUE
 )
 
-ipdw_manual <- function(sf, cost_ras, range, par_list, trim = TRUE) {
+ipdw_manual <- function(sf_ob, cost_ras, range, par_list, trim = FALSE) {
+
+  # Generate path-distance rasters
   path_dists <- pathdistGen(
-    sf_ob = sf,
+    sf_ob = sf_ob,
     costras = cost_ras,
     range = range,
     progressbar = TRUE
   )
 
+  # Calculate number of contributing stations per cell
+  coverage <- raster::calc(
+    path_dists,
+    fun = function(x) {
+      sum(x > 0, na.rm = TRUE)
+    }
+  )
+
+  # Interpolate
   interp <- ipdwInterp(
-    sf_ob = sf,
+    sf_ob = sf_ob,
     rstack = path_dists,
     paramlist = par_list,
     trim_rstack = trim
   )
 
+  # Remove barriers and cells with no interpolation support
   interp[
-    cost_raster != 1 |
+    cost_ras != 1 |
       coverage == 0
   ] <- NA
+
+  # Restore CRS
+  raster::crs(interp) <- raster::crs(cost_ras)
 
   return(interp)
 }

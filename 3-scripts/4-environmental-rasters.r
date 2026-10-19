@@ -1,57 +1,4 @@
-# Load packages and functions from setup script
-source(
-  here::here(
-    "3-scripts",
-    "0-setup.r"
-  )
-)
 
-proj4 <- st_crs(study_area)$proj4string
-
-# Create polygon surrounding the study area
-study_extent <- study_area %>%
-  st_bbox() %>%
-  st_as_sfc() %>%
-  st_buffer(1000)
-
-# Create land/barrier polygon:
-land_barrier <- st_difference(
-  # everything within extent EXCEPT the water study area
-  study_extent,
-  st_union(study_area)
-)
-
-land_barrier <- st_as_sf(land_barrier) # convert to sf
-
-# Generate cost raster
-cost_raster <- costrasterGen(
-  pols = land_barrier,
-  projstr = proj4,
-  resolution = 100
-)
-
-
-# SALINITY
-
-sal <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "salinity_0903.rds"
-  )
-)
-
-sal <- sal %>% # TODO FIX Salinity outlier detection
-  filter(
-    mean < 50
-  )
-
-sal_ipdw <- ipdw_manual(sal, cost_raster, 10000, "mean", dist_power = 0.25)
-
-plot(
-  sal_ipdw,
-  main = "Salinity IPDW"
-)
 
 # DO
 
@@ -63,7 +10,7 @@ do <- readRDS(
   )
 )
 
-do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 0.25)
+do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 1.5)
 
 plot(
   do_ipdw,
@@ -115,9 +62,4 @@ temp <- readRDS(
   )
 )
 
-water_temp_ipdw <- ipdw_manual(temp, cost_raster, 10000, "mean", dist_power = 0.50)
 
-plot(
-  water_temp_ipdw,
-  main = "Water Temperature IPDW"
-)

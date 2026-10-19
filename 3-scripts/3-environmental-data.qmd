@@ -87,7 +87,6 @@ table(salinity_raw$Result_MeasureUnit)
 salinity_raw <- salinity_raw %>%
   filter(Result_Measure != 2190 & Result_Measure != 322) # Drop extreme outliers
 
-
 ```
 
 ```{r}

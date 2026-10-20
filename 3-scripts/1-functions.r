@@ -51,7 +51,7 @@ get_study_area <- function() {
 # -----------------------------------------------------------------------------
 #  DEFINE SITE DATA RETRIEVAL FUNCTION -
 #  Checks if data already exists. If so, loads data, else retrieves from EPA
-#  WQP. 
+#  WQP.
 # -----------------------------------------------------------------------------
 
 get_wq_sites <- function(study_area) {
@@ -110,7 +110,7 @@ get_wq_sites <- function(study_area) {
 # -----------------------------------------------------------------------------
 #  DEFINE WQ DATA RETRIEVAL FUNCTION -
 #  Checks if data already exists. If so, loads data, else retrieves from EPA
-#  WQP. 
+#  WQP.
 # -----------------------------------------------------------------------------
 
 get_wq_data <- function(
@@ -212,7 +212,7 @@ find_outliers <- function(df) {
 
 # -----------------------------------------------------------------------------
 #  DEFINE WATER QUALITY DATA PROCESSING FUNCTION -
-#  Processes input data to prepare it for use in this projects analysis. 
+#  Processes input data to prepare it for use in this projects analysis.
 # -----------------------------------------------------------------------------
 
 proc_wq_data <- function(df, param_name) {
@@ -309,7 +309,7 @@ proc_wq_data <- function(df, param_name) {
 # -----------------------------------------------------------------------------
 #  DEFINE PARAMETER MEANS MAP FUNCTION -
 #  Creates spatial plot (map) of input parameter means for visual inspection of
-#  spatial distribution. 
+#  spatial distribution.
 # -----------------------------------------------------------------------------
 
 param_means_map <- function(x, param_label) {
@@ -348,7 +348,7 @@ param_means_map <- function(x, param_label) {
 # -----------------------------------------------------------------------------
 #  DEFINE PARAMETER MEANS HISTOGRAM FUNCTION -
 #  Creates histogram of input parameters mean values for visiual inspection of
-#  statistical distribution. 
+#  statistical distribution.
 # -----------------------------------------------------------------------------
 
 param_means_hist <- function(x, param_label) {
@@ -416,28 +416,33 @@ get_oyster_reefs <- function() {
 # -----------------------------------------------------------------------------
 #  DEFINE MANUAL FUNCTION FOR IDPW -
 #  Allows two-step interpolation porcess to mask un-needed pixels. IDPW() func
-#  resulted in washed out plots. 
+#  resulted in washed out plots.
 # -----------------------------------------------------------------------------
 
-ipdw_manual <- function(sf_ob, cost_ras, range, par_list, dist_power = 1, trim = FALSE) {
+ipdw_manual <- function(
+  sf_ob,
+  cost_ras,
+  range,
+  par_list,
+  dist_power = 1,
+  trim = FALSE,
+  path_dists = NULL
+) {
+  # Only generate if not already supplied
+  if (is.null(path_dists)) {
+    path_dists <- ipdw::pathdistGen(
+      sf_ob = sf_ob,
+      costras = cost_ras,
+      range = range,
+      progressbar = TRUE
+    )
+  }
 
-  # Generate path-distance rasters
-  path_dists <- ipdw::pathdistGen(
-    sf_ob = sf_ob,
-    costras = cost_ras,
-    range = range,
-    progressbar = TRUE
-  )
-
-  # Calculate number of contributing stations per cell
   coverage <- raster::calc(
     path_dists,
-    fun = function(x) {
-      sum(x > 0, na.rm = TRUE)
-    }
+    function(x) sum(x > 0, na.rm = TRUE)
   )
 
-  # Interpolate
   interp <- ipdw::ipdwInterp(
     sf_ob = sf_ob,
     rstack = path_dists,
@@ -446,42 +451,38 @@ ipdw_manual <- function(sf_ob, cost_ras, range, par_list, dist_power = 1, trim =
     trim_rstack = trim
   )
 
-  # Remove barriers and cells with no interpolation support
   interp[
     cost_ras != 1 |
       coverage == 0
   ] <- NA
 
-  # Restore CRS
   raster::crs(interp) <- raster::crs(cost_ras)
 
   return(interp)
 }
-
 # -----------------------------------------------------------------------------
-# IPDW CROSS VALIDATION FUNCTION - 
-# Split data into spatial folds and assess prediction accruacy of interpolation 
+# IPDW CROSS VALIDATION FUNCTION -
+# Split data into spatial folds and assess prediction accruacy of interpolation
 # model.
 # -----------------------------------------------------------------------------
 
 ipdw_run <- function(
-    df,
-    cost_raster,
-    folds,
-    dist_pwr = 1.5,
-    max_range = 10000,
-    value_col = "mean"
+  df,
+  cost_raster,
+  folds,
+  dist_pwr = 1.5,
+  max_range = 10000,
+  value_col = "mean",
+  path_dists = NULL
 ) {
-
   cv_results <- purrr::map_dfr(
     seq_along(folds$folds_list),
     function(i) {
-
       train_idx <- folds$folds_list[[i]][[1]]
-      test_idx  <- folds$folds_list[[i]][[2]]
+      test_idx <- folds$folds_list[[i]][[2]]
 
       train <- df[train_idx, ]
-      test  <- df[test_idx, ]
+      test <- df[test_idx, ]
 
       # Generate IPDW surface from training observations
       ipdw_result <- ipdw_manual(
@@ -489,7 +490,8 @@ ipdw_run <- function(
         cost_raster,
         max_range,
         value_col,
-        dist_power = dist_pwr
+        dist_power = dist_pwr,
+        path_dists = path_dists[[i]]
       )
 
       # Extract predicted values at withheld stations
@@ -521,23 +523,23 @@ ipdw_run <- function(
       Bias = mean(predicted - observed, na.rm = TRUE)
     )
 }
-
 # -----------------------------------------------------------------------------
-# IPDW SENSITIVITY FUNCTION - Test distance power, max range, or both
+# IPDW SENSITIVITY FUNCTION - Test distance power, max range, or both and
+# generate results table with model diagnostics to allow tuning for most
+# accurate prediction surfaces.
 # -----------------------------------------------------------------------------
 
 ipdw_sensitivity <- function(
-    df,
-    cost_raster,
-    n_seeds = 5,
-    value_col = "mean",
-    unit = "",
-    dist_powers = 1.5,
-    max_ranges = 10000,
-    block_size = 5000,
-    k = 5
+  df,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "",
+  dist_powers = 1.5,
+  max_ranges = 10000,
+  block_size = 5000,
+  k = 5
 ) {
-
   # All parameter combinations
   parameter_grid <- tidyr::expand_grid(
     dist_power = dist_powers,
@@ -546,7 +548,6 @@ ipdw_sensitivity <- function(
 
   # Repeated spatial cross-validation
   cv_results <- purrr::map_dfr(seq_len(n_seeds), function(s) {
-
     set.seed(s)
 
     folds <- blockCV::cv_spatial(
@@ -560,7 +561,6 @@ ipdw_sensitivity <- function(
     purrr::pmap_dfr(
       parameter_grid,
       function(dist_power, max_range) {
-
         ipdw_run(
           df = df,
           cost_raster = cost_raster,
@@ -573,6 +573,28 @@ ipdw_sensitivity <- function(
     ) %>%
       dplyr::mutate(seed = s)
   })
+  # Generate path distances once for each range and fold
+  path_cache <- purrr::map(
+    max_ranges,
+    function(max_range) {
+      names(path_cache) <- as.character(max_ranges)
+
+      purrr::pmap_dfr(
+        parameter_grid,
+        function(dist_power, max_range) {
+          ipdw_run(
+            df = df,
+            cost_raster = cost_raster,
+            folds = folds,
+            dist_pwr = dist_power,
+            max_range = max_range,
+            value_col = value_col,
+            path_dists = path_cache[[as.character(max_range)]]
+          )
+        }
+      )
+    }
+  )
 
   # Summarize performance across random partitions
   cv_summary <- cv_results %>%
@@ -607,7 +629,6 @@ ipdw_sensitivity <- function(
 
   # Plot depends on which parameters vary
   if (length(dist_powers) > 1 && length(max_ranges) == 1) {
-
     cv_plot <- ggplot2::ggplot(
       cv_results,
       ggplot2::aes(
@@ -626,9 +647,7 @@ ipdw_sensitivity <- function(
         color = "red"
       ) +
       ggplot2::labs(x = "Distance Power")
-
   } else {
-
     cv_plot <- ggplot2::ggplot(
       cv_results,
       ggplot2::aes(
@@ -650,7 +669,10 @@ ipdw_sensitivity <- function(
     ggplot2::labs(
       title = "IPDW Spatial Cross-Validation Sensitivity",
       subtitle = paste(
-        n_seeds, "partitions ×", k, "spatial folds"
+        n_seeds,
+        "partitions ×",
+        k,
+        "spatial folds"
       ),
       y = paste0(
         "Mean Absolute Error",

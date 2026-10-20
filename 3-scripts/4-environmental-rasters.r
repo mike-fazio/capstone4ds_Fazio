@@ -8,17 +8,24 @@ cost_raster <- ipdw::costrasterGen(
   resolution = 100
 )
 
-dp <- c(1.0, 1.5, 2.0, 2.5,3.0)
+dp <- c(1.0, 1.5, 2.0, 2.5, 3.0)
 
 
 # SAL
 
-sal_ipdw <- ipdw_manual(sal, cost_raster, 10000, "mean", unit = "ppt" dist_power = 1.5)
+sal_ipdw <- ipdw_manual(sal, cost_raster, 10000, "mean", dist_power = 1.5)
 
 
 # DO
 
-do_test <-ipdw_sensitivity(do, cost_raster, n_seeds = 5, value_col = "mean", unit = "mg/L", dist_powers = dp)
+do_test <- ipdw_sensitivity(
+  do,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = dp
+)
 do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 1.5)
 
 plot(

@@ -13,42 +13,22 @@ The study area for this project is the Pensacola Bay System which includes porti
 ![Study area for the Pensacola Bay System.](4-tables-and-figures/study-area.png){#fig-study-area}
 
 *Data acquisition and dataset inventory*
+
+Oyster occurence data was acquired from the Florida Fish and Wildlife Commission's GIS portal as polygons and converted to points using polygon centroids. After clipping to the study area extent, ### known reef locations were present within the PBS [@FWC2026Oysters]. Salinity, dissolved oxygen, temperature, and turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the 'dataRetrieval' package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 [@wqp_2026, @dataRetrieval2026]. Parameters were chosen based on relevance and represenation in previous oyster habitat retoration studies [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]. Bathymetry data for the PBS was obtained from NOAA as a #### resolution raster dataset [@NOAA_2018]. ***DOES BATHYMETRY DATA NEED TO BE RESAMPLED TO NEW CELL SIZE?***. Substrate data was obtained from the Pensacola and Perdido Bay Estuary Program and was the same dataset used in their earlier HSI study which was modeled on the @Geselbrach2024 study. 
    
-   1. Eastern oyster occurrence data.
-      - Source oyster occurrence data from the FWC-FWRI Oyster Beds in Florida dataset [@FWC2026Oysters].
-      - Record dataset version and acquisition date [@FWC2026Oysters].
-      - Document original geometry type.
-      - Document number of source features and number retained within the study area.
-      - Document temporal and source-data information where available [@FWC2026Oysters].
+
+```{r}
+#| label: tbl-metadata
+#| tbl-cap: "Environmental Parameters"
+
+# insert data table with environmental metadata  
+
+knitr::kable(
+   readxl::read_excel(here::here("4-tables-and-figures", "data_summary.xlsx"))
+)
    
-   2. Water-quality observations.
-      - Retrieve water-quality observations from the Water Quality Portal [@wqp_2026].
-      - Use the `dataRetrieval` package and associated WQP services for programmatic data acquisition [@dataRetrieval2026].
-      - Restrict queries to relevant counties, estuarine monitoring locations, selected parameters, and the study period.
-   
-   3. Document water-quality dataset size and temporal coverage.
-      - Dissolved oxygen: approximately 145 stations and 3,072 observations [@wqp_2026].
-      - Salinity: approximately 135 stations and 3,401 observations [@wqp_2026].
-      - Temperature: approximately 145 stations and 3,442 observations [@wqp_2026].
-      - Turbidity: approximately 122 stations and 1,563 observations [@wqp_2026].
-      - Chlorophyll-a: approximately 48 stations and 754 observations [@wqp_2026].
-      - Current temporal coverage is approximately 2005--2024 [@wqp_2026].
-   
-   4. Evaluate candidate predictors based on spatial coverage.
-      - Chlorophyll-a is expected to be excluded from interpolation because available monitoring stations do not provide adequate system-wide spatial coverage.
-      - Salinity, dissolved oxygen, temperature, and turbidity currently provide substantially stronger monitoring coverage.
-      - These variables have previously been identified as relevant environmental characteristics for Eastern oyster habitat and restoration modeling [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024].
-   
-   5. Bathymetry.
-      - Obtain Pensacola Bay estuarine bathymetry from NOAA [@NOAA_2018].
-      - Document raster resolution, vertical datum, geographic extent, and preprocessing requirements [@NOAA_2018].
-   
-   6. Substrate or bottom type.
-      - Identify and acquire a suitable spatial dataset describing bottom characteristics.
-      - Document spatial resolution, substrate classes, temporal source, and geographic coverage.
-      - Suitable substrate is an important constraint on Eastern oyster settlement and reef development [@Barnes2007; @Geselbracht2024].
-      - **Add a citation for the final substrate dataset once selected.**
-   
+```
+
    7. Existing Pensacola Bay HSI.
       - Obtain the original GIS/raster output associated with the Pensacola Bay HSI developed by Geselbracht et al. [@Geselbracht2024].
       - Document raster score range, coordinate reference system, extent, resolution, and NoData handling.

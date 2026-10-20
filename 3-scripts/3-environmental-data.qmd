@@ -61,7 +61,7 @@ param_means_map(chla_clean, "Chlorophyll-a (µg/L)")
 
 hist(chla_clean$mean)
 
-rm(chla_raw)
+#rm(chla_raw)
 
 
 ```
@@ -101,7 +101,7 @@ param_means_hist(sal_clean, "Salinity (ppt)")
 # View Spatial Distribution
 param_means_map(sal_clean, "Salinity (ppt)")
 
-rm(salinity_raw)
+#rm(salinity_raw)
 ```
 
 
@@ -139,7 +139,7 @@ param_means_hist(water_temp_clean, "Water Temperature (°C)")
 # View Spatial Distribution
 param_means_map(water_temp_clean, "Water Temperature (°C)")
 
-rm(water_temp_raw)
+#rm(water_temp_raw)
 ```
 
 
@@ -174,7 +174,7 @@ param_means_hist(do_clean, "Dissolved Oxygen (mg/L)")
 # View Spatial Distribution
 param_means_map(do_clean, "Dissolved Oxygen (mg/L)")
 
-rm(do_raw)
+#rm(do_raw)
 
 ```
 
@@ -210,7 +210,7 @@ param_means_hist(turbidity_clean, "Turbidity (NTU)")
 # View Spatial Distribution
 param_means_map(turbidity_clean, "Turbidity (NTU)")
 
-rm(turbidity_raw)
+#rm(turbidity_raw)
 ```
 
 

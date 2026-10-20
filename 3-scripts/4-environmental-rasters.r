@@ -21,11 +21,12 @@ sal_ipdw <- ipdw_manual(sal, cost_raster, 10000, "mean", dist_power = 1.5)
 do_test <- ipdw_sensitivity(
   do,
   cost_raster,
-  n_seeds = 5,
+  n_seeds = 1,
   value_col = "mean",
   unit = "mg/L",
   dist_powers = dp
 )
+
 do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 1.5)
 
 plot(

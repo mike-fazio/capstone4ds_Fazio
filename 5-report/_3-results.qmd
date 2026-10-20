@@ -1,3 +1,11 @@
 # Results
 
-In progress...
+*Water Quality Observations*
+
+Document water-quality dataset size and temporal coverage [@wqp_2026].
+      - Dissolved oxygen: approximately 145 stations and 3,072 observations .
+      - Salinity: approximately 135 stations and 3,401 observations 
+      - Temperature: approximately 145 stations and 3,442 observations
+      - Turbidity: approximately 122 stations and 1,563 observations 
+      - Chlorophyll-a: approximately 48 stations and 754 observations
+      - Current temporal coverage is approximately 2005--2024 

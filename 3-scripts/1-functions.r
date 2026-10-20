@@ -523,6 +523,7 @@ ipdw_run <- function(
       Bias = mean(predicted - observed, na.rm = TRUE)
     )
 }
+
 # -----------------------------------------------------------------------------
 # IPDW SENSITIVITY FUNCTION - Test distance power, max range, or both and
 # generate results table with model diagnostics to allow tuning for most
@@ -547,38 +548,56 @@ ipdw_sensitivity <- function(
   )
 
   # Repeated spatial cross-validation
-  cv_results <- purrr::map_dfr(seq_len(n_seeds), function(s) {
-    set.seed(s)
+  cv_results <- purrr::map_dfr(
+    seq_len(n_seeds),
+    function(s) {
+      set.seed(s)
 
-    folds <- blockCV::cv_spatial(
-      x = df,
-      k = k,
-      size = block_size,
-      selection = "random",
-      plot = FALSE
-    )
+      folds <- blockCV::cv_spatial(
+        x = df,
+        k = k,
+        size = block_size,
+        selection = "random",
+        plot = FALSE
+      )
 
-    purrr::pmap_dfr(
-      parameter_grid,
-      function(dist_power, max_range) {
-        ipdw_run(
-          df = df,
-          cost_raster = cost_raster,
-          folds = folds,
-          dist_pwr = dist_power,
-          max_range = max_range,
-          value_col = value_col
-        )
-      }
-    ) %>%
-      dplyr::mutate(seed = s)
-  })
-  # Generate path distances once for each range and fold
-  path_cache <- purrr::map(
-    max_ranges,
-    function(max_range) {
+      # Generate path distances once for each range and fold
+      path_cache <- purrr::map(
+        max_ranges,
+        function(max_range) {
+          purrr::map(
+            seq_along(folds$folds_list),
+            function(i) {
+              message(
+                "Seed ",
+                s,
+                "/",
+                n_seeds,
+                " | Range ",
+                max_range,
+                " | Fold ",
+                i,
+                "/",
+                length(folds$folds_list)
+              )
+              train_idx <- folds$folds_list[[i]][[1]]
+              train <- df[train_idx, ]
+
+              ipdw::pathdistGen(
+                sf_ob = train,
+                costras = cost_raster,
+                range = max_range,
+                progressbar = FALSE
+              )
+            }
+          )
+        }
+      )
+
+      # Name cached results by max range
       names(path_cache) <- as.character(max_ranges)
 
+      # Run all parameter combinations using cached path distances
       purrr::pmap_dfr(
         parameter_grid,
         function(dist_power, max_range) {
@@ -592,7 +611,8 @@ ipdw_sensitivity <- function(
             path_dists = path_cache[[as.character(max_range)]]
           )
         }
-      )
+      ) %>%
+        dplyr::mutate(seed = s)
     }
   )
 
@@ -609,7 +629,10 @@ ipdw_sensitivity <- function(
       mean_coverage = mean(coverage),
       .groups = "drop"
     ) %>%
-    dplyr::arrange(dplyr::desc(min_coverage), mean_MAE)
+    dplyr::arrange(
+      dplyr::desc(min_coverage),
+      mean_MAE
+    )
 
   # Best parameter combination for each partition
   best_by_seed <- cv_results %>%
@@ -624,69 +647,20 @@ ipdw_sensitivity <- function(
 
   # Count number of wins
   parameter_wins <- best_by_seed %>%
-    dplyr::count(dist_power, max_range, name = "wins") %>%
-    dplyr::arrange(dplyr::desc(wins))
-
-  # Plot depends on which parameters vary
-  if (length(dist_powers) > 1 && length(max_ranges) == 1) {
-    cv_plot <- ggplot2::ggplot(
-      cv_results,
-      ggplot2::aes(
-        x = dist_power,
-        y = MAE,
-        group = factor(seed)
-      )
-    ) +
-      ggplot2::geom_line(alpha = 0.4) +
-      ggplot2::geom_point(alpha = 0.6) +
-      ggplot2::stat_summary(
-        ggplot2::aes(group = 1),
-        fun = mean,
-        geom = "line",
-        linewidth = 1.2,
-        color = "red"
-      ) +
-      ggplot2::labs(x = "Distance Power")
-  } else {
-    cv_plot <- ggplot2::ggplot(
-      cv_results,
-      ggplot2::aes(
-        x = max_range / 1000,
-        y = MAE,
-        group = interaction(seed, dist_power),
-        color = factor(dist_power)
-      )
-    ) +
-      ggplot2::geom_line(alpha = 0.5) +
-      ggplot2::geom_point(alpha = 0.5) +
-      ggplot2::labs(
-        x = "Maximum Path Distance (km)",
-        color = "Distance Power"
-      )
-  }
-
-  cv_plot <- cv_plot +
-    ggplot2::labs(
-      title = "IPDW Spatial Cross-Validation Sensitivity",
-      subtitle = paste(
-        n_seeds,
-        "partitions ×",
-        k,
-        "spatial folds"
-      ),
-      y = paste0(
-        "Mean Absolute Error",
-        if (nzchar(unit)) paste0(" (", unit, ")")
-      )
-    ) +
-    ggplot2::theme_minimal()
+    dplyr::count(
+      dist_power,
+      max_range,
+      name = "wins"
+    ) %>%
+    dplyr::arrange(
+      dplyr::desc(wins)
+    )
 
   # Return complete results
   list(
     summary = cv_summary,
     raw_results = cv_results,
     best_by_seed = best_by_seed,
-    parameter_wins = parameter_wins,
-    plot = cv_plot
+    parameter_wins = parameter_wins
   )
 }

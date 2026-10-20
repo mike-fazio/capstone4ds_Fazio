@@ -1,15 +1,24 @@
+sites <- get_wq_sites()
+
+cost_raster <- ipdw::costrasterGen(
+  xymat = sites,
+  pols = study_area,
+  extent = "polys",
+  projstr = sf::st_crs(study_area)$proj4string,
+  resolution = 100
+)
+
+dp <- c(1.0, 1.5, 2.0, 2.5,3.0)
+
+
+# SAL
+
+sal_ipdw <- ipdw_manual(sal, cost_raster, 10000, "mean", unit = "ppt" dist_power = 1.5)
 
 
 # DO
 
-do <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "do_0903.rds"
-  )
-)
-
+do_test <-ipdw_sensitivity(do, cost_raster, n_seeds = 5, value_col = "mean", unit = "mg/L", dist_powers = dp)
 do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 1.5)
 
 plot(
@@ -51,7 +60,6 @@ plot(
 )
 
 
-
 # Water Temp
 
 temp <- readRDS(
@@ -61,5 +69,3 @@ temp <- readRDS(
     "water_temp_0903.rds"
   )
 )
-
-

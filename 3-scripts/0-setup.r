@@ -13,7 +13,7 @@ tmap_mode("plot")
 source(
   here::here(
     "3-scripts",
-     "1-functions.r"
+    "1-functions.r"
   )
 )
 

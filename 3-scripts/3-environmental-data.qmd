@@ -51,7 +51,7 @@ chla_raw <- chla_raw %>%
 
 ```{r}
 # Process Data
-chla_clean <- proc_wq_data(chla_raw, "chla")
+chla_clean <- proc_wq_data(chla_raw, "chla") %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(chla_clean, "Chlorophyll-a (µg/L)")
@@ -60,6 +60,8 @@ param_means_hist(chla_clean, "Chlorophyll-a (µg/L)")
 param_means_map(chla_clean, "Chlorophyll-a (µg/L)")
 
 hist(chla_clean$mean)
+
+rm(chla_raw)
 
 
 ```
@@ -91,7 +93,7 @@ salinity_raw <- salinity_raw %>%
 
 ```{r}
 # Process Data
-sal_clean <- proc_wq_data(salinity_raw, "salinity")
+sal_clean <- proc_wq_data(salinity_raw, "salinity") %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(sal_clean, "Salinity (ppt)")
@@ -99,6 +101,7 @@ param_means_hist(sal_clean, "Salinity (ppt)")
 # View Spatial Distribution
 param_means_map(sal_clean, "Salinity (ppt)")
 
+rm(salinity_raw)
 ```
 
 
@@ -128,7 +131,7 @@ water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
 
 
 ```{r}
-water_temp_clean <- proc_wq_data(water_temp_raw,"water_temp")
+water_temp_clean <- proc_wq_data(water_temp_raw,"water_temp") %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(water_temp_clean, "Water Temperature (°C)")
@@ -136,6 +139,7 @@ param_means_hist(water_temp_clean, "Water Temperature (°C)")
 # View Spatial Distribution
 param_means_map(water_temp_clean, "Water Temperature (°C)")
 
+rm(water_temp_raw)
 ```
 
 
@@ -158,18 +162,19 @@ table(do_raw$Result_MeasureUnit)
 
 #view(find_outliers(do_raw))
 
-
 ```
 
 ```{r}
 
-do_clean <- proc_wq_data(do_raw, "do")
+do_clean <- proc_wq_data(do_raw, "do") %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(do_clean, "Dissolved Oxygen (mg/L)")
 
 # View Spatial Distribution
 param_means_map(do_clean, "Dissolved Oxygen (mg/L)")
+
+rm(do_raw)
 
 ```
 
@@ -197,7 +202,7 @@ table(turbidity_raw$Result_MeasureUnit)
 ```
 
 ```{r}
-turbidity_clean <- proc_wq_data(turbidity_raw, "turbidity")
+turbidity_clean <- proc_wq_data(turbidity_raw, "turbidity") %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(turbidity_clean, "Turbidity (NTU)")
@@ -205,6 +210,7 @@ param_means_hist(turbidity_clean, "Turbidity (NTU)")
 # View Spatial Distribution
 param_means_map(turbidity_clean, "Turbidity (NTU)")
 
+rm(turbidity_raw)
 ```
 
 

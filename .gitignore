@@ -6,3 +6,6 @@ Literature/
 *.ini
 
 /2-data/raw/Oyster_Beds_Statewide.shp
+
+/.quarto/
+**/*.quarto_ipynb

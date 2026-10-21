@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.9.25)  7 OCT 2026 13:04
+This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.9.25)  20 OCT 2026 18:08
  restricted system commands enabled.
 **capstone.tex
 (./capstone.tex
@@ -1011,31 +1011,31 @@ No file capstone.toc.
 [1
 
 
-{c:/Users/michaelf/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] [4
+{c:/Users/michaelf/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3
 
-] [5
+] [4
 
-] [6] [7]
+] [5]
 
-LaTeX Warning: File `"../4-tables-and-figures/fig-1-study_area.png"' not found on input line 565.
+LaTeX Warning: File `4-tables-and-figures/study-area.png' not found on input line 531.
 
 
-! Package luatex.def Error: File `../4-tables-and-figures/fig-1-study_area.png' not found: using draft setting.
+! Package luatex.def Error: File `4-tables-and-figures/study-area.png' not found: using draft setting.
 
 See the luatex.def package documentation for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.565 ...-tables-and-figures/fig-1-study_area.png"}}
+l.531 ...atio]{4-tables-and-figures/study-area.png}}
                                                   
 
 Here is how much of LuaTeX's memory you used:
- 24334 strings out of 476081
+ 24309 strings out of 476081
  100000,1373583 words of node,token memory allocated
- 8497 words of node memory still in use:
-   18 hlist, 2 vlist, 5 rule, 67 disc, 3 local_par, 4 dir, 153 glue, 58 kern, 11 penalty, 5 margin_kern, 775 glyph, 28 attribute, 84 glue_spec, 28 attribute_list, 3 temp, 7 if_stack, 2 write, 2 pdf_dest, 4 pdf_colorstack nodes
-   avail lists: 1:2,2:478,3:188,4:106,5:375,6:61,7:7184,8:1,9:531,10:15,11:627,12:1
- 46383 multiletter control sequences out of 65536+600000
+ 25775 words of node memory still in use:
+   45 hlist, 1 vlist, 5 rule, 246 disc, 6 local_par, 4 dir, 461 glue, 179 kern, 23 penalty, 22 margin_kern, 2512 glyph, 40 attribute, 81 glue_spec, 40 attribute_list, 3 temp, 7 if_stack, 2 write, 2 pdf_dest, 4 pdf_colorstack nodes
+   avail lists: 1:2,2:454,3:176,4:67,5:278,6:58,7:6115,8:1,9:505,10:15,11:555,12:1
+ 46364 multiletter control sequences out of 65536+600000
  62 fonts using 19048687 bytes
  108i,9n,114p,11229b,545s stack positions out of 10000i,1000n,20000p,200000b,200000s
 !  ==> Fatal error occurred, no output PDF file produced!

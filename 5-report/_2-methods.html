@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -82,332 +117,138 @@ window.Quarto = {
 <p><em>Study design and team status</em></p>
 <p>This capstone is being completed as an individual project. As such, all data acquisition, processing, modeling, and interpretations will be produced soley by the author.</p>
 <p>All data analysis and processing will be performed using the R programming language <span class="citation" data-cites="r">[@r]</span>. Environmental observation data will be acquired from the EPA’s Water Quality Portal via the dataRetrieval r-package <span class="citation" data-cites="wqp_2026 dataRetrieval2026">[@wqp_2026; @dataRetrieval2026]</span>. Data QA/QC and preprocessing will be completed utilizing the Tidyverse package and any spatially aware data processing will be conducted using the package sf <span class="citation" data-cites="tidyverse sf">[@tidyverse; @sf]</span>. Environmental data will be processed to create continuous surface rasters for model input using the</p>
-<section id="study-area" class="level3">
-<h3 class="anchored" data-anchor-id="study-area">Study Area</h3>
-<p>The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>. ArcGIS allows direct access to hosted feature services via several formats. To avoid any potential compatibility issues, the GeoJSON format was chosen as this format is non-proprietary. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it will be needed to extract relevant environmental data from much larger datasets in the coming data gathering.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="%22../4-tables-and-figures/fig-1-study_area.png%22" class="img-fluid figure-img"></p>
-<figcaption>Study Area</figcaption>
+<p><em>Study Area</em></p>
+<p>The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it will be needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in <span class="citation" data-cites="Geselbracht2024">@Geselbracht2024</span>.</p>
+<div id="fig-study-area" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-study-area-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-tables-and-figures/study-area.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-study-area-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Study area for the Pensacola Bay System.
+</figcaption>
 </figure>
 </div>
-<ol start="2" type="1">
-<li><p>Describe the overall analytical workflow.</p>
-<ul>
-<li>Environmental and occurrence data acquisition.</li>
-<li>Data QA/QC and preprocessing.</li>
-<li>Creation of continuous environmental predictor surfaces.</li>
-<li>Oyster occurrence preparation.</li>
-<li>Background sampling.</li>
-<li>Predictor screening.</li>
-<li>MaxEnt tuning and fitting <span class="citation" data-cites="Phillips2006 Merow2013 Kass2021">[@Phillips2006; @Merow2013; @Kass2021]</span>.</li>
-<li>Spatial model validation <span class="citation" data-cites="Roberts2017 Valavi2019">[@Roberts2017; @Valavi2019]</span>.</li>
-<li>HSI comparison <span class="citation" data-cites="Johnson2005 Geselbracht2024">[@Johnson2005; @Geselbracht2024]</span>.</li>
-</ul></li>
-<li><p><strong>Study area</strong></p>
-<ol type="1">
-<li>Define the Pensacola Bay System modeling extent.
-<ul>
-<li>Delineate the study area using selected Florida Department of Environmental Protection Waterbody Identification (WBID) polygons <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>.</li>
-<li>Describe the primary embayments included within the analysis and their relationship to the Pensacola Bay System <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-</ul></li>
-<li>Restrict the modeling domain to aquatic habitat.
-<ul>
-<li>Background and prediction locations should represent environments potentially available to Eastern oysters <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
-<li>Terrestrial areas should therefore be excluded from the accessible/background modeling domain <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
-</ul></li>
-<li>Maintain spatial compatibility with the existing Pensacola Bay HSI where possible.
-<ul>
-<li>A comparable geographic extent will support subsequent spatial comparison with the HSI developed for PBS <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-</ul></li>
-<li>Develop a study-area map.
-<ul>
-<li>PBS boundary <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>.</li>
-<li>Major embayments <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-<li>Oyster occurrence locations <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
-<li>Environmental monitoring locations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Data acquisition and dataset inventory</strong></p>
-<ol type="1">
-<li>Eastern oyster occurrence data.
-<ul>
-<li>Source oyster occurrence data from the FWC-FWRI Oyster Beds in Florida dataset <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
-<li>Record dataset version and acquisition date <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
-<li>Document original geometry type.</li>
-<li>Document number of source features and number retained within the study area.</li>
-<li>Document temporal and source-data information where available <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
-</ul></li>
-<li>Water-quality observations.
-<ul>
-<li>Retrieve water-quality observations from the Water Quality Portal <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Use the <code>dataRetrieval</code> package and associated WQP services for programmatic data acquisition <span class="citation" data-cites="dataRetrieval2026">[@dataRetrieval2026]</span>.</li>
-<li>Restrict queries to relevant counties, estuarine monitoring locations, selected parameters, and the study period.</li>
-</ul></li>
-<li>Document water-quality dataset size and temporal coverage.
-<ul>
-<li>Dissolved oxygen: approximately 145 stations and 3,072 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Salinity: approximately 135 stations and 3,401 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Temperature: approximately 145 stations and 3,442 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Turbidity: approximately 122 stations and 1,563 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Chlorophyll-a: approximately 48 stations and 754 observations <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Current temporal coverage is approximately 2005–2024 <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-</ul></li>
-<li>Evaluate candidate predictors based on spatial coverage.
-<ul>
-<li>Chlorophyll-a is expected to be excluded from interpolation because available monitoring stations do not provide adequate system-wide spatial coverage.</li>
-<li>Salinity, dissolved oxygen, temperature, and turbidity currently provide substantially stronger monitoring coverage.</li>
-<li>These variables have previously been identified as relevant environmental characteristics for Eastern oyster habitat and restoration modeling <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>.</li>
-</ul></li>
-<li>Bathymetry.
-<ul>
-<li>Obtain Pensacola Bay estuarine bathymetry from NOAA <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>.</li>
-<li>Document raster resolution, vertical datum, geographic extent, and preprocessing requirements <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>.</li>
-</ul></li>
-<li>Substrate or bottom type.
-<ul>
-<li>Identify and acquire a suitable spatial dataset describing bottom characteristics.</li>
-<li>Document spatial resolution, substrate classes, temporal source, and geographic coverage.</li>
-<li>Suitable substrate is an important constraint on Eastern oyster settlement and reef development <span class="citation" data-cites="Barnes2007 Geselbracht2024">[@Barnes2007; @Geselbracht2024]</span>.</li>
-<li><strong>Add a citation for the final substrate dataset once selected.</strong></li>
-</ul></li>
-<li>Existing Pensacola Bay HSI.
-<ul>
-<li>Obtain the original GIS/raster output associated with the Pensacola Bay HSI developed by Geselbracht et al. <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-<li>Document raster score range, coordinate reference system, extent, resolution, and NoData handling.</li>
-<li>The HSI will provide the comparison surface for evaluating agreement with the MaxEnt model <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-<li><strong>Add a separate dataset citation once the original HSI GIS product is acquired.</strong></li>
-</ul></li>
-</ol></li>
-<li><p><strong>Water-quality preprocessing</strong></p>
-<ol type="1">
-<li>Standardize measurement characteristics and units.
-<ul>
-<li>Avoid combining fundamentally different measurement types that share similar WQP characteristic names <span class="citation" data-cites="wqp_2026">[@wqp_2026]</span>.</li>
-<li>Retain comparable measurement units and analytical forms for each environmental predictor <span class="citation" data-cites="wqp_2026 dataRetrieval2026">[@wqp_2026; @dataRetrieval2026]</span>.</li>
-</ul></li>
-<li>Restrict observations to warm-season conditions.
-<ul>
-<li>Define the warm season as May through October.</li>
-<li>Use seasonal filtering to characterize environmental conditions during the portion of the year most relevant to warm-season oyster habitat conditions.</li>
-<li>Seasonal environmental summaries have also been incorporated into previous Pensacola Bay oyster suitability modeling <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-</ul></li>
-<li>Generate station-level environmental summaries.
-<ul>
-<li>Calculate the warm-season mean for each monitoring location.</li>
-<li>Calculate the standard deviation for each monitoring location.</li>
-<li>Record total observation count.</li>
-<li>Record the number of unique years represented.</li>
-<li>Record first and last sample dates.</li>
-<li>Consider calculating site-year warm-season means before calculating long-term site means to prevent heavily sampled individual years from disproportionately influencing long-term conditions.</li>
-</ul></li>
-<li>Perform QA/QC.
-<ul>
-<li>Identify potential unit inconsistencies.</li>
-<li>Investigate implausible or extreme values.</li>
-<li>Document removal or correction criteria.</li>
-<li>Retain original raw data separately from processed datasets.</li>
-</ul></li>
-<li>Convert monitoring data to spatial features.
-<ul>
-<li>Use the <code>sf</code> package for spatial-vector processing <span class="citation" data-cites="sf">[@sf]</span>.</li>
-<li>Project monitoring locations to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Generation of continuous environmental predictor surfaces</strong></p>
-<ol type="1">
-<li>Assess monitoring-station spatial coverage prior to interpolation.
-<ul>
-<li>Map station distributions for each environmental parameter.</li>
-<li>Identify spatial clustering.</li>
-<li>Identify portions of PBS lacking observations.</li>
-<li>Exclude variables where development of a continuous surface would consist primarily of spatial extrapolation.</li>
-</ul></li>
-<li>Account for coastal barriers and complex estuarine geometry.
-<ul>
-<li>Straight-line Euclidean distance can incorrectly represent spatial relationships between monitoring locations separated by peninsulas, islands, and other land barriers <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
-<li>Barrier-aware interpolation will therefore be evaluated for the PBS environmental surfaces <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
-</ul></li>
-<li>Evaluate inverse path distance weighting (IPDW) as a candidate interpolation method.
-<ul>
-<li>IPDW uses aquatic-path distance rather than straight-line Euclidean distance when determining spatial relationships among observations <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
-<li>This approach was developed for coastal water-quality interpolation where land barriers influence spatial connectivity <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
-</ul></li>
-<li>Compare candidate interpolation approaches.
-<ul>
-<li>Evaluate inverse path distance weighting (IPDW) <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>.</li>
-<li>Evaluate conventional inverse distance weighting (IDW).</li>
-<li>Evaluate ordinary kriging.</li>
-<li>Use spatially withheld monitoring locations to evaluate predictive performance and reduce bias associated with spatial dependence <span class="citation" data-cites="Roberts2017 Valavi2019">[@Roberts2017; @Valavi2019]</span>.</li>
-<li>Compare root mean square error (RMSE), mean absolute error (MAE), and prediction bias among interpolation methods.</li>
-<li>Select the final interpolation method based on predictive performance and ecological appropriateness.</li>
-</ul></li>
-<li>Produce final environmental predictor rasters.
-<ul>
-<li>Use a common projected coordinate reference system.</li>
-<li>Use a common cell size.</li>
-<li>Use a common raster origin and alignment.</li>
-<li>Mask predictions to aquatic habitat.</li>
-<li>Document the final raster resolution.</li>
-<li>Maintain spatial compatibility with the existing PBS habitat-suitability framework where appropriate <span class="citation" data-cites="Geselbracht2024">[@Geselbracht2024]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Oyster occurrence preparation</strong></p>
-<ol type="1">
-<li>Clip FWC oyster-bed features to the study area.
-<ul>
-<li>Remove oyster occurrences outside the PBS modeling extent <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>.</li>
-</ul></li>
-<li>Convert mapped oyster-bed polygons into representative MaxEnt presence observations.
-<ul>
-<li>Use a reproducible procedure that avoids disproportionately representing large or densely mapped oyster polygons <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
-<li>Document the initial number of oyster polygons and final number of presence observations.</li>
-</ul></li>
-<li>Evaluate spatial clustering of presence observations.
-<ul>
-<li>Apply spatial thinning where necessary to reduce clustering and sampling bias <span class="citation" data-cites="Phillips2009">[@Phillips2009]</span>.</li>
-<li>Base thinning decisions on spatial dependence and sampling structure rather than arbitrary data reduction <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Background sampling</strong></p>
-<ol type="1">
-<li>Define the accessible/background modeling region.
-<ul>
-<li>Restrict background sampling to aquatic habitat within the Pensacola Bay System <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
-<li>Require complete environmental predictor coverage within the background domain.</li>
-<li>Exclude terrestrial areas and locations outside the modeled environmental domain <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
-</ul></li>
-<li>Generate MaxEnt background locations.
-<ul>
-<li>Document the final number of background points.</li>
-<li>Sample background locations from the defined accessible region rather than from an arbitrary rectangular geographic extent <span class="citation" data-cites="Phillips2009 Merow2013">[@Phillips2009; @Merow2013]</span>.</li>
-</ul></li>
-<li>Address occurrence-sampling bias.
-<ul>
-<li>Evaluate whether spatial thinning, bias weighting, or restricted background sampling is necessary <span class="citation" data-cites="Phillips2009">[@Phillips2009]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Predictor screening</strong></p>
-<ol type="1">
-<li>Assemble the final candidate predictor stack.
-<ul>
-<li>Salinity <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>.</li>
-<li>Dissolved oxygen <span class="citation" data-cites="LaPeyre2021 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Pollack2012; @Geselbracht2024]</span>.</li>
-<li>Temperature <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012">[@LaPeyre2021; @Barnes2007; @Pollack2012]</span>.</li>
-<li>Turbidity <span class="citation" data-cites="LaPeyre2021 Pollack2012">[@LaPeyre2021; @Pollack2012]</span>.</li>
-<li>Bathymetry/depth <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012">[@LaPeyre2021; @Barnes2007; @Pollack2012]</span>.</li>
-<li>Substrate/bottom type, if suitable data are obtained <span class="citation" data-cites="LaPeyre2021 Barnes2007 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Geselbracht2024]</span>.</li>
-</ul></li>
-<li>Evaluate correlation and redundancy among predictors.
-<ul>
-<li>Calculate pairwise correlations among candidate environmental variables <span class="citation" data-cites="Dormann2013">[@Dormann2013]</span>.</li>
-<li>Identify highly correlated or ecologically redundant predictors <span class="citation" data-cites="Dormann2013">[@Dormann2013]</span>.</li>
-<li>Retain predictors based on ecological relevance, data quality, and interpretability while limiting problematic collinearity <span class="citation" data-cites="Dormann2013">[@Dormann2013]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>MaxEnt model fitting and tuning</strong></p>
-<ol type="1">
-<li><p>Fit MaxEnt using oyster occurrence locations, background samples, and the finalized environmental predictor stack <span class="citation" data-cites="Phillips2006 Elith2011">[@Phillips2006; @Elith2011]</span>.</p></li>
-<li><p>Tune model complexity rather than relying exclusively on default settings.</p>
-<ul>
-<li>Evaluate multiple regularization multipliers <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
-<li>Evaluate multiple feature-class combinations <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
-</ul></li>
-<li><p>Use the <code>ENMeval</code> framework for model tuning and evaluation <span class="citation" data-cites="Kass2021">[@Kass2021]</span>.</p></li>
-<li><p>Select the final MaxEnt configuration.</p>
-<ul>
-<li>Consider predictive performance <span class="citation" data-cites="Kass2021">[@Kass2021]</span>.</li>
-<li>Consider omission rates <span class="citation" data-cites="Kass2021">[@Kass2021]</span>.</li>
-<li>Consider model complexity and overfitting <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
-</ul></li>
-<li><p>Generate the final continuous habitat-suitability surface.</p>
-<ul>
-<li>Retain continuous predictions for the primary spatial comparison with the HSI <span class="citation" data-cites="Elith2011 Merow2013">[@Elith2011; @Merow2013]</span>.</li>
-</ul></li>
-<li><p>Evaluate environmental-variable influence.</p>
-<ul>
-<li>Examine permutation importance <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
-<li>Examine model response curves <span class="citation" data-cites="Elith2011 Merow2013">[@Elith2011; @Merow2013]</span>.</li>
-<li>Evaluate other supported measures of predictor contribution <span class="citation" data-cites="Merow2013">[@Merow2013]</span>.</li>
-<li>Interpret these associations as predictive relationships rather than direct evidence of ecological causation <span class="citation" data-cites="Elith2011">[@Elith2011]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Spatial model validation</strong></p>
-<ol type="1">
-<li>Use spatial rather than purely random cross-validation.
-<ul>
-<li>Nearby oyster occurrences may experience highly similar environmental conditions, violating assumptions of independence <span class="citation" data-cites="Roberts2017">[@Roberts2017]</span>.</li>
-<li>Random training/test partitions may therefore produce overly optimistic estimates of predictive performance <span class="citation" data-cites="Roberts2017 Valavi2019">[@Roberts2017; @Valavi2019]</span>.</li>
-</ul></li>
-<li>Divide oyster occurrences into spatially separated validation folds.
-<ul>
-<li>Select spatial-block dimensions based on observed spatial structure rather than arbitrary distances <span class="citation" data-cites="Valavi2019">[@Valavi2019]</span>.</li>
-</ul></li>
-<li>Evaluate candidate models against withheld spatial folds.
-<ul>
-<li>Report appropriate presence-background model-performance metrics <span class="citation" data-cites="Phillips2006 Kass2021">[@Phillips2006; @Kass2021]</span>.</li>
-<li>Evaluate omission rates and AUC where appropriate <span class="citation" data-cites="Phillips2006 Kass2021">[@Phillips2006; @Kass2021]</span>.</li>
-<li>Report variation in model performance among spatial folds <span class="citation" data-cites="Valavi2019 Kass2021">[@Valavi2019; @Kass2021]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Comparison with the existing Habitat Suitability Index</strong></p>
-<ol type="1">
-<li><p>Harmonize the MaxEnt and HSI raster surfaces.</p>
-<ul>
-<li>Match geographic extent to permit spatial comparison <span class="citation" data-cites="Johnson2005 Geselbracht2024">[@Johnson2005; @Geselbracht2024]</span>.</li>
-<li>Match coordinate reference systems.</li>
-<li>Match cell size and raster alignment.</li>
-<li>Ensure suitability scores are represented on directly comparable scales where possible <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-</ul></li>
-<li><p>Compare continuous habitat-suitability predictions.</p>
-<ul>
-<li>Calculate cell-by-cell correlation between HSI and MaxEnt predictions <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-<li>Consider Pearson and/or Spearman correlation depending on the characteristics of the model-output distributions <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-</ul></li>
-<li><p>Generate a spatial difference surface <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</p>
-<p><span class="math display">\[
-D_i = S_{MaxEnt,i} - S_{HSI,i}
+<p><em>Data acquisition and dataset inventory</em></p>
+<p>Oyster occurence data was acquired from the Florida Fish and Wildlife Commission’s GIS portal as polygons and converted to points using polygon centroids. After clipping to the study area extent, ### known reef locations were present within the PBS <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>. Salinity, dissolved oxygen, temperature, and turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the ‘dataRetrieval’ package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 <span class="citation" data-cites="wqp_2026">[@wqp_2026, @dataRetrieval2026]</span>. Parameters were chosen based on relevance and represenation in previous oyster habitat retoration studies <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>. Bathymetry data for the PBS was obtained from NOAA as a #### resolution raster dataset <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>. <strong><em>DOES BATHYMETRY DATA NEED TO BE RESAMPLED TO NEW CELL SIZE?</em></strong>. Substrate data was obtained from the Pensacola and Perdido Bay Estuary Program and was the same dataset used in their earlier HSI study which was modeled on the <span class="citation" data-cites="Geselbrach2024">@Geselbrach2024</span> study.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># insert data table with environmental metadata  </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   readxl<span class="sc">::</span><span class="fu">read_excel</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"4-tables-and-figures"</span>, <span class="st">"data_summary.xlsx"</span>))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in attr(x, "align"): 'xfun::attr()' is deprecated.
+Use 'xfun::attr2()' instead.
+See help("Deprecated")</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in attr(x, "format"): 'xfun::attr()' is deprecated.
+Use 'xfun::attr2()' instead.
+See help("Deprecated")</code></pre>
+</div>
+<div id="tbl-metadata" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metadata-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Environmental Parameters
+</figcaption>
+<div aria-describedby="tbl-metadata-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 14%">
+<col style="width: 8%">
+<col style="width: 15%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Data Type</th>
+<th style="text-align: left;">Count</th>
+<th style="text-align: left;">Resolution</th>
+<th style="text-align: left;">Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Salinity</td>
+<td style="text-align: left;">Point</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Water Temperature</td>
+<td style="text-align: left;">Point</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Substrate type</td>
+<td style="text-align: left;">Raster</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="PPBEP_OysterRestoration">@PPBEP_OysterRestoration</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dissolved oxygen</td>
+<td style="text-align: left;">Point</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Depth / bathymetry</td>
+<td style="text-align: left;">Raster</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Turbidity</td>
+<td style="text-align: left;">Point</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Chlorophyll a</td>
+<td style="text-align: left;">Point</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Oyster Reefs</td>
+<td style="text-align: left;">Polygon</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="FWC2026Oysters">@FWC2026Oysters</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>Water-quality Data Preprocessing</strong></p>
+<p>All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. Further, to maintain consistency with other similar oyster studies, all data was filtered to only include warm season conditions. Here, the warm season is defined as May through October. Finally, the data was screened for any extreme outliers, where outliers were defined as: <span class="math display">\[
+\begin{aligned}
+\text{Outlier if } \quad
+x &amp;&lt; Q_{0.25} - 1.5(IQR) \\
+\text{or} \quad
+x &amp;&gt; Q_{0.75} + 1.5(IQR) \\
+\\
+\text{where } IQR &amp;= Q_{0.75} - Q_{0.25}
+\end{aligned}
 \]</span></p>
-<ul>
-<li>Values near zero represent relatively strong agreement between the two suitability estimates.</li>
-<li>Positive values identify locations where MaxEnt predicts relatively greater suitability.</li>
-<li>Negative values identify locations where the HSI predicts relatively greater suitability.</li>
-</ul></li>
-<li><p>Evaluate categorical agreement if suitability classes are created.</p>
-<ul>
-<li>Identify locations where both models predict high suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-<li>Identify locations where both models predict low suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-<li>Identify locations where MaxEnt predicts high suitability while the HSI predicts low suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-<li>Identify locations where the HSI predicts high suitability while MaxEnt predicts low suitability <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-<li>Consider an agreement statistic such as Kappa if categorical suitability classes are used <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-</ul></li>
-<li><p>Interpret disagreement between models.</p>
-<ul>
-<li>Determine whether disagreement is geographically concentrated <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-<li>Evaluate whether disagreement corresponds with particular environmental predictors.</li>
-<li>Consider differences in data availability and modeling assumptions between MaxEnt and the HSI <span class="citation" data-cites="Johnson2005 Geselbracht2024">[@Johnson2005; @Geselbracht2024]</span>.</li>
-<li>Avoid treating either modeling approach as automatically representing ground truth <span class="citation" data-cites="Johnson2005">[@Johnson2005]</span>.</li>
-</ul></li>
-</ol></li>
-<li><p><strong>Software and reproducibility</strong></p>
-<ol type="1">
-<li><p>Conduct data processing, statistical analysis, and modeling in R <span class="citation" data-cites="r">[@r]</span>.</p></li>
-<li><p>Use scripted workflows for data transformation and spatial processing.</p>
-<ul>
-<li>Use <code>tidyverse</code> for data manipulation <span class="citation" data-cites="tidyverse">[@tidyverse]</span>.</li>
-<li>Use <code>sf</code> for vector spatial processing <span class="citation" data-cites="sf">[@sf]</span>.</li>
-</ul></li>
-<li><p>Maintain reproducibility throughout the workflow.</p>
-<ul>
-<li>Record package versions.</li>
-<li>Set random seeds where applicable.</li>
-<li>Record data-acquisition dates for dynamically updated datasets <span class="citation" data-cites="dataRetrieval2026 wqp_2026 FWC2026Oysters">[@dataRetrieval2026; @wqp_2026; @FWC2026Oysters]</span>.</li>
-<li>Document model settings and tuning parameters <span class="citation" data-cites="Merow2013 Kass2021">[@Merow2013; @Kass2021]</span>.</li>
-<li>Preserve raw data separately from processed analytical datasets.</li>
-</ul></li>
-</ol></li>
-</ol>
-</section>
+<p>Following data cleaning, station-level environmental summaries were calculated to represent warm-season conditions that could be expected at that station. Stations that only had one sample were also removed as it was considered one sample was not representitive enough to be considered the normal conditions over the full 20 year period. Finally, the station-level dataset was converted to spatial using the <code>sf</code> package in r and projected to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters <span class="citation" data-cites="sf">[@sf]</span>.</p>
+<p><strong>Spatial Interpolation of Environmental Factors</strong></p>
+<p>Spatial interpolation in progress….</p>
 </section>
 
 </main>

@@ -1,0 +1,172 @@
+```{r} 
+
+sites <- get_wq_sites()
+
+study_extent <- study_area %>%
+  sf::st_bbox() %>%
+  sf::st_as_sfc() %>%
+  sf::st_buffer(1000)
+
+land_barrier <- sf::st_difference(
+  study_extent,
+  sf::st_union(study_area)
+) %>%
+  sf::st_as_sf()
+
+cost_raster <- ipdw::costrasterGen(
+  xymat = sites,
+  pols = land_barrier,
+  extent = "polys",
+  projstr = sf::st_crs(study_area)$proj4string,
+  resolution = 100
+)
+
+
+dp <- c(1.0, 1.5, 2.0, 2.5, 3.0)
+mr <- c(5000, 7500, 10000, 12500, 15000)
+
+```
+
+**Salinity**
+
+Test model sensitivity for distance powers
+```{r}
+# SAL
+
+sal_test <- ipdw_sensitivity(
+  sal_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "ppt",
+  dist_powers = dp
+)
+
+# save distance power output for later reference
+saveRDS(
+  sal_test$summary,
+  file = here::here("2-data", "models", "salinity_dp_test.rds")
+)
+
+```
+
+
+Test model for max range sensitivity
+
+```{r}
+
+sal_mr_test <- ipdw_sensitivity(
+  sal_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "ppt",
+  dist_powers = 2,
+  max_ranges = mr
+)
+
+saveRDS(
+  sal_mr_test,
+  file = here::here("2-data", "models", "salinity_mr_test.rds")
+)
+```
+
+```{r}
+
+# run model using tuned parameters
+set.seed(42)
+sal_ipdw <- ipdw_manual(sal_clean, cost_raster, 12500, "mean", dist_power = 2)
+
+
+```
+# DO
+
+do_test <- ipdw_sensitivity(
+  do_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = dp
+)
+
+do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 1.5)
+
+plot(
+  do_ipdw,
+  main = "Dissolved Oxygen IPDW"
+)
+
+# Chlorophyll-a
+
+chla <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "chla_0903.rds"
+  )
+)
+
+
+chla_test <- ipdw_sensitivity(
+  chla,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = dp
+)
+
+chla_ipdw <- ipdw_manual(chla, cost_raster, 10000, "mean", dist_power = 1)
+
+plot(
+  chla_ipdw,
+  main = "Chlorophyll-a IPDW"
+)
+
+# Turbidiity
+turb <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "turbidity_0903.rds"
+  )
+)
+
+
+turb_test <- ipdw_sensitivity(
+  turbidity_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = dp
+)
+
+
+turb_ipdw <- ipdw_manual(turb, cost_raster, 10000, "mean", dist_power = 0.25)
+
+plot(
+  turb_ipdw,
+  main = "Turbidity IPDW"
+)
+
+
+# Water Temp
+
+temp <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "water_temp_0903.rds"
+  )
+)
+
+temp_test <- ipdw_sensitivity(
+  water_temp_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "deg C",
+  dist_powers = dp
+)

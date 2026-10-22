@@ -21,31 +21,47 @@ cost_raster <- ipdw::costrasterGen(
   resolution = 100
 )
 
+dist_pwr <- c(
+  0.25,
+  0.5,
+  0.75,
+  1,
+  1.25,
+  1.5,
+  2,
+  2.5,
+  3
+)
 
-dp <- c(1.0, 1.5, 2.0, 2.5, 3.0)
-mr <- c(5000, 7500, 10000, 12500, 15000)
+max_rng <- c(
+  5000, 
+  10000,  
+  15000,
+  20000
+)
 
 ```
 
-**Salinity**
+# Salinity
 
-Test model sensitivity for distance powers
+Test model sensitivity against distance power X max range interactions
 ```{r}
 # SAL
 
-sal_test <- ipdw_sensitivity(
+sal_sensitivity <- ipdw_sensitivity(
   sal_clean,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
   unit = "ppt",
-  dist_powers = dp
+  dist_powers = dist_pwr,
+  max_ranges = max_rng
 )
 
 # save distance power output for later reference
 saveRDS(
-  sal_test$summary,
-  file = here::here("2-data", "models", "salinity_dp_test.rds")
+  sal_sensitivity,
+  file = here::here("2-data", "models", "salinity_sensitivity_test.rds")
 )
 
 ```
@@ -77,9 +93,14 @@ saveRDS(
 set.seed(42)
 sal_ipdw <- ipdw_manual(sal_clean, cost_raster, 12500, "mean", dist_power = 2)
 
+saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
 
 ```
-# DO
+
+# Dissolved Oxygen
+
+Test disance power sensitivity
+```{r}
 
 do_test <- ipdw_sensitivity(
   do_clean,
@@ -90,32 +111,54 @@ do_test <- ipdw_sensitivity(
   dist_powers = dp
 )
 
+do_test
+```
+
+Test max range sensitivity
+```{r}
+
+do_mr_test <- ipdw_sensitivity(
+  do_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = 1.5,
+  max_ranges = mr
+)
+
+do_mr_test
+
+saveRDS(do_mr_test, here::here("2-data", "models", "do_mr_test.rds"))
+
+```
+
+```{r}
 do_ipdw <- ipdw_manual(do, cost_raster, 10000, "mean", dist_power = 1.5)
 
 plot(
   do_ipdw,
   main = "Dissolved Oxygen IPDW"
 )
+```
+
 
 # Chlorophyll-a
 
-chla <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "chla_0903.rds"
-  )
-)
-
+```{r}
 
 chla_test <- ipdw_sensitivity(
-  chla,
+  chla_clean,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
   unit = "mg/L",
   dist_powers = dp
 )
+
+chla_test
+
+```
 
 chla_ipdw <- ipdw_manual(chla, cost_raster, 10000, "mean", dist_power = 1)
 
@@ -124,16 +167,9 @@ plot(
   main = "Chlorophyll-a IPDW"
 )
 
+
 # Turbidiity
-turb <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "turbidity_0903.rds"
-  )
-)
-
-
+```{r}
 turb_test <- ipdw_sensitivity(
   turbidity_clean,
   cost_raster,
@@ -143,6 +179,8 @@ turb_test <- ipdw_sensitivity(
   dist_powers = dp
 )
 
+turb_test
+```
 
 turb_ipdw <- ipdw_manual(turb, cost_raster, 10000, "mean", dist_power = 0.25)
 

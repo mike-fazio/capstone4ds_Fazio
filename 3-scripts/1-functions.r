@@ -600,7 +600,16 @@ ipdw_sensitivity <- function(
       # Run all parameter combinations using cached path distances
       purrr::pmap_dfr(
         parameter_grid,
+        message("Running Parameter Combinations...")
         function(dist_power, max_range) {
+          
+          message(
+          "Distance Power | ",
+          dist_power,
+          "Max Range | ",
+          max_range 
+          )
+          
           ipdw_run(
             df = df,
             cost_raster = cost_raster,

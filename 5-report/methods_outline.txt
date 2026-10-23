@@ -5,30 +5,37 @@
       - Identify spatial clustering.
       - Identify portions of PBS lacking observations.
       - Exclude variables where development of a continuous surface would consist primarily of spatial extrapolation.
+      - Assign retained water-quality records to the canonical 100 m aquatic raster cells.
+      - Calculate cell-year means, then average those means equally across sampled years so that each year receives equal weight.
+      - Require at least two retained observations per cell and represent each final spatial bin by its cell center.
+      - Retain cell-level sample counts, temporal coverage, source-station counts, and organization counts for auditing.
    
    2. Account for coastal barriers and complex estuarine geometry.
       - Straight-line Euclidean distance can incorrectly represent spatial relationships between monitoring locations separated by peninsulas, islands, and other land barriers [@Stachelek2015].
-      - Barrier-aware interpolation will therefore be evaluated for the PBS environmental surfaces [@Stachelek2015].
-   
-   3. Evaluate inverse path distance weighting (IPDW) as a candidate interpolation method.
-      - IPDW uses aquatic-path distance rather than straight-line Euclidean distance when determining spatial relationships among observations [@Stachelek2015].
-      - This approach was developed for coastal water-quality interpolation where land barriers influence spatial connectivity [@Stachelek2015].
-   
-   4. Compare candidate interpolation approaches.
-      - Evaluate inverse path distance weighting (IPDW) [@Stachelek2015].
-      - Evaluate conventional inverse distance weighting (IDW).
-      - Evaluate ordinary kriging.
-      - Use spatially withheld monitoring locations to evaluate predictive performance and reduce bias associated with spatial dependence [@Roberts2017; @Valavi2019].
-      - Compare root mean square error (RMSE), mean absolute error (MAE), and prediction bias among interpolation methods.
-      - Select the final interpolation method based on predictive performance and ecological appropriateness.
+      - Select inverse path distance weighting (IPDW) a priori because it uses aquatic-path distance and has previously reduced interpolation error relative to conventional Euclidean IDW in a barrier-rich coastal water-quality setting [@Stachelek2015].
+      - Focus this study on tuning and validating IPDW rather than benchmarking local IDW or kriging models.
+
+   3. Tune and validate the IPDW surfaces.
+      - Evaluate distance power and maximum aquatic-path range jointly.
+      - Use repeated spatial cross-validation to keep spatially related cells together and reduce optimistic performance estimates caused by spatial dependence [@Roberts2017; @Valavi2019; @Schratz2019].
+      - Retain cell-level out-of-fold predictions for every validation repetition.
+      - Rank parameter combinations first by complete prediction coverage, then by mean absolute error (MAE), root mean square error (RMSE), absolute prediction bias, shorter maximum range, and lower distance power [@Willmott2006].
+      - Report coverage, MAE, RMSE, and signed prediction bias by fold and repetition, followed by their means and standard deviations.
+
+   4. Diagnose the selected IPDW model.
+      - Examine observed-versus-predicted agreement, residual distributions, and residuals relative to predicted values [@Pineiro2008].
+      - Map out-of-fold residuals and evaluate residual spatial autocorrelation to identify geographically concentrated overprediction or underprediction [@Zhang2005].
+      - Evaluate absolute error relative to contributor count and nearest aquatic-path distance as measures of data support [@Ohlert2023].
+      - Treat contributor count and nearest aquatic-path distance as descriptive support diagnostics rather than confidence intervals.
+      - State that deterministic IPDW does not provide intrinsic model-based prediction uncertainty or formal cell-level standard errors [@Ghosh2012].
    
    5. Produce final environmental predictor rasters.
-      - Use a common projected coordinate reference system.
-      - Use a common cell size.
-      - Use a common raster origin and alignment.
+      - Retain the native 100 m StatePlane modeling grid in `ESRI:103021` for environmental predictors and the final MaxEnt surface.
+      - Use a common raster extent, origin, and alignment.
       - Mask predictions to aquatic habitat.
-      - Document the final raster resolution.
-      - Maintain spatial compatibility with the existing PBS habitat-suitability framework where appropriate [@Geselbracht2024].
+      - Retain unsupported aquatic cells as missing values rather than filling them through unreported extrapolation.
+      - Save the prediction, contributor-count, and nearest aquatic-path-distance rasters.
+      - Verify coordinate reference system, 100 m resolution, extent, origin, aquatic mask, land leakage, finite values, prediction coverage, support consistency, and prediction range.
 
 6. **Oyster occurrence preparation**
    
@@ -113,14 +120,15 @@
 11. **Comparison with the existing Habitat Suitability Index**
     
     1. Harmonize the MaxEnt and HSI raster surfaces.
-       - Match geographic extent to permit spatial comparison [@Johnson2005; @Geselbracht2024].
-       - Match coordinate reference systems.
-       - Match cell size and raster alignment.
+       - Preserve the final MaxEnt surface on its native 100 m StatePlane modeling grid.
+       - Create a separate comparison copy of the continuous MaxEnt surface that exactly matches the selected HSI grid: EPSG:3857, 415 columns, 250 rows, and the HSI extent, origin, and cell alignment.
+       - Use bilinear reprojection for the continuous MaxEnt comparison copy.
+       - Leave the source HSI raster unchanged.
        - Ensure suitability scores are represented on directly comparable scales where possible [@Johnson2005].
     
     2. Compare continuous habitat-suitability predictions.
-       - Calculate cell-by-cell correlation between HSI and MaxEnt predictions [@Johnson2005].
-       - Consider Pearson and/or Spearman correlation depending on the characteristics of the model-output distributions [@Johnson2005].
+       - Restrict the comparison to shared aquatic cells with valid values in both rasters.
+       - Use cell-by-cell Spearman rank correlation as the primary agreement measure because the two suitability products arise from different modeling structures [@Johnson2005].
     
     3. Generate a spatial difference surface [@Johnson2005].
        

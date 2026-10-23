@@ -1,24 +1,24 @@
 ```{r} 
+source(
+  here::here(
+    "3-scripts",
+    "0-setup.r"
+  )
+)
 
-sites <- get_wq_sites()
+model_dir <- here::here("2-data", "models")
+figure_dir <- here::here("4-tables-and-figures")
+dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 
-study_extent <- study_area %>%
-  sf::st_bbox() %>%
-  sf::st_as_sfc() %>%
-  sf::st_buffer(1000)
+sal_clean <- sal
 
-land_barrier <- sf::st_difference(
-  study_extent,
-  sf::st_union(study_area)
-) %>%
-  sf::st_as_sf()
-
-cost_raster <- ipdw::costrasterGen(
-  xymat = sites,
-  pols = land_barrier,
-  extent = "polys",
-  projstr = sf::st_crs(study_area)$proj4string,
-  resolution = 100
+wq_ipdw_inputs <- list(
+  salinity = list(data = sal, unit = "ppt"),
+  dissolved_oxygen = list(data = do, unit = "mg/L"),
+  chlorophyll_a = list(data = chla, unit = "ug/L"),
+  turbidity = list(data = turb, unit = "NTU"),
+  water_temperature = list(data = temp, unit = "degrees C")
 )
 
 dist_pwr <- c(
@@ -40,6 +40,15 @@ max_rng <- c(
   20000
 )
 
+force_tuning <- FALSE
+validation_seeds <- 1:5
+block_size <- 5000
+k_folds <- 5
+
+if (any(vapply(wq_ipdw_inputs, function(x) is.null(x$data), logical(1)))) {
+  stop("Run 3-environmental-data.qmd before fitting the IPDW models.")
+}
+
 ```
 
 # Salinity
@@ -47,21 +56,134 @@ max_rng <- c(
 Test model sensitivity against distance power X max range interactions
 ```{r}
 # SAL
-
-sal_sensitivity <- ipdw_sensitivity(
-  sal_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "ppt",
-  dist_powers = dist_pwr,
-  max_ranges = max_rng
+sensitivity_path <- file.path(
+  model_dir,
+  "salinity_sensitivity_100m.rds"
 )
 
-# save distance power output for later reference
+sensitivity_signature <- ipdw_sensitivity_signature(
+  sal_clean,
+  value_col = "mean",
+  dist_powers = dist_pwr,
+  max_ranges = max_rng,
+  seed_values = validation_seeds,
+  block_size = block_size,
+  k = k_folds
+)
+
+cached_sensitivity <- if (file.exists(sensitivity_path)) {
+  readRDS(sensitivity_path)
+} else {
+  NULL
+}
+
+cache_is_current <- !is.null(cached_sensitivity) &&
+  identical(cached_sensitivity$cache_signature, sensitivity_signature)
+
+if (cache_is_current && !force_tuning) {
+  sal_sensitivity <- cached_sensitivity
+} else {
+  sal_sensitivity <- ipdw_sensitivity(
+    sal_clean,
+    cost_raster,
+    n_seeds = 5,
+    seed_values = validation_seeds,
+    value_col = "mean",
+    unit = "ppt",
+    dist_powers = dist_pwr,
+    max_ranges = max_rng,
+    block_size = block_size,
+    k = k_folds
+  )
+  sal_sensitivity$cache_signature <- sensitivity_signature
+
+  saveRDS(sal_sensitivity, sensitivity_path)
+  saveRDS(
+    sal_sensitivity,
+    file.path(model_dir, "salinity_sensitivity_test.rds")
+  )
+}
+
+selected_parameters <- sal_sensitivity$selected
+tested_parameters <- tidyr::expand_grid(
+  dist_power = dist_pwr,
+  max_range = max_rng
+)
+
+stopifnot(
+  nrow(dplyr::inner_join(
+    selected_parameters[c("dist_power", "max_range")],
+    tested_parameters,
+    by = c("dist_power", "max_range")
+  )) == 1
+)
+
+sal_prediction_rows <- sal_sensitivity$point_results %>%
+  dplyr::filter(
+    dist_power == selected_parameters$dist_power,
+    max_range == selected_parameters$max_range
+  )
+
+prediction_counts <- sal_prediction_rows %>%
+  dplyr::count(cell_id, name = "n_predictions")
+
+stopifnot(
+  nrow(prediction_counts) == nrow(sal_clean),
+  all(prediction_counts$n_predictions == 5)
+)
+
+sal_validation <- list(
+  point_results = sal_prediction_rows,
+  fold_results = summarise_ipdw_metrics(
+    sal_prediction_rows,
+    c("seed", "fold", "dist_power", "max_range")
+  ),
+  seed_results = summarise_ipdw_metrics(
+    sal_prediction_rows,
+    c("seed", "dist_power", "max_range")
+  ),
+  summary = selected_parameters
+)
+
+direct_metrics <- summarise_ipdw_metrics(
+  sal_prediction_rows,
+  c("seed", "dist_power", "max_range")
+)
+saved_metrics <- sal_sensitivity$raw_results %>%
+  dplyr::filter(
+    dist_power == selected_parameters$dist_power,
+    max_range == selected_parameters$max_range
+  )
+
+stopifnot(isTRUE(all.equal(direct_metrics, saved_metrics)))
+
 saveRDS(
-  sal_sensitivity,
-  file = here::here("2-data", "models", "salinity_sensitivity_test.rds")
+  selected_parameters,
+  file.path(model_dir, "salinity_selected_parameters_100m.rds")
+)
+saveRDS(
+  sal_validation,
+  file.path(model_dir, "salinity_validation_100m.rds")
+)
+saveRDS(
+  sal_prediction_rows,
+  file.path(model_dir, "salinity_prediction_rows_100m.rds")
+)
+
+utils::write.csv(
+  selected_parameters,
+  file.path(figure_dir, "salinity_selected_parameters_100m.csv"),
+  row.names = FALSE
+)
+utils::write.csv(
+  sal_validation$seed_results,
+  file.path(figure_dir, "salinity_metrics_by_seed_100m.csv"),
+  row.names = FALSE
+)
+utils::write.csv(
+  sal_validation$fold_results,
+  file.path(figure_dir, "salinity_metrics_by_fold_100m.csv"),
+  row.names = FALSE
 )
 
 ```
@@ -69,14 +191,148 @@ saveRDS(
  run model using tuned parameters
 
 ```{r}
+sal_paths <- ipdw::pathdistGen(
+  sf_ob = sal_clean,
+  costras = cost_raster,
+  range = selected_parameters$max_range,
+  progressbar = FALSE
+)
 
-set.seed(42)
+sal_bundle <- ipdw_manual(
+  sal_clean,
+  cost_raster,
+  selected_parameters$max_range,
+  "mean",
+  dist_power = selected_parameters$dist_power,
+  path_dists = sal_paths,
+  return_support = TRUE,
+  progressbar = FALSE
+)
 
-sal_ipdw <- ipdw_manual(sal_clean, cost_raster, 15000, "mean", dist_power = 0.5)
+sal_qa <- ipdw_qa(
+  sal_bundle,
+  cost_raster,
+  sal_clean,
+  max_range = selected_parameters$max_range,
+  value_col = "mean"
+)
 
-saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
+sal_moran <- ipdw_moran(
+  sal_prediction_rows,
+  sal_clean,
+  sal_paths,
+  nsim = 999
+)
 
-plot(sal_ipdw)
+sal_diagnostics <- ipdw_diagnostics(
+  sal_prediction_rows,
+  sal_clean,
+  sensitivity_summary = sal_sensitivity$summary,
+  unit = "ppt"
+)
+
+saveRDS(
+  sal_bundle$surface,
+  file.path(model_dir, "salinity_ipdw_100m.rds")
+)
+saveRDS(
+  sal_bundle$surface,
+  file.path(model_dir, "sal_ipdw.rds")
+)
+saveRDS(
+  sal_bundle$contributor_count,
+  file.path(model_dir, "salinity_contributor_count_100m.rds")
+)
+saveRDS(
+  sal_bundle$nearest_path_distance,
+  file.path(model_dir, "salinity_nearest_path_distance_100m.rds")
+)
+saveRDS(
+  sal_bundle,
+  file.path(model_dir, "salinity_ipdw_bundle_100m.rds")
+)
+saveRDS(
+  sal_diagnostics,
+  file.path(model_dir, "salinity_ipdw_diagnostics_100m.rds")
+)
+saveRDS(
+  sal_qa,
+  file.path(model_dir, "salinity_ipdw_qa_100m.rds")
+)
+saveRDS(
+  sal_moran,
+  file.path(model_dir, "salinity_moran_by_seed_100m.rds")
+)
+
+utils::write.csv(
+  sal_sensitivity$summary,
+  file.path(figure_dir, "salinity_sensitivity_summary_100m.csv"),
+  row.names = FALSE
+)
+utils::write.csv(
+  sal_prediction_rows,
+  file.path(figure_dir, "salinity_prediction_rows_100m.csv"),
+  row.names = FALSE
+)
+utils::write.csv(
+  sal_moran,
+  file.path(figure_dir, "salinity_moran_by_seed_100m.csv"),
+  row.names = FALSE
+)
+utils::write.csv(
+  sal_qa,
+  file.path(figure_dir, "salinity_ipdw_qa_100m.csv"),
+  row.names = FALSE
+)
+
+ggplot2::ggsave(
+  file.path(figure_dir, "salinity_observed_predicted_100m.png"),
+  sal_diagnostics$observed_vs_predicted,
+  width = 6,
+  height = 6,
+  dpi = 300
+)
+ggplot2::ggsave(
+  file.path(figure_dir, "salinity_prediction_error_100m.png"),
+  sal_diagnostics$prediction_error,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+ggplot2::ggsave(
+  file.path(figure_dir, "salinity_error_distribution_100m.png"),
+  sal_diagnostics$error_distribution,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+ggplot2::ggsave(
+  file.path(figure_dir, "salinity_spatial_error_100m.png"),
+  sal_diagnostics$spatial_error,
+  width = 7,
+  height = 6,
+  dpi = 300
+)
+ggplot2::ggsave(
+  file.path(figure_dir, "salinity_support_error_100m.png"),
+  sal_diagnostics$support_error,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+ggplot2::ggsave(
+  file.path(figure_dir, "salinity_parameter_sensitivity_100m.png"),
+  sal_diagnostics$parameter_sensitivity,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+plot(sal_bundle$surface)
+sal_validation$seed_results
+sal_validation$fold_results
+sal_moran
+sal_qa
 
 ```
 
@@ -84,108 +340,43 @@ plot(sal_ipdw)
 
 Test disance power sensitivity
 ```{r}
-
-do_sensitivity <- ipdw_sensitivity(
-  do_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "mg/L",
-  dist_powers = dist_pwr,
-  max_ranges = max_rng
-)
-
-saveRDS(
-  do_sensitivity,
-  file = here::here("2-data", "models", "do_sensitivity_test.rds")
-)
-
-do_test
+do_clean <- wq_ipdw_inputs$dissolved_oxygen$data
 ```
 
 
 
 ```{r}
-do_ipdw <- ipdw_manual(do, cost_raster, 15000, "mean", dist_power = 0.75)
-
-plot(
-  do_ipdw,
-  main = "Dissolved Oxygen IPDW"
-)
+invisible(do_clean)
 ```
 
 
 # Chlorophyll-a
 
 ```{r}
-
-chla_test <- ipdw_sensitivity(
-  chla_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "mg/L",
-  dist_powers = dist_pwr,
-  max_ranges = max_rng
-)
-
-chla_test
+chla_clean <- wq_ipdw_inputs$chlorophyll_a$data
 
 ```
 
 
 ```{r}
-chla_ipdw <- ipdw_manual(chla_clean, cost_raster, 20000, "mean", dist_power = 1)
-
-plot(
-  chla_ipdw,
-  main = "Chlorophyll-a IPDW"
-)
+invisible(chla_clean)
 
 ```
 
 # Turbidiity
 ```{r}
-turb_test <- ipdw_sensitivity(
-  turbidity_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "mg/L",
-  dist_powers = dist_pwr,
-  max_ranges = max_rng
-)
-
-turb_test
+turbidity_clean <- wq_ipdw_inputs$turbidity$data
 ```
 
 
 ```{r}
-
-turb_ipdw <- ipdw_manual(turb, cost_raster, 7500, "mean", dist_power = 1)
-
-plot(
-  turb_ipdw,
-  main = "Turbidity IPDW"
-)
+invisible(turbidity_clean)
 
 ```
 
 # Water Temp
 
-temp <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "water_temp_0903.rds"
-  )
-)
-
-temp_test <- ipdw_sensitivity(
-  water_temp_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "deg C",
-  dist_powers = dp
-)
+```{r}
+water_temp_clean <- wq_ipdw_inputs$water_temperature$data
+invisible(water_temp_clean)
+```

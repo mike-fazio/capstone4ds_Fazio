@@ -19,42 +19,22 @@ source(
 
 study_area <- get_study_area()
 
-do <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "do_0903.rds"
-  )
+pbs_sites <- get_wq_sites(study_area)
+
+cost_raster <- make_cost_raster(
+  study_area,
+  pbs_sites,
+  resolution = 100
 )
 
-sal <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "salinity_0903.rds"
-  )
-)
+read_processed <- function(filename) {
+  path <- here::here("2-data", "processed", filename)
+  if (file.exists(path)) readRDS(path) else NULL
+}
 
-turb <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "turbidity_0903.rds"
-  )
-)
-
-temp <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "water_temp_0903.rds"
-  )
-)
-
-reefs <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "oyster_pts_0903.rds"
-  )
-)
+do <- read_processed("do_0903.rds")
+sal <- read_processed("salinity_0903.rds")
+chla <- read_processed("chla_0903.rds")
+turb <- read_processed("turbidity_0903.rds")
+temp <- read_processed("water_temp_0903.rds")
+reefs <- read_processed("oyster_pts_0903.rds")

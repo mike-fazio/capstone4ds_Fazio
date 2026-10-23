@@ -7,8 +7,6 @@ source(
   )
 )
 
-pbs_sites <- get_wq_sites(study_area)
-
 start_date <- "2005-01-01" # Beginning date of WQ data
 
 end_date <- "2025-01-01" # Ending date of WQ data
@@ -51,7 +49,7 @@ chla_raw <- chla_raw %>%
 
 ```{r}
 # Process Data
-chla_clean <- proc_wq_data(chla_raw, "chla") %>% filter(total_n > 1)
+chla_clean <- proc_wq_data(chla_raw, "chla", cost_raster)
 
 # Plot Data Distribution
 param_means_hist(chla_clean, "Chlorophyll-a (µg/L)")
@@ -93,7 +91,7 @@ salinity_raw <- salinity_raw %>%
 
 ```{r}
 # Process Data
-sal_clean <- proc_wq_data(salinity_raw, "salinity") %>% filter(total_n > 1)
+sal_clean <- proc_wq_data(salinity_raw, "salinity", cost_raster)
 
 # Plot Data Distribution
 param_means_hist(sal_clean, "Salinity (ppt)")
@@ -131,7 +129,11 @@ water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
 
 
 ```{r}
-water_temp_clean <- proc_wq_data(water_temp_raw,"water_temp") %>% filter(total_n > 1)
+water_temp_clean <- proc_wq_data(
+  water_temp_raw,
+  "water_temp",
+  cost_raster
+)
 
 # Plot Data Distribution
 param_means_hist(water_temp_clean, "Water Temperature (°C)")
@@ -166,7 +168,7 @@ table(do_raw$Result_MeasureUnit)
 
 ```{r}
 
-do_clean <- proc_wq_data(do_raw, "do") %>% filter(total_n > 1)
+do_clean <- proc_wq_data(do_raw, "do", cost_raster)
 
 # Plot Data Distribution
 param_means_hist(do_clean, "Dissolved Oxygen (mg/L)")
@@ -202,7 +204,11 @@ table(turbidity_raw$Result_MeasureUnit)
 ```
 
 ```{r}
-turbidity_clean <- proc_wq_data(turbidity_raw, "turbidity") %>% filter(total_n > 1)
+turbidity_clean <- proc_wq_data(
+  turbidity_raw,
+  "turbidity",
+  cost_raster
+)
 
 # Plot Data Distribution
 param_means_hist(turbidity_clean, "Turbidity (NTU)")
@@ -224,6 +230,24 @@ wq_summary <- bind_rows(
   turbidity_clean %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
   water_temp_clean %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
 )
+
+expected_cell_counts <- c(
+  salinity = 84L,
+  do = 88L,
+  chla = 42L,
+  turbidity = 69L,
+  water_temp = 89L
+)
+
+observed_cell_counts <- c(
+  salinity = nrow(sal_clean),
+  do = nrow(do_clean),
+  chla = nrow(chla_clean),
+  turbidity = nrow(turbidity_clean),
+  water_temp = nrow(water_temp_clean)
+)
+
+stopifnot(identical(observed_cell_counts, expected_cell_counts))
 ```
 
 Retrieve Oyster Data:
@@ -252,7 +276,7 @@ tm_basemap("Esri.WorldGrayCanvas") +
     tm_shape(study_area, bbox = study_area) +
     tm_borders(
       col = "red"
-    )
+    ) +
     tm_layout(
       inner.margins = c(0.2, 0.2, 0.2, 0.2)
     ) +

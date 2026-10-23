@@ -1,0 +1,2 @@
+"dist_power","max_range","mean_MAE","sd_MAE","mean_RMSE","sd_RMSE","mean_Bias","sd_Bias","min_coverage","mean_coverage","sd_coverage"
+0.75,15000,2.64094552551609,0.0498147204048326,3.60310995932518,0.0748704856801857,0.148741712217966,0.0475757252469134,1,1,0

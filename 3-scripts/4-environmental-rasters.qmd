@@ -21,6 +21,8 @@ cost_raster <- ipdw::costrasterGen(
   resolution = 100
 )
 
+
+
 dist_pwr <- c(
   0.25,
   0.5,
@@ -58,6 +60,8 @@ sal_sensitivity <- ipdw_sensitivity(
   max_ranges = max_rng
 )
 
+sal_sensitivity
+
 # save distance power output for later reference
 saveRDS(
   sal_sensitivity,
@@ -70,13 +74,41 @@ saveRDS(
 
 ```{r}
 
-set.seed(42)
+set.seed(42) 
 
-sal_ipdw <- ipdw_manual(sal_clean, cost_raster, 15000, "mean", dist_power = 0.5)
+sal_folds <- blockCV::cv_spatial(
+  x = sal_clean,
+  k = 5,
+  size = 5000,  # spatial block size in metres for a projected CRS
+  selection = "random",
+  plot = TRUE
+)
 
-saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
+sal_ipdw <- ipdw_stats(
+  df = sal_clean,
+  cost_raster = cost_raster,
+  folds = sal_folds,
+  dist_pwr = 0.5,
+  max_range = 15000,
+  value_col = "mean"
+)
 
 plot(sal_ipdw)
+
+sal_surface <- ipdw_manual(
+  sf_ob = sal_clean,
+  cost_ras = cost_raster,
+  range = 15000,
+  par_list = "mean",
+  dist_power = 0.5
+)
+
+plot(sal_surface)
+
+saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
+saveRDS(sal_surface, file = here::here("2-data", "models", "sal_surface.rds"))
+
+
 
 ```
 

@@ -70,6 +70,24 @@ saveRDS(
 
 ```
 
+Try spatial binning model
+
+```{r}
+
+sal <- get_sf_wq_data(
+  param = "Salinity",
+  from_date = start_date,
+  to_date = end_date,
+  study_area = study_area,
+  output_name = "salinity",
+  force = TRUE # TODO: must be set to true if old data is in cache. 
+)
+
+sal_proc <- proc_sf_wq_data(sal, study_area)
+
+```
+
+
  run model using tuned parameters
 
 ```{r}
@@ -108,8 +126,6 @@ plot(sal_surface)
 saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
 saveRDS(sal_surface, file = here::here("2-data", "models", "sal_surface.rds"))
 
-
-
 ```
 
 # Dissolved Oxygen
@@ -138,12 +154,30 @@ do_test
 
 
 ```{r}
-do_ipdw <- ipdw_manual(do, cost_raster, 15000, "mean", dist_power = 0.75)
+do_ipdw <- ipdw_manual(
+  do_clean, 
+  cost_raster, 
+  15000, 
+  "mean", 
+  dist_power = 0.75
+  )
+
+do_stats <- ipdw_sensitivity(
+  do_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = 0.25,
+  max_ranges = 15000
+)
 
 plot(
   do_ipdw,
   main = "Dissolved Oxygen IPDW"
 )
+
+do_stats
 ```
 
 
@@ -203,6 +237,9 @@ plot(
 
 ```
 
+
+```{r}
+
 # Water Temp
 
 temp <- readRDS(
@@ -214,10 +251,12 @@ temp <- readRDS(
 )
 
 temp_test <- ipdw_sensitivity(
-  water_temp_clean,
+  temp,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
   unit = "deg C",
-  dist_powers = dp
+  dist_powers = dist_pwr,
+  max_ranges = max_rng
 )
+```

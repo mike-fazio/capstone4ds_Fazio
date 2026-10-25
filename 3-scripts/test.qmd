@@ -195,203 +195,32 @@ distance_power_test <- function(
 ```
 
 
-Test different Max Ranges
+```{r}
+
+sa <- get_study_area()
+
+chl_a <- get_spatial_wq_data(
+  param = "Chlorophyll a, corrected for pheophytin",
+  from_date = start_date,
+  to_date = end_date,
+  study_area = sa,
+  output_name = "chl_a_mgL",
+  force = TRUE
+)
+
+plot(chl_a$geometry)
+
+```
+
 
 ```{r}
 
-library(sf)
-library(terra)
-library(blockCV)
-library(dplyr)
-library(purrr)
-library(yardstick)
-library(ggplot2)
-
-# --------------------------------------------------
-# 1. Define IPDW cross-validation function
-# --------------------------------------------------
-
-ipdw_range_cv <- function(max_range, folds, dist_pwr = 1.5) {
-
-  ipdw_cv <- purrr::map_dfr(
-    seq_along(folds$folds_list),
-    function(i) {
-
-      # Identify training and validation stations
-      train_idx <- folds$folds_list[[i]][[1]]
-      test_idx  <- folds$folds_list[[i]][[2]]
-
-      train <- sal_cv[train_idx, ]
-      test  <- sal_cv[test_idx, ]
-
-      # Run IPDW using training stations only
-      ipdw_result <- ipdw_manual(
-        train,
-        cost_raster,
-        max_range,
-        "mean",
-        dist_power = dist_pwr
-      )
-
-      # Convert result to SpatRaster
-      ipdw_raster <- terra::rast(ipdw_result)
-
-      # Extract predictions at validation stations
-      predicted <- terra::extract(
-        ipdw_raster,
-        terra::vect(test),
-        ID = FALSE
-      )[[1]]
-
-      tibble::tibble(
-        fold = i,
-        observed = test$mean,
-        predicted = predicted
-      )
-    }
-  )
-
-  # Calculate accuracy metrics
-  ipdw_cv %>%
-    summarise(
-      max_range = max_range,
-      dist_power = dist_pwr,
-      n = n(),
-      n_valid = sum(is.finite(predicted)),
-      coverage = n_valid / n,
-      MAE = yardstick::mae_vec(
-        observed, predicted, na_rm = TRUE
-      ),
-      RMSE = yardstick::rmse_vec(
-        observed, predicted, na_rm = TRUE
-      ),
-      Bias = mean(
-        predicted - observed, na.rm = TRUE
-      )
-    )
-}
 
 
-# --------------------------------------------------
-# 2. Set parameters
-# --------------------------------------------------
-
-path_ranges <- c(5000, 7500, 10000, 15000, 20000)
-
-dist_pwr <- 1.5
-
-seeds <- 1:5
+chla_sf <- proc_sf_wq_data(chl_a, study_area, bin_size = 500)
 
 
-# --------------------------------------------------
-# 3. Run repeated spatial cross-validation
-# --------------------------------------------------
 
-range_sensitivity <- purrr::map_dfr(seeds, function(s) {
-
-  set.seed(s)
-
-  folds <- blockCV::cv_spatial(
-    x = sal_cv,
-    k = 5,
-    size = 5000,
-    selection = "random",
-    plot = FALSE
-  )
-
-  purrr::map_dfr(
-    path_ranges,
-    \(r) ipdw_range_cv(
-      max_range = r,
-      folds = folds,
-      dist_pwr = dist_pwr
-    )
-  ) %>%
-    mutate(seed = s)
-})
-
-
-# --------------------------------------------------
-# 4. Summarize results across partitions
-# --------------------------------------------------
-
-range_summary <- range_sensitivity %>%
-  group_by(max_range) %>%
-  summarise(
-    dist_power = first(dist_power),
-    mean_MAE = mean(MAE),
-    sd_MAE = sd(MAE),
-    mean_RMSE = mean(RMSE),
-    sd_RMSE = sd(RMSE),
-    mean_Bias = mean(Bias),
-    min_coverage = min(coverage),
-    mean_coverage = mean(coverage),
-    .groups = "drop"
-  ) %>%
-  arrange(desc(min_coverage), mean_MAE)
-
-print(range_summary)
-
-
-# --------------------------------------------------
-# 5. Identify best range for each partition
-# --------------------------------------------------
-
-best_range_by_seed <- range_sensitivity %>%
-  group_by(seed) %>%
-  arrange(desc(coverage), MAE, .by_group = TRUE) %>%
-  slice_head(n = 1) %>%
-  ungroup()
-
-print(best_range_by_seed)
-
-
-# --------------------------------------------------
-# 6. Count how often each range performed best
-# --------------------------------------------------
-
-range_wins <- best_range_by_seed %>%
-  count(max_range, name = "wins") %>%
-  arrange(desc(wins))
-
-print(range_wins)
-
-
-# --------------------------------------------------
-# 7. Plot performance across maximum path distances
-# --------------------------------------------------
-
-ggplot(
-  range_sensitivity,
-  aes(
-    x = max_range / 1000,
-    y = MAE,
-    group = factor(seed)
-  )
-) +
-  geom_line(alpha = 0.4, color = "grey50") +
-  geom_point(alpha = 0.6, color = "grey50") +
-  stat_summary(
-    aes(group = 1),
-    fun = mean,
-    geom = "line",
-    linewidth = 1.2,
-    color = "red"
-  ) +
-  stat_summary(
-    aes(group = 1),
-    fun = mean,
-    geom = "point",
-    size = 3,
-    color = "red"
-  ) +
-  labs(
-    title = "IPDW Maximum Path Distance Sensitivity",
-    subtitle = "5 partitions, 5 spatial folds, distance power = 1.5",
-    x = "Maximum Path Distance (km)",
-    y = "Mean Absolute Error (ppt)"
-  ) +
-  theme_minimal()
 
 
 ```

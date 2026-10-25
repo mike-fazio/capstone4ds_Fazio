@@ -162,6 +162,73 @@ get_wq_data <- function(
 }
 
 # -----------------------------------------------------------------------------
+#  DEFINE SPATIAL WQ DATA RETRIEVAL FUNCTION -
+#  Uses study area polygon instead of site list. Checks if data already exists. 
+#  If so, loads data, else retrieves from EPA WQP.
+# -----------------------------------------------------------------------------
+
+get_sf_wq_data <- function(
+  param,
+  from_date,
+  to_date,
+  study_area,
+  output_name,
+  force = FALSE
+) {
+  # Create file name based on user-provided input
+  file_name <- paste0(output_name, ".rds")
+
+  # Build output path
+  out_path <- here::here(
+    "2-data",
+    "raw",
+    file_name
+  )
+
+  if (file.exists(out_path) && !force) {
+    # Load previously downloaded data
+    pbs_df <- readRDS(out_path)
+  } else {
+    # Site list used to filter query results
+    site_list <- unique(sites$Location_Identifier)
+
+    # Download data from WQP API
+    wq_df <- dataRetrieval::readWQPdata(
+      countycode = c("US:12:033", "US:12:113"),
+      siteType = "Estuary",
+      characteristicName = param,
+      startDateLo = from_date,
+      startDateHi = to_date,
+      dataProfile = "narrow",
+      service = "ResultWQX3",
+      ignore_attributes = FALSE
+    )
+
+    # Filter results to sites within study area
+    pbs_df <- wq_df %>% sf::st_as_sf(
+        coords = c(
+          "Location_Longitude",
+          "Location_Latitude"
+        ),
+        crs = 4326,
+        remove = TRUE
+      ) %>%
+      sf::st_transform(sf::st_crs(study_area)) %>%
+      sf::st_filter(
+        study_area,
+        .predicate = st_within
+      )
+
+    # Save dataset
+    saveRDS(pbs_df, out_path)
+  }
+
+  return(pbs_df)
+}
+
+
+
+# -----------------------------------------------------------------------------
 #  DEFINE OUTLIER DETECTION FUNCTION -
 #  Detect, flag, and return extreme outliers for further inspection.
 # -----------------------------------------------------------------------------
@@ -293,6 +360,7 @@ proc_wq_data <- function(df, param_name) {
   outname <- paste0(
     param_name,
     "_0903.rds"
+
   )
 
   out_path <- here::here(
@@ -304,6 +372,120 @@ proc_wq_data <- function(df, param_name) {
   saveRDS(df_out, out_path)
 
   return(df_out)
+}
+
+# -----------------------------------------------------------------------------
+#  DEFINE WATER QUALITY DATA PROCESSING FUNCTION WITH SPATIAL BINNING-
+#  Processes input data to prepare it for use in this projects analysis. This 
+#  function differs from previous processing because it summarizes WQ data 
+#  using spatial polygons (bins) rather than just summarizing on Location ID.
+# -----------------------------------------------------------------------------
+
+
+proc_sf_wq_data <- function(wq_data, study_area, bin_size = 500) {
+
+  # create spatial grid overlaying study_area
+  sa_grid <-
+    sf::st_make_grid(
+      x = study_area,
+      cellsize = bin_size,
+      crs = sf::st_crs(study_area),
+      what = "polygons",
+      square = FALSE,
+      flat_topped = TRUE
+    ) %>%
+    sf::st_sf() %>%
+    # Clip grid to study area
+    sf::st_intersection(
+      study_area
+    ) %>%
+    # Assign unique IDs
+    dplyr::mutate(
+      bin_id = dplyr::row_number()
+    )
+
+  wq_filtered <- wq_data %>%
+    dplyr::filter(
+      # Select warm season (May-October)
+      lubridate::month(Activity_StartDate) %in% 5:10,
+
+      # Remove records without measured values
+      !is.na(Result_Measure),
+
+      # Remove records without coordinates
+      !sf::st_is_empty(geometry)  # FIX: Check empty geometries
+    ) %>%
+    dplyr::mutate(
+      year = lubridate::year(Activity_StartDate),
+
+      # FIX: Convert measurements to numeric
+      Result_Measure = as.numeric(Result_Measure)
+    ) %>%
+    # FIX: Assign spatial bin IDs to observations
+    sf::st_join(
+      sa_grid["bin_id"],
+      join = sf::st_within,
+      left = FALSE
+    )
+
+  # Calculate annual warm-season means for each site
+  annual_summary <- wq_filtered %>%
+    dplyr::group_by(
+      bin_id, # FIX: Retain bin ID
+      Location_Identifier,
+      year
+    ) %>%
+    dplyr::summarise(
+      annual_mean = mean(Result_Measure),
+      annual_n = n(),
+
+      # Station metadata
+      location_name = first(Location_Name),
+
+      .groups = "drop"
+    )
+
+  # Compute long-term means per station
+  station_summary <- annual_summary %>%
+    dplyr::group_by(
+      bin_id, # FIX: Retain bin ID
+      Location_Identifier
+    ) %>%
+    dplyr::summarise(
+      station_mean = mean(annual_mean),
+      station_sd = sd(annual_mean),
+
+      years_sampled = dplyr::n(),
+      total_n = sum(annual_n),
+
+      first_year = min(year),
+      last_year = max(year),
+
+      location_name = dplyr::first(location_name),
+
+      .groups = "drop"
+    )
+
+  # Aggregate stations within each bin
+  bin_summary <- station_summary %>%
+    sf::st_drop_geometry() %>% # FIX: Aggregate attributes only
+    dplyr::group_by(bin_id) %>%
+    dplyr::summarise(
+      mean = mean(station_mean),
+      sd = sd(station_mean),
+      n_stations = dplyr::n(),
+      total_n = sum(total_n),
+      first_year = min(first_year),
+      last_year = max(last_year),
+      .groups = "drop"
+    )
+
+  # FIX: Join summary back to grid before converting to points
+  wq_binned <- sa_grid %>%
+    dplyr::inner_join(bin_summary, by = "bin_id") %>%
+    sf::st_point_on_surface()
+
+  return(wq_binned)
 }
 
 # -----------------------------------------------------------------------------

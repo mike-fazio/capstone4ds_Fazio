@@ -108,60 +108,6 @@ get_wq_sites <- function(study_area) {
 
 
 # -----------------------------------------------------------------------------
-#  DEFINE WQ DATA RETRIEVAL FUNCTION -
-#  Checks if data already exists. If so, loads data, else retrieves from EPA
-#  WQP.
-# -----------------------------------------------------------------------------
-
-get_wq_data <- function(
-  param,
-  from_date,
-  to_date,
-  sites,
-  output_name,
-  force = FALSE
-) {
-  # Create file name based on user-provided input
-  file_name <- paste0(output_name, ".rds")
-
-  # Build output path
-  out_path <- here::here(
-    "2-data",
-    "raw",
-    file_name
-  )
-
-  if (file.exists(out_path) && !force) {
-    # Load previously downloaded data
-    pbs_df <- readRDS(out_path)
-  } else {
-    # Site list used to filter query results
-    site_list <- unique(sites$Location_Identifier)
-
-    # Download data from WQP API
-    wq_df <- dataRetrieval::readWQPdata(
-      countycode = c("US:12:033", "US:12:113"),
-      siteType = "Estuary",
-      characteristicName = param,
-      startDateLo = from_date,
-      startDateHi = to_date,
-      dataProfile = "narrow",
-      service = "ResultWQX3",
-      ignore_attributes = FALSE
-    )
-
-    # Filter results to sites within study area
-    pbs_df <- wq_df %>%
-      filter(Location_Identifier %in% site_list)
-
-    # Save dataset
-    saveRDS(pbs_df, out_path)
-  }
-
-  return(pbs_df)
-}
-
-# -----------------------------------------------------------------------------
 #  DEFINE SPATIAL WQ DATA RETRIEVAL FUNCTION -
 #  Uses study area polygon instead of site list. Checks if data already exists. 
 #  If so, loads data, else retrieves from EPA WQP.
@@ -172,6 +118,7 @@ get_sf_wq_data <- function(
   from_date,
   to_date,
   study_area,
+  sites,
   output_name,
   force = FALSE
 ) {
@@ -202,6 +149,13 @@ get_sf_wq_data <- function(
       ignore_attributes = FALSE
     )
 
+    # Add geometry data using sites
+    wq_df <- wq_df %>%
+      inner_join(
+        y = sites,
+        by = "Location_Identifier"
+      )
+
     # Filter results to sites within study area
     pbs_df <- wq_df %>% sf::st_as_sf(
         coords = c(
@@ -223,8 +177,6 @@ get_sf_wq_data <- function(
 
   return(pbs_df)
 }
-
-
 
 # -----------------------------------------------------------------------------
 #  DEFINE OUTLIER DETECTION FUNCTION -
@@ -273,103 +225,6 @@ find_outliers <- function(df) {
   print(paste("Number of outliers detected: ", sum(df_flagged$outlier)))
 
   return(df_flagged)
-}
-
-# -----------------------------------------------------------------------------
-#  DEFINE WATER QUALITY DATA PROCESSING FUNCTION -
-#  Processes input data to prepare it for use in this projects analysis.
-# -----------------------------------------------------------------------------
-
-proc_wq_data <- function(df, param_name) {
-  # Get name of input dataset
-  input_name <- deparse(substitute(df))
-
-  df <- df %>%
-    filter(
-      # Select warm season (May-October)
-      lubridate::month(Activity_StartDate) %in% 5:10,
-      # Remove records without measured values
-      !is.na(Result_Measure),
-
-      # Remove records without coordinates
-      !is.na(Location_Latitude),
-      !is.na(Location_Longitude)
-    ) %>%
-    mutate(
-      year = lubridate::year(Activity_StartDate)
-    )
-
-  # Calculate annual warm-season means for each site
-  annual_summary <- df %>%
-    group_by(
-      Location_Identifier,
-      year
-    ) %>%
-    summarise(
-      # Mean excluding statistical outliers
-      annual_mean = mean(
-        Result_Measure,
-        na.rm = TRUE
-      ),
-
-      # Number of observations retained
-      annual_n = n(),
-
-      # Station metadata
-      location_name = first(Location_Name),
-      latitude = first(Location_Latitude),
-      longitude = first(Location_Longitude),
-
-      .groups = "drop"
-    )
-
-  # Calculate long-term site-level conditions
-  df_out <- annual_summary %>%
-    group_by(Location_Identifier) %>%
-    summarise(
-      # Station metadata
-      location_name = first(location_name),
-      latitude = first(latitude),
-      longitude = first(longitude),
-
-      # Long-term summary statistics
-      mean = mean(annual_mean, na.rm = TRUE),
-      sd = sd(annual_mean, na.rm = TRUE),
-      years_sampled = n(),
-      total_n = sum(annual_n),
-
-      first_year = min(year),
-      last_year = max(year),
-
-      .groups = "drop"
-    ) %>%
-
-    # Make data spatially aware for interpolation
-    sf::st_as_sf(
-      coords = c("longitude", "latitude"),
-      crs = 4326,
-      remove = FALSE
-    ) %>%
-
-    # NAD 1983 (2011) StatePlane Florida North FIPS 0903 (Meters)
-    sf::st_transform("ESRI:103021")
-
-  # Save processed data
-  outname <- paste0(
-    param_name,
-    "_0903.rds"
-
-  )
-
-  out_path <- here::here(
-    "2-data",
-    "processed",
-    outname
-  )
-
-  saveRDS(df_out, out_path)
-
-  return(df_out)
 }
 
 # -----------------------------------------------------------------------------

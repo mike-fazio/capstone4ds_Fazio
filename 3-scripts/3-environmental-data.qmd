@@ -69,29 +69,16 @@ hist(chla_clean$mean)
 ## Salinity
 
 ```{r}
-salinity_raw <- get_wq_data(
-  param = "Salinity",
-  from_date = start_date,
-  to_date = end_date,
-  sites = pbs_sites,
-  output_name = "salinity",
-  force = force_toggle
-)
-
-```
-
-```{r}
 
 salinity_raw <- get_sf_wq_data(
   param = "Salinity",
   from_date = start_date,
   to_date = end_date,
   study_area = study_area,
-  output_name = "salinity",
+  sites = pbs_sites,
+  output_name = "sf_salinity",
   force = TRUE # TODO: must be set to true if old data is in cache. 
 )
-
-
 
 ```
 
@@ -108,8 +95,9 @@ salinity_raw <- salinity_raw %>%
 ```
 
 ```{r}
+
 # Process Data
-sal_clean <- proc_wq_data(salinity_raw, "salinity") %>% filter(total_n > 1)
+sal_clean <- proc_sf_wq_data(salinity_raw, study_area, bin_size = 1000) %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(sal_clean, "Salinity (ppt)")

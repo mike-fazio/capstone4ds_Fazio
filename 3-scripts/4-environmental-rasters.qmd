@@ -70,11 +70,6 @@ saveRDS(
 
 ```
 
-Try spatial binning model
-
-
-
-
  run model using tuned parameters
 
 ```{r}

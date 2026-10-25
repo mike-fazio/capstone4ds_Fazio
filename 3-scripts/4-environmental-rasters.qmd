@@ -72,20 +72,7 @@ saveRDS(
 
 Try spatial binning model
 
-```{r}
 
-sal <- get_sf_wq_data(
-  param = "Salinity",
-  from_date = start_date,
-  to_date = end_date,
-  study_area = study_area,
-  output_name = "salinity",
-  force = TRUE # TODO: must be set to true if old data is in cache. 
-)
-
-sal_proc <- proc_sf_wq_data(sal, study_area)
-
-```
 
 
  run model using tuned parameters

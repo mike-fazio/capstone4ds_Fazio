@@ -189,9 +189,7 @@ get_sf_wq_data <- function(
     # Load previously downloaded data
     pbs_df <- readRDS(out_path)
   } else {
-    # Site list used to filter query results
-    site_list <- unique(sites$Location_Identifier)
-
+    
     # Download data from WQP API
     wq_df <- dataRetrieval::readWQPdata(
       countycode = c("US:12:033", "US:12:113"),

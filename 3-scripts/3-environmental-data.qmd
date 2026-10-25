@@ -80,6 +80,22 @@ salinity_raw <- get_wq_data(
 
 ```
 
+```{r}
+
+salinity_raw <- get_sf_wq_data(
+  param = "Salinity",
+  from_date = start_date,
+  to_date = end_date,
+  study_area = study_area,
+  output_name = "salinity",
+  force = TRUE # TODO: must be set to true if old data is in cache. 
+)
+
+
+
+```
+
+
 Clean data before processing for interpolation
 ```{r}
 # check units to make sure all are comparable

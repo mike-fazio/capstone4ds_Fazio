@@ -70,41 +70,44 @@ saveRDS(
 
 ```
 
- run model using tuned parameters
+## Run model using tuned parameters
 
 ```{r}
 
 set.seed(42) 
 
-sal_folds <- blockCV::cv_spatial(
-  x = sal_clean,
-  k = 5,
-  size = 5000,  # spatial block size in metres for a projected CRS
-  selection = "random",
-  plot = TRUE
-)
+folds <- blockCV::cv_spatial(
+        x = sal_clean,
+        k = 5,
+        size = 5000,
+        selection = "random",
+        plot = FALSE
+      )
 
-sal_ipdw <- ipdw_stats(
-  df = sal_clean,
-  cost_raster = cost_raster,
-  folds = sal_folds,
-  dist_pwr = 0.5,
-  max_range = 15000,
-  value_col = "mean"
-)
+sal_stats <- ipdw_stats(
+  sal_clean, 
+  cost_raster, 
+  folds = folds, 
+  dist_pwr = .25, 
+  max_range = 10000, 
+  value_col = "mean")
 
-plot(sal_ipdw)
 
-sal_surface <- ipdw_manual(
-  sf_ob = sal_clean,
-  cost_ras = cost_raster,
-  range = 15000,
-  par_list = "mean",
-  dist_power = 0.5
-)
+sal_rast <- ipdw_manual(
+  sal_clean, 
+  cost_raster, 
+  range = 10000, 
+  "mean", 
+  dist_power = 0.25
+  )  
 
-plot(sal_surface)
+plot(sal_ipdw_surface)
 
+```
+
+## Save model results
+
+```{r}
 saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
 saveRDS(sal_surface, file = here::here("2-data", "models", "sal_surface.rds"))
 
@@ -219,21 +222,14 @@ plot(
 
 ```
 
+# Water Temp
 
 ```{r}
 
-# Water Temp
 
-temp <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "water_temp_0903.rds"
-  )
-)
 
-temp_test <- ipdw_sensitivity(
-  temp,
+water_temp_sensitivity <- ipdw_sensitivity(
+  water_temp_clean,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -241,4 +237,46 @@ temp_test <- ipdw_sensitivity(
   dist_powers = dist_pwr,
   max_ranges = max_rng
 )
+
+water_temp_sensitivity
+
+# save distance power output for later reference
+saveRDS(
+  water_temp_sensitivity,
+  file = here::here("2-data", "models", "water_temp_sensitivity_test.rds")
+)
+
+```
+
+```{r}
+
+set.seed(42) 
+
+folds <- blockCV::cv_spatial(
+        x = water_temp_clean,
+        k = 5,
+        size = 5000,
+        selection = "random",
+        plot = FALSE
+      )
+
+water_temp_stats <- ipdw_stats(
+  water_temp_clean, 
+  cost_raster, 
+  folds = folds, 
+  dist_pwr = .25, 
+  max_range = 10000, 
+  value_col = "mean")
+
+
+water_temp_rast <- ipdw_manual(
+  water_temp_clean, 
+  cost_raster, 
+  range = 10000, 
+  "mean", 
+  dist_power = 0.25
+  )  
+
+plot(water_temp_rast)
+
 ```

@@ -13,9 +13,9 @@ start_date <- "2005-01-01" # Beginning date of WQ data
 
 end_date <- "2025-01-01" # Ending date of WQ data
 
-force_toggle <- FALSE # TRUE or FALSE, determines if new API download occurs
+force_toggle <- TRUE # TRUE or FALSE, determines if new API download occurs
 
-
+bin = 2000
 ```
 
 # Retrieve WQ data using study-area sites and selected parameters
@@ -24,13 +24,14 @@ force_toggle <- FALSE # TRUE or FALSE, determines if new API download occurs
 
 ```{r}
 # Retrieve Data 
-chla_raw <- get_wq_data(
+chla_raw <- get_sf_wq_data(
   param = "Chlorophyll a, corrected for pheophytin",
   from_date = start_date,
   to_date = end_date,
   sites = pbs_sites,
+  study_area = study_area,
   output_name = "chl_a_mgL",
-  force = force_toggle
+  force = TRUE
 )
 
 ```
@@ -51,7 +52,11 @@ chla_raw <- chla_raw %>%
 
 ```{r}
 # Process Data
-chla_clean <- proc_wq_data(chla_raw, "chla") %>% filter(total_n > 1)
+chla_clean <- proc_sf_wq_data(
+  wq_data = chla_raw, 
+  study_area = study_area, 
+  bin_size = bin) %>% 
+    filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(chla_clean, "Chlorophyll-a (µg/L)")
@@ -88,6 +93,8 @@ Clean data before processing for interpolation
 # check units to make sure all are comparable
 table(salinity_raw$Result_MeasureUnit)
 
+view(find_outliers(salinity_raw))
+
 # drop unwanted measurements 
 salinity_raw <- salinity_raw %>%
   filter(Result_Measure != 2190 & Result_Measure != 322) # Drop extreme outliers
@@ -97,7 +104,9 @@ salinity_raw <- salinity_raw %>%
 ```{r}
 
 # Process Data
-sal_clean <- proc_sf_wq_data(salinity_raw, study_area, bin_size = 1000) %>% filter(total_n > 1)
+sal_clean <- proc_sf_wq_data(salinity_raw, study_area, bin_size = bin)
+
+sal_clean <- sal_clean %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(sal_clean, "Salinity (ppt)")
@@ -112,10 +121,11 @@ param_means_map(sal_clean, "Salinity (ppt)")
 ## Water Temperature
 
 ```{r}
-water_temp_raw <- get_wq_data(
+water_temp_raw <- get_sf_wq_data(
   param = "Temperature, water",
   from_date = start_date,
   to_date = end_date,
+  study_area = study_area,
   sites = pbs_sites,
   output_name = "water_temp",
   force = force_toggle
@@ -135,7 +145,14 @@ water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
 
 
 ```{r}
-water_temp_clean <- proc_wq_data(water_temp_raw,"water_temp") %>% filter(total_n > 1)
+water_temp_clean <- proc_sf_wq_data(
+  wq_data = water_temp_raw,
+  study_area = study_area, 
+  bin_size = bin
+  ) %>% 
+    filter(
+      total_n > 1
+      )
 
 # Plot Data Distribution
 param_means_hist(water_temp_clean, "Water Temperature (°C)")
@@ -150,7 +167,7 @@ param_means_map(water_temp_clean, "Water Temperature (°C)")
 ## Dissolved Oxygen
 
 ```{r}
-do_raw <- get_wq_data(
+do_raw <- get_sf_wq_data(
   param = "Dissolved oxygen (DO)",
   from_date = start_date,
   to_date = end_date,

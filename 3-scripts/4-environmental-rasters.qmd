@@ -1,3 +1,4 @@
+# Set Up 
 ```{r} 
 
 sites <- get_wq_sites()
@@ -44,8 +45,38 @@ max_rng <- c(
 
 ```
 
+
+# Chlorophyll-a
+
+```{r}
+
+chla_test <- ipdw_sensitivity(
+  chla_clean,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "mg/L",
+  dist_powers = dist_pwr,
+  max_ranges = max_rng
+)
+
+chla_test
+
+```
+
+```{r}
+chla_ipdw <- ipdw_manual(chla_clean, cost_raster, 20000, "mean", dist_power = 1)
+
+plot(
+  chla_ipdw,
+  main = "Chlorophyll-a IPDW"
+)
+
+```
+
 # Salinity
 
+## Eval Sensitivity
 Test model sensitivity against distance power X max range interactions
 ```{r}
 # SAL
@@ -113,6 +144,66 @@ saveRDS(sal_surface, file = here::here("2-data", "models", "sal_surface.rds"))
 
 ```
 
+
+# Water Temp
+
+```{r}
+water_temp <- temp
+
+
+water_temp_sensitivity <- ipdw_sensitivity(
+  water_temp,
+  cost_raster,
+  n_seeds = 5,
+  value_col = "mean",
+  unit = "deg C",
+  dist_powers = dist_pwr,
+  max_ranges = max_rng
+)
+
+water_temp_sensitivity
+
+# save distance power output for later reference
+saveRDS(
+  water_temp_sensitivity,
+  file = here::here("2-data", "models", "water_temp_sensitivity_test.rds")
+)
+
+```
+
+```{r}
+
+set.seed(42) 
+
+folds <- blockCV::cv_spatial(
+        x = water_temp,
+        k = 5,
+        size = 5000,
+        selection = "random",
+        plot = FALSE
+      )
+
+water_temp_stats <- ipdw_stats(
+  water_temp, 
+  cost_raster, 
+  folds = folds, 
+  dist_pwr = .50, 
+  max_range = 10000, 
+  value_col = "mean")
+
+
+water_temp_rast <- ipdw_manual(
+  water_temp, 
+  cost_raster, 
+  range = 10000, 
+  "mean", 
+  dist_power = 0.5
+  )  
+
+plot(water_temp_rast)
+
+```
+
 # Dissolved Oxygen
 
 Test disance power sensitivity
@@ -166,35 +257,6 @@ do_stats
 ```
 
 
-# Chlorophyll-a
-
-```{r}
-
-chla_test <- ipdw_sensitivity(
-  chla_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "mg/L",
-  dist_powers = dist_pwr,
-  max_ranges = max_rng
-)
-
-chla_test
-
-```
-
-
-```{r}
-chla_ipdw <- ipdw_manual(chla_clean, cost_raster, 20000, "mean", dist_power = 1)
-
-plot(
-  chla_ipdw,
-  main = "Chlorophyll-a IPDW"
-)
-
-```
-
 # Turbidiity
 ```{r}
 turb_test <- ipdw_sensitivity(
@@ -219,64 +281,5 @@ plot(
   turb_ipdw,
   main = "Turbidity IPDW"
 )
-
-```
-
-# Water Temp
-
-```{r}
-
-
-
-water_temp_sensitivity <- ipdw_sensitivity(
-  water_temp_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "deg C",
-  dist_powers = dist_pwr,
-  max_ranges = max_rng
-)
-
-water_temp_sensitivity
-
-# save distance power output for later reference
-saveRDS(
-  water_temp_sensitivity,
-  file = here::here("2-data", "models", "water_temp_sensitivity_test.rds")
-)
-
-```
-
-```{r}
-
-set.seed(42) 
-
-folds <- blockCV::cv_spatial(
-        x = water_temp_clean,
-        k = 5,
-        size = 5000,
-        selection = "random",
-        plot = FALSE
-      )
-
-water_temp_stats <- ipdw_stats(
-  water_temp_clean, 
-  cost_raster, 
-  folds = folds, 
-  dist_pwr = .25, 
-  max_range = 10000, 
-  value_col = "mean")
-
-
-water_temp_rast <- ipdw_manual(
-  water_temp_clean, 
-  cost_raster, 
-  range = 10000, 
-  "mean", 
-  dist_power = 0.25
-  )  
-
-plot(water_temp_rast)
 
 ```

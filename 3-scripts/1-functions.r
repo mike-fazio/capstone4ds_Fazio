@@ -109,7 +109,7 @@ get_wq_sites <- function(study_area) {
 
 # -----------------------------------------------------------------------------
 #  DEFINE SPATIAL WQ DATA RETRIEVAL FUNCTION -
-#  Uses study area polygon instead of site list. Checks if data already exists. 
+#  Uses study area polygon instead of site list. Checks if data already exists.
 #  If so, loads data, else retrieves from EPA WQP.
 # -----------------------------------------------------------------------------
 
@@ -136,7 +136,6 @@ get_sf_wq_data <- function(
     # Load previously downloaded data
     pbs_df <- readRDS(out_path)
   } else {
-    
     # Download data from WQP API
     wq_df <- dataRetrieval::readWQPdata(
       countycode = c("US:12:033", "US:12:113"),
@@ -157,7 +156,8 @@ get_sf_wq_data <- function(
       )
 
     # Filter results to sites within study area
-    pbs_df <- wq_df %>% sf::st_as_sf(
+    pbs_df <- wq_df %>%
+      sf::st_as_sf(
         coords = c(
           "Location_Longitude",
           "Location_Latitude"
@@ -229,14 +229,12 @@ find_outliers <- function(df) {
 
 # -----------------------------------------------------------------------------
 #  DEFINE WATER QUALITY DATA PROCESSING FUNCTION WITH SPATIAL BINNING-
-#  Processes input data to prepare it for use in this projects analysis. This 
-#  function differs from previous processing because it summarizes WQ data 
+#  Processes input data to prepare it for use in this projects analysis. This
+#  function differs from previous processing because it summarizes WQ data
 #  using spatial polygons (bins) rather than just summarizing on Location ID.
 # -----------------------------------------------------------------------------
 
-
-proc_sf_wq_data <- function(wq_data, study_area, bin_size = 500) {
-
+proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
   # create spatial grid overlaying study_area
   sa_grid <-
     sf::st_make_grid(
@@ -266,7 +264,7 @@ proc_sf_wq_data <- function(wq_data, study_area, bin_size = 500) {
       !is.na(Result_Measure),
 
       # Remove records without coordinates
-      !sf::st_is_empty(geometry)  # FIX: Check empty geometries
+      !sf::st_is_empty(geometry) # FIX: Check empty geometries
     ) %>%
     dplyr::mutate(
       year = lubridate::year(Activity_StartDate),
@@ -337,6 +335,9 @@ proc_sf_wq_data <- function(wq_data, study_area, bin_size = 500) {
   wq_binned <- sa_grid %>%
     dplyr::inner_join(bin_summary, by = "bin_id") %>%
     sf::st_point_on_surface()
+
+  outname <- paste0(output_name, ".rds")
+  saveRDS(wq_binned, here::here("2-data", "processed", outname))
 
   return(wq_binned)
 }

@@ -177,6 +177,7 @@ do_raw <- get_sf_wq_data(
   param = "Dissolved oxygen (DO)",
   from_date = start_date,
   to_date = end_date,
+  study_area = study_area,
   sites = pbs_sites,
   output_name = "do",
   force = force_toggle
@@ -186,16 +187,23 @@ do_raw <- get_sf_wq_data(
 ### Clean DO Data
 ```{r}
 # check units
+hist(do_raw$Result_Measure)
+
 table(do_raw$Result_MeasureUnit)
 
-#view(find_outliers(do_raw))
+view(find_outliers(do_raw))
 
 ```
 
 ### Process DO Data
 ```{r}
 
-do_proc <- proc_sf_wq_data(do_raw, "do") %>% filter(total_n > 1)
+do_proc <- proc_sf_wq_data(
+  wq_data = do_raw,
+  study_area = study_area,
+  output_name = "do_proc", 
+  bin_size = bin) %>% 
+    filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(do_proc, "Dissolved Oxygen (mg/L)")
@@ -214,8 +222,9 @@ turbidity_raw <- get_sf_wq_data(
   param = "Turbidity",
   from_date = start_date,
   to_date = end_date,
+  study_area = study_area,
   sites = pbs_sites,
-  output_name = "turbidity",
+  output_name = "turb_raw",
   force = force_toggle
 )
 
@@ -225,13 +234,18 @@ turbidity_raw <- get_sf_wq_data(
 # check units
 table(turbidity_raw$Result_MeasureUnit)
 
-#view(find_outliers(turbidity_raw))
+view(find_outliers(turbidity_raw))
 
 
 ```
 
 ```{r}
-turbidity_proc <- proc_wq_data(turbidity_raw, "turbidity") %>% filter(total_n > 1)
+turbidity_proc <- proc_sf_wq_data(
+  turbidity_raw,
+  study_area = study_area,
+  output_name = "turb_proc",
+  bin = bin) %>% 
+    filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(turbidity_proc, "Turbidity (NTU)")

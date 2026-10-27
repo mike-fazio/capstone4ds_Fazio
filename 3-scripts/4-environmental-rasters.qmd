@@ -46,7 +46,7 @@ max_rng <- c(
 ```
 
 
-# Chlorophyll-a
+# Chlorophyll-a (**MAY DROP**)
 
 ```{r}
 
@@ -172,6 +172,7 @@ saveRDS(
 ```
 
 ```{r}
+water_temp <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
 
 set.seed(42) 
 
@@ -191,6 +192,13 @@ water_temp_stats <- ipdw_stats(
   max_range = 10000, 
   value_col = "mean")
 
+table(water_temp_stats)
+
+saveRDS(
+  water_temp_stats,
+  file = here::here("2-data", "models", "water_temp_ipdw.rds")
+)
+
 
 water_temp_rast <- ipdw_manual(
   water_temp, 
@@ -202,15 +210,22 @@ water_temp_rast <- ipdw_manual(
 
 plot(water_temp_rast)
 
+saveRDS(
+  water_temp_rast,
+  file = here::here("2-data", "models", "water_temp_rast.rds")
+)
+
 ```
 
 # Dissolved Oxygen
 
 Test disance power sensitivity
 ```{r}
+do <- readRDS(here::here("2-data", "processed", "do_proc.rds"))
+
 
 do_sensitivity <- ipdw_sensitivity(
-  do_clean,
+  do_proc,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -224,7 +239,6 @@ saveRDS(
   file = here::here("2-data", "models", "do_sensitivity_test.rds")
 )
 
-do_test
 ```
 
 
@@ -259,8 +273,11 @@ do_stats
 
 # Turbidiity
 ```{r}
-turb_test <- ipdw_sensitivity(
-  turbidity_clean,
+turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
+
+
+turb_sensitivity <- ipdw_sensitivity(
+  turb,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -269,7 +286,10 @@ turb_test <- ipdw_sensitivity(
   max_ranges = max_rng
 )
 
-turb_test
+saveRDS(
+  turb_sensitivity,
+  file = here::here("2-data", "models", "turb_sensitivity_test.rds")
+)
 ```
 
 

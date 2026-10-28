@@ -74,7 +74,7 @@ plot(
 
 ```
 
-# Salinity **FINAL**
+# Salinity (***FINALIZED****)
 
 ## Eval Sensitivity
 Test model sensitivity against distance power X max range interactions
@@ -156,11 +156,10 @@ saveRDS(sal_rast, file = here::here("2-data", "models", "sal_rast.rds"))
 ```
 
 
-# Water Temp
+# Water Temp (***FINALIZED****)
 
 ```{r}
-water_temp <- temp
-
+water_temp_proc <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
 
 water_temp_sensitivity <- ipdw_sensitivity(
   water_temp,
@@ -195,35 +194,55 @@ folds <- blockCV::cv_spatial(
         plot = FALSE
       )
 
+
+```
+
+```{r}
+mr = 10000
+dp = .25
+
+
 water_temp_stats <- ipdw_stats(
   water_temp, 
   cost_raster, 
   folds = folds, 
-  dist_pwr = .50, 
-  max_range = 10000, 
+  dist_pwr = dp,
+  max_range = mr, 
   value_col = "mean")
 
 table(water_temp_stats)
 
-saveRDS(
-  water_temp_stats,
-  file = here::here("2-data", "models", "water_temp_ipdw.rds")
-)
-
-
 water_temp_rast <- ipdw_manual(
   water_temp, 
   cost_raster, 
-  range = 10000, 
+  range = mr, 
   "mean", 
-  dist_power = 0.5
+  dist_power = dp
   )  
 
-plot(water_temp_rast)
 
+plot(
+  water_temp_rast,
+  main = sprintf("DP = %.2f | MR = %d m", dp, mr),
+  sub = sprintf(
+    "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
+    water_temp_stats$MAE,
+    water_temp_stats$RMSE,
+    water_temp_stats$Bias
+  )
+)
+
+```
+
+## Save Results
+```{r}
 saveRDS(
   water_temp_rast,
   file = here::here("2-data", "models", "water_temp_rast.rds")
+)
+saveRDS(
+  water_temp_stats,
+  file = here::here("2-data", "models", "water_temp_stats.rds")
 )
 
 ```

@@ -74,7 +74,7 @@ plot(
 
 ```
 
-# Salinity
+# Salinity **FINAL**
 
 ## Eval Sensitivity
 Test model sensitivity against distance power X max range interactions
@@ -105,10 +105,12 @@ saveRDS(
 
 ```{r}
 
+sal_proc <- readRDS(here::here("2-data", "processed", "sal_proc.rds"))
+
 set.seed(42) 
 
 folds <- blockCV::cv_spatial(
-        x = sal_clean,
+        x = sal_proc,
         k = 5,
         size = 5000,
         selection = "random",
@@ -116,7 +118,7 @@ folds <- blockCV::cv_spatial(
       )
 
 sal_stats <- ipdw_stats(
-  sal_clean, 
+  sal_proc, 
   cost_raster, 
   folds = folds, 
   dist_pwr = .25, 
@@ -125,22 +127,31 @@ sal_stats <- ipdw_stats(
 
 
 sal_rast <- ipdw_manual(
-  sal_clean, 
+  sal_proc, 
   cost_raster, 
   range = 10000, 
   "mean", 
   dist_power = 0.25
   )  
 
-plot(sal_ipdw_surface)
+plot(
+  sal_rast,
+  main = "DP = 0.25, MR = 10 km",
+  sub = sprintf(
+    "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
+    sal_stats$MAE,
+    sal_stats$RMSE,
+    sal_stats$Bias
+  )
+)
 
 ```
 
 ## Save model results
 
 ```{r}
-saveRDS(sal_ipdw, file = here::here("2-data", "models", "sal_ipdw.rds"))
-saveRDS(sal_surface, file = here::here("2-data", "models", "sal_surface.rds"))
+saveRDS(sal_stats, file = here::here("2-data", "models", "sal_stats.rds"))
+saveRDS(sal_rast, file = here::here("2-data", "models", "sal_rast.rds"))
 
 ```
 

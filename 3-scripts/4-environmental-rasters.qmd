@@ -347,12 +347,50 @@ saveRDS(
 
 
 ```{r}
+mr = 10000
+dp = .250
 
-turb_ipdw <- ipdw_manual(turb, cost_raster, 7500, "mean", dist_power = 1)
+
+turb_stats <- ipdw_stats(
+  turb, 
+  cost_raster, 
+  folds = folds, 
+  dist_pwr = dp,
+  max_range = mr, 
+  value_col = "mean")
+
+table(turb_stats)
+
+turb_rast <- ipdw_manual(
+  turb, 
+  cost_raster, 
+  range = mr, 
+  "mean", 
+  dist_power = dp
+  )  
+
 
 plot(
-  turb_ipdw,
-  main = "Turbidity IPDW"
+  turb_rast,
+  main = sprintf("DP = %.2f | MR = %d m", dp, mr),
+  sub = sprintf(
+    "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
+    turb_stats$MAE,
+    turb_stats$RMSE,
+    turb_stats$Bias
+  )
+)
+
+```
+
+```{r}
+saveRDS(
+  turb_rast,
+  file = here::here("2-data", "models", "turb_rast.rds")
+)
+saveRDS(
+  turb_stats,
+  file = here::here("2-data", "models", "turb_stats.rds")
 )
 
 ```

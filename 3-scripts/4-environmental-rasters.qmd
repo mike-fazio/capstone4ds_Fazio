@@ -217,7 +217,7 @@ saveRDS(
 
 ```
 
-# Dissolved Oxygen
+# Dissolved Oxygen (***FINALIZED****)
 
 Test disance power sensitivity
 ```{r}
@@ -244,32 +244,55 @@ saveRDS(
 
 
 ```{r}
-do_ipdw <- ipdw_manual(
-  do_clean, 
+set.seed(42) 
+
+do_proc <- readRDS(here::here("2-data", "processed", "do_proc.rds"))
+
+folds <- blockCV::cv_spatial(
+        x = do_proc,
+        k = 5,
+        size = 5000,
+        selection = "random",
+        plot = FALSE
+      )
+
+do_stats <- ipdw_stats(
+  do_proc, 
   cost_raster, 
-  15000, 
-  "mean", 
-  dist_power = 0.75
-  )
-
-do_stats <- ipdw_sensitivity(
-  do_clean,
-  cost_raster,
-  n_seeds = 5,
-  value_col = "mean",
-  unit = "mg/L",
-  dist_powers = 0.25,
-  max_ranges = 15000
-)
-
-plot(
-  do_ipdw,
-  main = "Dissolved Oxygen IPDW"
-)
+  folds = folds, 
+  dist_pwr = .25, 
+  max_range = 10000, 
+  value_col = "mean")
 
 do_stats
+
+do_rast <- ipdw_manual(
+  do_proc, 
+  cost_raster, 
+  range = 10000, 
+  "mean", 
+  dist_power = 0.25
+  )  
+
+plot(
+  do_rast,
+  main = "DP = 0.25, MR = 10 km",
+  sub = sprintf(
+    "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
+    do_stats$MAE,
+    do_stats$RMSE,
+    do_stats$Bias
+  )
+)
+
 ```
 
+## Save model results
+
+```{r}
+saveRDS(do_stats, file = here::here("2-data", "models", "do_stats.rds"))
+saveRDS(do_rast, file = here::here("2-data", "models", "do_rast.rds"))
+```
 
 # Turbidiity
 ```{r}

@@ -101,6 +101,32 @@ saveRDS(
 
 ```
 
+```{r}
+# create heatmap to evaluate sensitivity
+
+ggplot(
+  sal_sensitivity$summary,
+  aes(
+    x = factor(dist_power),
+    y = factor(max_range),
+    fill = mean_MAE
+  )
+) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%.2f", mean_MAE))) +
+  scale_fill_viridis_c(direction = -1) +
+  labs(
+    title = "Salinity IPDW Sensitivity",
+    x = "Distance Power",
+    y = "Maximum Range (m)",
+    fill = "Mean MAE"
+  ) +
+  theme_minimal()
+
+ggsave("sal_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+
+```
+
 ## Run model using tuned parameters
 
 ```{r}
@@ -178,6 +204,32 @@ saveRDS(
   water_temp_sensitivity,
   file = here::here("2-data", "models", "water_temp_sensitivity_test.rds")
 )
+
+```
+
+```{r}
+# create heatmap to evaluate sensitivity
+
+ggplot(
+  water_temp_sensitivity$summary,
+  aes(
+    x = factor(dist_power),
+    y = factor(max_range),
+    fill = mean_MAE
+  )
+) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%.2f", mean_MAE))) +
+  scale_fill_viridis_c(direction = -1) +
+  labs(
+    title = "Water Temp IPDW Sensitivity",
+    x = "Distance Power",
+    y = "Maximum Range (m)",
+    fill = "Mean MAE"
+  ) +
+  theme_minimal()
+
+ggsave("water_temp_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
 
 ```
 
@@ -271,7 +323,31 @@ saveRDS(
 
 ```
 
+```{r}
+# create heatmap to evaluate sensitivity
 
+ggplot(
+  do_sensitivity$summary,
+  aes(
+    x = factor(dist_power),
+    y = factor(max_range),
+    fill = mean_MAE
+  )
+) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%.2f", mean_MAE))) +
+  scale_fill_viridis_c(direction = -1) +
+  labs(
+    title = "Dissolved Oxygen IPDW Sensitivity",
+    x = "Distance Power",
+    y = "Maximum Range (m)",
+    fill = "Mean MAE"
+  ) +
+  theme_minimal()
+
+ggsave("do_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+
+```
 
 ```{r}
 set.seed(42) 
@@ -345,6 +421,31 @@ saveRDS(
 )
 ```
 
+```{r}
+# create heatmap to evaluate sensitivity
+
+ggplot(
+  turb_sensitivity$summary,
+  aes(
+    x = factor(dist_power),
+    y = factor(max_range),
+    fill = mean_MAE
+  )
+) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%.2f", mean_MAE))) +
+  scale_fill_viridis_c(direction = -1) +
+  labs(
+    title = "Turbidity IPDW Sensitivity",
+    x = "Distance Power",
+    y = "Maximum Range (m)",
+    fill = "Mean MAE"
+  ) +
+  theme_minimal()
+
+ggsave("turb_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+
+```
 
 ```{r}
 mr = 10000
@@ -391,6 +492,119 @@ saveRDS(
 saveRDS(
   turb_stats,
   file = here::here("2-data", "models", "turb_stats.rds")
+)
+
+```
+
+
+```{r}
+library(patchwork)
+
+# Reusable heatmap function
+plot_sensitivity <- function(data, parameter) {
+
+  data <- data %>%
+    mutate(
+      dist_power = factor(
+        dist_power,
+        levels = sort(unique(dist_power))
+      ),
+      max_range = factor(
+        max_range,
+        levels = sort(unique(max_range))
+      )
+    )
+
+  ggplot(
+    data,
+    aes(
+      x = dist_power,
+      y = max_range,
+      fill = mean_MAE
+    )
+  ) +
+    geom_tile() +
+    geom_text(
+      aes(
+        label = sprintf("%.2f", mean_MAE),
+        color = mean_MAE > median(mean_MAE, na.rm = TRUE)
+      ),
+      size = 3
+    ) +
+    scale_fill_viridis_c(
+      option = "viridis",
+      direction = -1,
+      name = "Mean MAE"
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "black", "TRUE" = "white"),
+      guide = "none"
+    ) +
+    labs(
+      title = parameter,
+      x = "Distance Power",
+      y = "Maximum Range (m)"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(
+      panel.grid = element_blank(),
+      plot.title = element_text(
+        face = "bold",
+        size = 12,
+        hjust = 0.5
+      ),
+      axis.text.x = element_text(
+        angle = 45,
+        hjust = 1
+      ),
+      legend.position = "right"
+    )
+}
+
+# Generate individual plots
+p_do <- plot_sensitivity(
+  do_sensitivity$summary,
+  "Dissolved Oxygen"
+)
+
+p_sal <- plot_sensitivity(
+  sal_sensitivity$summary,
+  "Salinity"
+)
+
+p_turb <- plot_sensitivity(
+  turb_sensitivity$summary,
+  "Turbidity"
+)
+
+p_temp <- plot_sensitivity(
+  water_temp_sensitivity$summary,
+  "Water Temperature"
+)
+
+# Combine using patchwork
+sensitivity_plot <-
+  (p_do | p_sal) /
+  (p_turb | p_temp) +
+  plot_annotation(
+    title = "IPDW Parameter Sensitivity Analysis",
+    subtitle = "Mean MAE from 5-fold spatial cross-validation",
+    caption = paste(
+      "Red outlines indicate the lowest MAE",
+      "for each environmental parameter."
+    )
+  )
+
+# Display
+sensitivity_plot
+
+# Export for capstone
+ggsave(
+  "4-tables-and-figures/ipdw-sensitivity.png",
+  plot = sensitivity_plot,
+  width = 14,
+  height = 9,
+  dpi = 300
 )
 
 ```

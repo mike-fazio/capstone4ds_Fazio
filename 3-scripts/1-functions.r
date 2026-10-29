@@ -264,15 +264,15 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
       !is.na(Result_Measure),
 
       # Remove records without coordinates
-      !sf::st_is_empty(geometry) # FIX: Check empty geometries
+      !sf::st_is_empty(geometry)
     ) %>%
     dplyr::mutate(
       year = lubridate::year(Activity_StartDate),
 
-      # FIX: Convert measurements to numeric
+      # convert measurements to numeric
       Result_Measure = as.numeric(Result_Measure)
     ) %>%
-    # FIX: Assign spatial bin IDs to observations
+    # assign spatial bin IDs to observations
     sf::st_join(
       sa_grid["bin_id"],
       join = sf::st_within,
@@ -282,7 +282,7 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
   # Calculate annual warm-season means for each site
   annual_summary <- wq_filtered %>%
     dplyr::group_by(
-      bin_id, # FIX: Retain bin ID
+      bin_id,
       Location_Identifier,
       year
     ) %>%
@@ -299,7 +299,7 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
   # Compute long-term means per station
   station_summary <- annual_summary %>%
     dplyr::group_by(
-      bin_id, # FIX: Retain bin ID
+      bin_id,
       Location_Identifier
     ) %>%
     dplyr::summarise(
@@ -319,7 +319,7 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
 
   # Aggregate stations within each bin
   bin_summary <- station_summary %>%
-    sf::st_drop_geometry() %>% # FIX: Aggregate attributes only
+    sf::st_drop_geometry() %>%
     dplyr::group_by(bin_id) %>%
     dplyr::summarise(
       mean = mean(station_mean),
@@ -331,7 +331,7 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
       .groups = "drop"
     )
 
-  # FIX: Join summary back to grid before converting to points
+  # join summary back to grid before converting to points
   wq_binned <- sa_grid %>%
     dplyr::inner_join(bin_summary, by = "bin_id") %>%
     sf::st_point_on_surface()

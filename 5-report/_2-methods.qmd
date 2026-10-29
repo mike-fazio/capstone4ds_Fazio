@@ -1,14 +1,12 @@
 # Methods
 
-*Study design and team status*
+*Study design*
 
-This capstone is being completed as an individual project. As such, all data acquisition, processing, modeling, and interpretations will be produced soley by the author.
-
-All data analysis and processing will be performed using the R programming language [@r]. Environmental observation data will be acquired from the EPA's Water Quality Portal via the dataRetrieval r-package [@wqp_2026; @dataRetrieval2026]. Data QA/QC and preprocessing will be completed utilizing the Tidyverse package and any spatially aware data processing will be conducted using the package sf [@tidyverse; @sf]. Environmental data will be processed to create continuous surface rasters for model input using the 
+All data analysis and processing was performed using the R programming language [@r]. Environmental observation data was acquired from the EPA's Water Quality Portal via the dataRetrieval r-package [@wqp_2026; @dataRetrieval2026]. Data QA/QC and preprocessing was completed utilizing the Tidyverse package and any spatially aware data processing was conducted using the package sf [@tidyverse; @sf]. All spatial data was projected to the NAD83 / Florida North State Plane Coordinate System (EPSG: 2238) which minimizes spatial distortion in the study areas geographic region. 
 
 *Study Area*
 
-The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online [@FDEP2005WBIDs]. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it will be needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in @Geselbracht2024. 
+The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online [@FDEP2005WBIDs]. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it was needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in @Geselbracht2024. 
 
 ![Study area for the Pensacola Bay System.](4-tables-and-figures/study-area.png){#fig-study-area}
 
@@ -30,9 +28,9 @@ knitr::kable(
    
 ```
 
-**Water-quality Data Preprocessing**
+*Water-quality Data Preprocessing*
 
-All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. Further, to maintain consistency with other similar oyster studies, all data was filtered to only include warm season conditions. Here, the warm season is defined as May through October. Finally, the data was screened for any extreme outliers, where outliers were defined as:
+All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. Further, to maintain consistency with other similar oyster studies, all data was filtered to only include warm season conditions. Here, the warm season is defined as any data that was collected in the monthes of May, June, July, August, September, or October. Finally, the data was screened for any extreme outliers, where outliers were defined as:
 $$
 \begin{aligned}
 \text{Outlier if } \quad
@@ -44,8 +42,137 @@ x &> Q_{0.75} + 1.5(IQR) \\
 \end{aligned}
 $$
 
-Following data cleaning, station-level environmental summaries were calculated to represent warm-season conditions that could be expected at that station. Stations that only had one sample were also removed as it was considered one sample was not representitive enough to be considered the normal conditions over the full 20 year period. Finally, the station-level dataset was converted to spatial using the `sf` package in r and projected to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters [@sf]. 
-   
+
+
+*Spatial Binning and Data Aggregation*
+
+To avoid spatial bias during the interpolation process, station-level site data was aggregated using 2000m hexagonal spatial bins, taking the mean value of all data within that bin and returning a single value for each hexagon, using the hexagons centroid as the representative point for the data value. Stations that only had one sample were removed as was considered one sample was not representitive enough to be considered the normal conditions over the full 20 year period.   
+
+### Environmental Prediction Rasters
+
 **Spatial Interpolation of Environmental Factors**
 
-Spatial interpolation in progress....  
+Continuous prediction rasters were generated for dissolved oxygen, salinity, turbidity, and water temperature using Inverse Path Distance Weighting (IPDW) package in R [@IPDW_2026]. IPDW was selected due to its ability to be barrier aware and avoid interference or influence from crossing land boundaries that can be introduced when using more traditional euclidean based interpolation methods [@Stachelek2015]. This is especially important given the geography on PBS where the Garcon Point area is a narrow, low lying peninsula separating Escambia Bay to the west and Blackwater Bay to the east. Both of which are significantly influence by different riverine inputs. Instead, IPDW weights observations according to the shortest water-path distance through the aquatic environment. Chlorophyll-a was also evaluated, but was ultimately removed due to lack of spatial and temporal representation. 
+
+**Creation of the cost-distance raster**
+
+Monitoring site locations were used to define the interpolation domain for each of the environmental variables using the spatial extent. The land-barrier polygon was created by taking the inverse of the study area polygon. To achieve this, a singular polygon was created using the entire study area extent bounding box and adding 1,000 meters to each side ensuring full coverage. Next the PBS study-area polygon geometry was subtracted from the study area extent polygon. Leaving behind a land barrier polygon that would be used to create the path-distance calculations for the IPDW algorithm.  
+
+An IPDW cost raster was then calculated using the monitoring site locations as point data and the newly created land-barrier polygon as the barrier geometry. The raster was the converted to 100m resolution and projected to the Plorida North State Plane CRS to align with other spatial data. 
+
+**IPDW parameter sensitivity analysis**
+   
+   1. Evaluate the influence of distance power on interpolation performance.
+      - Distance-power values tested:
+        - 0.25
+        - 0.50
+        - 0.75
+        - 1.00
+        - 1.25
+        - 1.50
+        - 2.00
+        - 2.50
+        - 3.00
+      - Explain that distance power controls how rapidly the influence of a monitoring station decreases with increasing path distance.
+   
+   2. Evaluate the influence of maximum path distance.
+      - Maximum ranges tested:
+        - 5,000 m
+        - 10,000 m
+        - 15,000 m
+        - 20,000 m
+      - Explain that maximum range determines the maximum water-path distance over which a monitoring station can contribute to a prediction.
+   
+   3. Evaluate all combinations of distance power and maximum range.
+      - Parameter combinations are evaluated independently for each environmental variable.
+      - This allows the interpolation parameters to be selected empirically rather than assumed beforehand.
+
+**Spatial cross-validation of candidate parameter combinations**
+   
+   1. Use spatial cross-validation to evaluate interpolation performance.
+      - Generate five spatial folds.
+      - Use 5,000-m spatial blocks.
+      - Assign blocks to folds using random selection.
+      - Suggested citations: [@Valavi2019; @Roberts2017]
+   
+   2. Repeat the sensitivity analysis across five random seeds.
+      - Generate a new spatial partition for each seed.
+      - Reduce dependence of parameter selection on a single arrangement of spatial folds.
+   
+   3. For each spatial fold:
+      - Use monitoring locations in the training folds to construct the IPDW surface.
+      - Withhold monitoring locations belonging to the validation fold.
+      - Extract predicted raster values at the withheld monitoring locations.
+      - Compare predictions with the observed station means.
+
+**Evaluation of interpolation performance**
+   
+   1. Calculate prediction-error statistics for each distance-power and maximum-range combination.
+      - Mean absolute error (MAE).
+      - Root mean squared error (RMSE).
+      - Prediction bias.
+      - Prediction coverage.
+   
+   2. Summarize performance across repeated spatial partitions.
+      - Mean MAE.
+      - Standard deviation of MAE.
+      - Mean RMSE.
+      - Standard deviation of RMSE.
+      - Mean bias.
+      - Mean and/or minimum prediction coverage.
+   
+   3. Use MAE as the primary metric displayed in the sensitivity analysis.
+      - Generate heatmaps showing mean MAE for each distance-power × maximum-range combination.
+      - Compare parameter performance among salinity, temperature, dissolved oxygen, and turbidity.
+      - Retain RMSE, bias, and coverage as supporting measures of interpolation performance.
+   
+   4. Select final interpolation parameters.
+      - Favor parameter combinations with low prediction error.
+      - Ensure that improvements in prediction error are not accompanied by unacceptable loss of spatial prediction coverage.
+      - Avoid selecting parameters based only on visual appearance of the final raster.
+
+**Generation of final IPDW surfaces**
+   
+   1. Apply the selected distance-power and maximum-range values to the complete monitoring dataset for each environmental variable.
+   
+   2. Generate path-distance rasters between monitoring stations and raster cells.
+      - Restrict path-distance calculations according to the selected maximum range.
+   
+   3. Interpolate the warm-season mean observed at each monitoring station.
+      - Weight observations according to aquatic path distance.
+      - Apply the selected distance-power parameter.
+   
+   4. Restrict the final interpolation to supported aquatic cells.
+      - Remove cells corresponding to land barriers.
+      - Assign `NA` to cells with no monitoring stations contributing within the selected maximum range.
+   
+   5. Retain the coordinate reference system and spatial structure of the common cost raster.
+      - Final environmental surfaces use the 100-m interpolation grid.
+
+**Final spatial validation**
+   
+   1. Generate a reproducible five-fold spatial partition for the finalized model.
+      - Set a reproducible random seed.
+      - Use 5,000-m spatial blocks.
+      - Use five folds.
+      - Suggested citations: [@Valavi2019; @Roberts2017]
+   
+   2. Calculate final model-performance statistics.
+      - MAE.
+      - RMSE.
+      - Bias.
+      - Prediction coverage.
+   
+   3. Report the final tuned distance power and maximum range for each environmental predictor.
+      - Salinity: [insert final values].
+      - Water temperature: [insert final values].
+      - Dissolved oxygen: [insert final values].
+      - Turbidity: [insert final values].
+
+**Raster storage and subsequent use**
+   
+   1. Save the finalized raster surface for each environmental variable.
+   
+   2. Save the associated cross-validation statistics and sensitivity-analysis results.
+   
+   3. Use the resulting continuous environmental rasters as candidate predictor layers in the subsequent MaxEnt species distribution model.

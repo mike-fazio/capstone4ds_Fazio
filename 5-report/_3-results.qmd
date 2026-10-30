@@ -1,11 +1,295 @@
+```{r}
+#| label: load dfs for results report
+#| echo: false
+#| output: false
+
+library(dplyr)
+
+
+# Raw Data
+chla_raw <- readRDS(here::here("2-data", "raw", "chla_raw.rds"))
+
+do_raw <- readRDS(here::here("2-data", "raw", "do.rds"))
+
+sal_raw <- readRDS(here::here("2-data", "raw", "salinity_raw.rds"))
+
+turb_raw <- readRDS(here::here("2-data", "raw", "turb_raw.rds"))
+
+water_temp_raw <- readRDS(here::here("2-data", "raw", "water_temp_raw.rds"))
+
+raw_data <- list(
+  "Chlorophyll-a" = chla_raw,
+  "Dissolved oxygen" = do_raw,
+  "Salinity" = sal_raw,
+  "Turbidity" = turb_raw,
+  "Water temperature" = water_temp_raw
+)
+
+all_sites <- purrr::imap_dfr(
+  raw_data,
+  \(data, parameter_name) {
+    tibble::tibble(
+      parameter = parameter_name,
+      Location_Identifier = data$Location_Identifier
+    )
+  }
+)
+
+length(unique(all_sites$Location_Identifier))
+```
+
+```{r}
+#| label: load processed data sets for results report
+#| echo: false
+#| output: false
+
+# Processed Data
+
+chla <- readRDS(here::here("2-data", "processed", "chla_proc.rds"))
+
+do <- readRDS(here::here("2-data", "processed", "do_proc.rds")) 
+
+sal <- readRDS(here::here("2-data", "processed", "sal_proc.rds"))
+
+turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
+
+```
+
 # Results
 
 *Water Quality Observations*
 
-Document water-quality dataset size and temporal coverage [@wqp_2026].
-      - Dissolved oxygen: approximately 145 stations and 3,072 observations .
-      - Salinity: approximately 135 stations and 3,401 observations 
-      - Temperature: approximately 145 stations and 3,442 observations
-      - Turbidity: approximately 122 stations and 1,563 observations 
-      - Chlorophyll-a: approximately 48 stations and 754 observations
-      - Current temporal coverage is approximately 2005--2024 
+Queried water quality observations for a twenty year period between 2005 and 2025 returned more than 25,000 observations from 174 unique sampling sites located within the PBS (@tbl-raw-data-summary). 
+
+```{r}
+#| label: tbl-raw-data-summary
+#| tbl-cap: "Summary of raw water-quality data available for each environmental parameter."
+#| echo: false
+#| warning: false
+
+raw_summary <- purrr::imap_dfr(
+  raw_data,
+  \(data, parameter) {
+    result_values <- suppressWarnings(
+      as.numeric(as.character(data$Result_Measure))
+    )
+    sample_dates <- as.Date(data$Activity_StartDate)
+    reported_units <- unique(
+      trimws(as.character(data$Result_MeasureUnit))
+    )
+    reported_units <- reported_units[
+      !is.na(reported_units) & reported_units != ""
+    ]
+
+    tibble::tibble(
+      Parameter = parameter,
+      `Total Observations` = nrow(data),
+      `Unique Stations` = dplyr::n_distinct(
+        data$Location_Identifier,
+        na.rm = TRUE
+      ),
+      #`Numeric results` = sum(!is.na(result_values)),
+      `Begin Date` = min(sample_dates, na.rm = TRUE),
+      `End Date` = max(sample_dates, na.rm = TRUE),
+      `Reported Units` = paste(reported_units, collapse = ", ")
+    )
+  }
+) |>
+  dplyr::arrange(dplyr::desc(`Total Observations`)) %>%
+  dplyr::mutate(
+    `Total Observations` = scales::comma(`Total Observations`),
+    `Unique Stations` = scales::comma(`Unique Stations`),
+    #`Numeric results` = scales::comma(`Numeric results`),
+    `Begin Date` = format(`Begin Date`, "%m/%d/%Y"),
+    `End Date` = format(`End Date`, "%m/%d/%Y")
+  )
+
+knitr::kable(
+  raw_summary,
+  booktabs = TRUE,
+  align = c("l", "r", "r", "r", "c", "c", "l")
+)
+```
+
+After processing and spatial aggregation, there were a total of `{r} sum(length(chla), length(do), length(sal), length(turb)) ` records each representing the mean value for that location (@tbl-processed-data-summary). Chlorophyll-a processing resulted in 754 observations summarized within 27 spatial bins using 48 stations. Dissolved oxygen had 3072 observations summarized into 68 bins across 145 stations. Salinity had 3,400 observations summarized into 67 bins with 135 stations, and turbidity retained 1563 observations within 61 spatial bins using 122 unique stations.
+
+```{r}
+#| label: tbl-processed-data-summary
+#| tbl-cap: "Summary of processed warm-season water-quality data used for spatial interpolation."
+#| echo: false
+#| warning: false
+
+processed_data <- list(
+  "Chlorophyll-a" = chla,
+  "Dissolved oxygen" = do,
+  "Salinity" = sal,
+  "Turbidity" = turb
+)
+
+parameter_units <- c(
+  "Chlorophyll-a" = "µg/L",
+  "Dissolved oxygen" = "mg/L",
+  "Salinity" = "ppt",
+  "Turbidity" = "NTU"
+)
+
+processed_summary <- purrr::imap_dfr(
+  processed_data,
+  \(data, parameter) {
+    tibble::tibble(
+      Parameter = parameter,
+      `Spatial bins` = nrow(data),
+      `Unique Stations` = sum(
+        data$n_stations,
+        na.rm = TRUE
+      ),
+      `Total Observations` = sum(
+        data$total_n,
+        na.rm = TRUE
+      ),
+      `First year` = min(
+        data$first_year,
+        na.rm = TRUE
+      ),
+      `Last year` = max(
+        data$last_year,
+        na.rm = TRUE
+      ),
+      Units = parameter_units[[parameter]],
+    )
+  }
+) |>
+  dplyr::mutate(
+    `Spatial bins` = scales::comma(`Spatial bins`),
+    `Unique Stations` = scales::comma(`Unique Stations`),
+    `Total Observations` = scales::comma(
+      `Total Observations`
+    )
+  )
+
+knitr::kable(
+  processed_summary,
+  booktabs = TRUE,
+  align = c("l", "l", "r", "r", "r", "c", "c")
+)
+```
+
+*Water Quality Mean Observation Data Distribution*
+
+Mean Chlorophyll-a values ranged from `{r} round(min(chla$mean),2) ` to `{r} round(max(chla$mean),2)`ug/L with an average mean of `{r} round(mean(chla$mean),2)`ug/L. The distribution was heavily skewed to the right due to an extreme outlier of 60ug/L.
+
+```{r}
+#| label: fig-processed-mean-distributions
+#| fig-cap: "Distribution of processed warm-season spatial-bin means for each environmental parameter. Dashed lines identify the median of each distribution."
+#| fig-width: 10
+#| fig-height: 8
+#| echo: false
+#| warning: false
+
+water_temp <- readRDS(
+  here::here(
+    "2-data",
+    "processed",
+    "water_temp_proc.rds"
+  )
+)
+
+processed_data <- list(
+  "Chlorophyll-a" = chla,
+  "Dissolved oxygen" = do,
+  "Salinity" = sal,
+  "Turbidity" = turb,
+  "Water temperature" = water_temp
+)
+
+parameter_units <- c(
+  "Chlorophyll-a" = "µg/L",
+  "Dissolved oxygen" = "mg/L",
+  "Salinity" = "ppt",
+  "Turbidity" = "NTU",
+  "Water temperature" = "°C"
+)
+
+parameter_order <- names(processed_data)
+
+parameter_labels <- paste0(
+  parameter_order,
+  " (",
+  parameter_units[parameter_order],
+  ")"
+)
+
+processed_mean_data <- purrr::imap_dfr(
+  processed_data,
+  \(data, parameter) {
+    data |>
+      sf::st_drop_geometry() |>
+      dplyr::transmute(
+        parameter = parameter,
+        value = .data$mean
+      )
+  }
+) |>
+  dplyr::mutate(
+    parameter = factor(
+      parameter,
+      levels = parameter_order
+    ),
+    parameter_label = factor(
+      paste0(
+        parameter,
+        " (",
+        parameter_units[as.character(parameter)],
+        ")"
+      ),
+      levels = parameter_labels
+    )
+  )
+
+processed_medians <- processed_mean_data |>
+  dplyr::group_by(parameter_label) |>
+  dplyr::summarise(
+    median_value = median(
+      value,
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  )
+
+ggplot2::ggplot(
+  processed_mean_data,
+  ggplot2::aes(x = value)
+) +
+  ggplot2::geom_histogram(
+    bins = 12,
+    fill = "#2C7FB8",
+    color = "white",
+    linewidth = 0.3
+  ) +
+  ggplot2::geom_vline(
+    data = processed_medians,
+    ggplot2::aes(
+      xintercept = median_value
+    ),
+    color = "#B2182B",
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  ggplot2::facet_wrap(
+    ~parameter_label,
+    scales = "free_x",
+    ncol = 2
+  ) +
+  ggplot2::labs(
+    x = "Processed spatial mean",
+    y = "Number of spatial bins"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(
+    panel.grid.minor = ggplot2::element_blank(),
+    strip.text = ggplot2::element_text(
+      face = "bold"
+    )
+  )
+
+```

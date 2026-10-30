@@ -20,41 +20,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -114,11 +79,9 @@ window.Quarto = {
 
 <section id="methods" class="level1">
 <h1>Methods</h1>
-<p><em>Study design and team status</em></p>
-<p>This capstone is being completed as an individual project. As such, all data acquisition, processing, modeling, and interpretations will be produced soley by the author.</p>
-<p>All data analysis and processing will be performed using the R programming language <span class="citation" data-cites="r">[@r]</span>. Environmental observation data will be acquired from the EPA’s Water Quality Portal via the dataRetrieval r-package <span class="citation" data-cites="wqp_2026 dataRetrieval2026">[@wqp_2026; @dataRetrieval2026]</span>. Data QA/QC and preprocessing will be completed utilizing the Tidyverse package and any spatially aware data processing will be conducted using the package sf <span class="citation" data-cites="tidyverse sf">[@tidyverse; @sf]</span>. Environmental data will be processed to create continuous surface rasters for model input using the</p>
-<p><em>Study Area</em></p>
-<p>The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it will be needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in <span class="citation" data-cites="Geselbracht2024">@Geselbracht2024</span>.</p>
+<p>All data analysis and processing was performed using the R programming language <span class="citation" data-cites="r">[@r]</span>. Environmental observation data was acquired from the EPA’s Water Quality Portal via the dataRetrieval r-package <span class="citation" data-cites="wqp_2026 dataRetrieval2026">[@wqp_2026; @dataRetrieval2026]</span>. Data QA/QC and preprocessing was completed utilizing the Tidyverse package and any spatially aware data processing was conducted using the package sf <span class="citation" data-cites="tidyverse sf">[@tidyverse; @sf]</span>. All spatial data was projected to the NAD83 / Florida North State Plane Coordinate System (EPSG: 2238) which minimizes spatial distortion in the study areas geographic region.</p>
+<p><strong>Study Area</strong></p>
+<p>The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Protections (FDEP) Waterbod IDs feature layer hosted on ArcGIS Online <span class="citation" data-cites="FDEP2005WBIDs">[@FDEP2005WBIDs]</span>. Once retrieved, the dataset was filtered to include only relevant WBIDs (WBID = 548) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it was needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in <span class="citation" data-cites="Geselbracht2024">@Geselbracht2024</span>.</p>
 <div id="fig-study-area" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-study-area-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -129,24 +92,9 @@ Figure&nbsp;1: Study area for the Pensacola Bay System.
 </figcaption>
 </figure>
 </div>
-<p><em>Data acquisition and dataset inventory</em></p>
-<p>Oyster occurence data was acquired from the Florida Fish and Wildlife Commission’s GIS portal as polygons and converted to points using polygon centroids. After clipping to the study area extent, ### known reef locations were present within the PBS <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>. Salinity, dissolved oxygen, temperature, and turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the ‘dataRetrieval’ package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 <span class="citation" data-cites="wqp_2026">[@wqp_2026, @dataRetrieval2026]</span>. Parameters were chosen based on relevance and represenation in previous oyster habitat retoration studies <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>. Bathymetry data for the PBS was obtained from NOAA as a #### resolution raster dataset <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>. <strong><em>DOES BATHYMETRY DATA NEED TO BE RESAMPLED TO NEW CELL SIZE?</em></strong>. Substrate data was obtained from the Pensacola and Perdido Bay Estuary Program and was the same dataset used in their earlier HSI study which was modeled on the <span class="citation" data-cites="Geselbrach2024">@Geselbrach2024</span> study.</p>
+<p><strong>Data Acquisition and Processing</strong></p>
+<p>Oyster occurence data was acquired from the Florida Fish and Wildlife Commission’s GIS portal as polygons and converted to points using polygon centroids. After clipping to the study area extent, ### known reef locations were present within the PBS <span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span>. Salinity, dissolved oxygen, temperature, and turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the ‘dataRetrieval’ package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 <span class="citation" data-cites="wqp_2026">[@wqp_2026, @dataRetrieval2026]</span>. Parameters were chosen based on relevance and represenation in previous oyster habitat retoration studies <span class="citation" data-cites="LaPeyre2021 Barnes2007 Pollack2012 Geselbracht2024">[@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]</span>. Bathymetry data for the PBS was obtained from NOAA as a <strong>####</strong> resolution raster dataset <span class="citation" data-cites="NOAA_2018">[@NOAA_2018]</span>. <strong>DOES BATHYMETRY DATA NEED TO BE RESAMPLED TO NEW CELL SIZE?</strong>. Substrate data was obtained from the Pensacola and Perdido Bay Estuary Program and was the same dataset used in their earlier HSI study which was modeled on the <span class="citation" data-cites="Geselbrach2024">@Geselbrach2024</span> study.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># insert data table with environmental metadata  </span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   readxl<span class="sc">::</span><span class="fu">read_excel</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"4-tables-and-figures"</span>, <span class="st">"data_summary.xlsx"</span>))</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in attr(x, "align"): 'xfun::attr()' is deprecated.
-Use 'xfun::attr2()' instead.
-See help("Deprecated")</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in attr(x, "format"): 'xfun::attr()' is deprecated.
-Use 'xfun::attr2()' instead.
-See help("Deprecated")</code></pre>
-</div>
 <div id="tbl-metadata" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metadata-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -156,18 +104,18 @@ Table&nbsp;1: Environmental Parameters
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 26%">
-<col style="width: 14%">
-<col style="width: 8%">
+<col style="width: 22%">
+<col style="width: 11%">
 <col style="width: 15%">
-<col style="width: 35%">
+<col style="width: 18%">
+<col style="width: 31%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Dataset</th>
 <th style="text-align: left;">Data Type</th>
-<th style="text-align: left;">Count</th>
-<th style="text-align: left;">Resolution</th>
+<th style="text-align: right;"># of Records</th>
+<th style="text-align: right;">Processed Count</th>
 <th style="text-align: left;">Source</th>
 </tr>
 </thead>
@@ -175,58 +123,58 @@ Table&nbsp;1: Environmental Parameters
 <tr class="odd">
 <td style="text-align: left;">Salinity</td>
 <td style="text-align: left;">Point</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+<td style="text-align: right;">6992</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">[@wqp_2026]</span></td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Water Temperature</td>
 <td style="text-align: left;">Point</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+<td style="text-align: right;">7159</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">[@wqp_2026]</span></td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Substrate type</td>
 <td style="text-align: left;">Raster</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="PPBEP_OysterRestoration">@PPBEP_OysterRestoration</span></td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="PPBEP_OysterRestoration">[@PPBEP_OysterRestoration]</span></td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Dissolved oxygen</td>
 <td style="text-align: left;">Point</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+<td style="text-align: right;">6261</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">[@wqp_2026]</span></td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Depth / bathymetry</td>
 <td style="text-align: left;">Raster</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">[@wqp_2026]</span></td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Turbidity</td>
 <td style="text-align: left;">Point</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+<td style="text-align: right;">3402</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">[@wqp_2026]</span></td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Chlorophyll a</td>
 <td style="text-align: left;">Point</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">@wqp_2026</span></td>
+<td style="text-align: right;">1847</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: left;"><span class="citation" data-cites="wqp_2026">[@wqp_2026]</span></td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Oyster Reefs</td>
 <td style="text-align: left;">Polygon</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;"><span class="citation" data-cites="FWC2026Oysters">@FWC2026Oysters</span></td>
+<td style="text-align: right;">443</td>
+<td style="text-align: right;">443</td>
+<td style="text-align: left;"><span class="citation" data-cites="FWC2026Oysters">[@FWC2026Oysters]</span></td>
 </tr>
 </tbody>
 </table>
@@ -236,7 +184,7 @@ Table&nbsp;1: Environmental Parameters
 </div>
 </div>
 <p><strong>Water-quality Data Preprocessing</strong></p>
-<p>All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. Further, to maintain consistency with other similar oyster studies, all data was filtered to only include warm season conditions. Here, the warm season is defined as May through October. Finally, the data was screened for any extreme outliers, where outliers were defined as: <span class="math display">\[
+<p>All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. Further, to maintain consistency with other similar oyster studies, all data was filtered to only include warm season conditions. Here, the warm season is defined as any data that was collected in the monthes of May, June, July, August, September, or October. Finally, the data was screened for any extreme outliers, where outliers were defined as: <span class="math display">\[
 \begin{aligned}
 \text{Outlier if } \quad
 x &amp;&lt; Q_{0.25} - 1.5(IQR) \\
@@ -246,9 +194,28 @@ x &amp;&gt; Q_{0.75} + 1.5(IQR) \\
 \text{where } IQR &amp;= Q_{0.75} - Q_{0.25}
 \end{aligned}
 \]</span></p>
-<p>Following data cleaning, station-level environmental summaries were calculated to represent warm-season conditions that could be expected at that station. Stations that only had one sample were also removed as it was considered one sample was not representitive enough to be considered the normal conditions over the full 20 year period. Finally, the station-level dataset was converted to spatial using the <code>sf</code> package in r and projected to NAD 1983 (2011) StatePlane Florida North FIPS 0903 in meters <span class="citation" data-cites="sf">[@sf]</span>.</p>
-<p><strong>Spatial Interpolation of Environmental Factors</strong></p>
-<p>Spatial interpolation in progress….</p>
+<p>To avoid spatial bias during the interpolation process, station-level site data was aggregated using 2000m hexagonal spatial bins, taking the mean value of all data within that bin and returning a single value for each hexagon, using the hexagons centroid as the representative point for the data value. Stations that only had one sample were removed as was considered one sample was not representative enough to be considered the normal conditions over the full 20 year period.</p>
+<section id="environmental-prediction-rasters" class="level3">
+<h3 class="anchored" data-anchor-id="environmental-prediction-rasters">Environmental Prediction Rasters</h3>
+<p>Continuous prediction rasters were generated for dissolved oxygen, salinity, turbidity, and water temperature using Inverse Path Distance Weighting (IPDW) package in R <span class="citation" data-cites="IPDW_2026">[@IPDW_2026]</span>. IPDW is a variant of Inverse Distance Weighting (IDW), which is a deterministic interpolation method that allows for the estimation of point values using the equation:</p>
+<p><span class="math display">\[
+V= \frac{\sum\limits^{n}_{i=1} v_i {d^{-p}_{i}}}{\sum\limits^{n}_{i=1} {d^{-p}_{i}}}
+\]</span></p>
+<p>where <span class="math inline">\(d\)</span> is the distance between the prediction and measurement points, <span class="math inline">\(v_i\)</span> is the parameter value, and <span class="math inline">\(p\)</span> is a power parameter. However, in IPDW <span class="math inline">\(d\)</span> is a calculated path-distance value rather than a typical euclidean distance as used in IDW <span class="citation" data-cites="Stalchelek2015">[@Stalchelek2015]</span>.</p>
+<p>IPDW was selected due to its ability to be barrier aware and avoid interference or influence from crossing land boundaries that can be introduced when using more traditional euclidean based interpolation methods <span class="citation" data-cites="Stachelek2015">[@Stachelek2015]</span>. This is especially important given the geography on PBS where the Garcon Point area is a narrow, low lying peninsula separating Escambia Bay to the west and Blackwater Bay to the east. Both of which are significantly influence by different riverine inputs. Instead, IPDW weights observations according to the shortest water-path distance through the aquatic environment. Chlorophyll-a was also evaluated, but was ultimately removed due to lack of spatial and temporal representation.</p>
+<p><em>Creation of the cost-distance raster</em></p>
+<p>Monitoring site locations were used to define the interpolation domain for each of the environmental variables using the spatial extent. A land-barrier polygon was created by taking the inverse of the study area polygon. To achieve this, a singular polygon was created using the entire study area extent bounding box and adding 1,000 meters to each side ensuring full coverage. Next the PBS study-area polygon geometry was subtracted from the study area extent polygon. Leaving behind a land barrier polygon that would be used to create the path-distance calculations for the IPDW algorithm.</p>
+<p>An IPDW cost raster was then calculated using the monitoring site locations as point data and the newly created land-barrier polygon as the barrier geometry. The raster was the converted to 100m resolution and projected to the Florida North State Plane CRS to align with other spatial data.</p>
+<p><em>IPDW parameter sensitivity analysis</em></p>
+<p>All parameter IPDW models were evaluated for sensitivity to determine influence of distance power and maximum path distance on overall interpolation performance. In IPDW, distance power determines how rapid the site influence decays as path distance increases. The distance powers (<span class="math inline">\(p\)</span>) tested were: 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50 and 3.00. The influence of maximum path distance was also evaluated for each IPDW model, in which the maximum range determines the max distance in which a measured value can contribute to the prediction value. Maximum ranges evaluated were: 5km, 10km, 15km, and 20km. All combinations of distance power and maximum range values were evaluated to determine the best fit for each parameter allowing for tuned parameter to be chosen empirically rather than by assumption. However, in many situations the diagnostics proved a range of plausible values, in which case the smother gradient was chosen as the PBS is a well mixed system and some parameter combinations would result in generating surfaces that contained “bulls-eyes” in which the parameter would highly influence the immediate area causing for ecologically implausible surfaces.</p>
+<p>Spatial cross-validation was used to determine interpolation accuracy using the blockCV package in R, which uses spatial folds to split data into test and training data sets <span class="citation" data-cites="Valvi2019">[@Valvi2019]</span>. To improve fitting, the fold-generation procedure was repeated, each time refitting the IPDW model and comparing the results to the with-held observation spatial-blocks. For this analysis 5 spatial folds were used with 5km spatial blocks, and blocks were assigned the folds randomly. This process was then repeated across 5 random seeds in which a new spatial partition was generated for each seed. For each spatial fold, the monitoring locations were used in the training data to construct the IPDW prediction surface. Withheld monitoring locations were used to extract predicted values from the prediction raster and compared to the observed station means.</p>
+<p>Finally, model performance was evaluated using calculated prediction-error statistics for each DP-MR combination. Each statistic was summarized across each repetition to generate a mean Mean Absolute Error (MAE), the standard deviation of the MAE, the mean Root Mean Square Error (RMSE) and its standard deviation, the mean prediction bias (+/-) and finally the prediction coverage. Mean MAE was the primary metric used in parameter selection, although in cases were differences between several of the lowest results were negligible, the smoother surfaces were given preference to better reflect the reality of a well mixed natural system.</p>
+<p><em>Final Prediction Raster Generation</em></p>
+<p>The final prediction surfaces were generated by fitting the IPDW algorithm using the selected DP and MR values on the full dataset for each environmental variable. A new path-distance raster was also created using the selected maximum range value from the sensitivity analysis. The final prediction surfaces were validated using a reproducible known seed, 5km spatial blocks, and five folds to calculate the final MAE, RMSE, prediction bias, and prediction coverage.</p>
+</section>
+<section id="max-ent-species-distribution-modeling" class="level2">
+<h2 class="anchored" data-anchor-id="max-ent-species-distribution-modeling">Max-Ent Species Distribution Modeling</h2>
+</section>
 </section>
 
 </main>

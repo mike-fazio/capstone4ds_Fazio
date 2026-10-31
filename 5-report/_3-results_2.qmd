@@ -1,0 +1,1018 @@
+# Results
+
+```{r}
+#| label: results-setup
+#| include: false
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(ggplot2)
+library(forcats)
+library(sf)
+library(raster)
+library(ipdw)
+library(patchwork)
+library(here)
+library(knitr)
+library(scales)
+
+# Raw water-quality data
+chla_raw <- readRDS(here("2-data", "raw", "chla_raw.rds"))
+do_raw <- readRDS(here("2-data", "raw", "do.rds"))
+sal_raw <- readRDS(here("2-data", "raw", "salinity_raw.rds"))
+turb_raw <- readRDS(here("2-data", "raw", "turb_raw.rds"))
+water_temp_raw <- readRDS(here("2-data", "raw", "water_temp_raw.rds"))
+
+raw_data <- list(
+  "Chlorophyll-a" = chla_raw,
+  "Dissolved oxygen" = do_raw,
+  "Salinity" = sal_raw,
+  "Turbidity" = turb_raw,
+  "Water temperature" = water_temp_raw
+)
+
+# Processed water-quality data
+chla_proc <- readRDS(here("2-data", "processed", "chla_proc.rds"))
+do_proc <- readRDS(here("2-data", "processed", "do_proc.rds"))
+sal_proc <- readRDS(here("2-data", "processed", "sal_proc.rds"))
+turb_proc <- readRDS(here("2-data", "processed", "turb_proc.rds"))
+water_temp_proc <- readRDS(
+  here("2-data", "processed", "water_temp_proc.rds")
+)
+
+processed_data <- list(
+  "Chlorophyll-a" = chla_proc,
+  "Dissolved oxygen" = do_proc,
+  "Salinity" = sal_proc,
+  "Turbidity" = turb_proc,
+  "Water temperature" = water_temp_proc
+)
+
+parameter_units <- c(
+  "Chlorophyll-a" = "ug/L",
+  "Dissolved oxygen" = "mg/L",
+  "Salinity" = "ppt",
+  "Turbidity" = "NTU",
+  "Water temperature" = "degrees C"
+)
+
+# Saved IPDW sensitivity results
+sensitivity_results <- list(
+  "Dissolved oxygen" = readRDS(
+    here("2-data", "models", "do_sensitivity_test.rds")
+  ),
+  "Salinity" = readRDS(
+    here("2-data", "models", "sal_sensitivity_test.rds")
+  ),
+  "Turbidity" = readRDS(
+    here("2-data", "models", "turb_sensitivity_test.rds")
+  ),
+  "Water temperature" = readRDS(
+    here("2-data", "models", "water_temp_sensitivity_test.rds")
+  )
+)
+
+# Saved final IPDW validation results
+model_stats <- list(
+  "Dissolved oxygen" = readRDS(
+    here("2-data", "models", "do_stats.rds")
+  ),
+  "Salinity" = readRDS(
+    here("2-data", "models", "sal_stats.rds")
+  ),
+  "Turbidity" = readRDS(
+    here("2-data", "models", "turb_stats.rds")
+  ),
+  "Water temperature" = readRDS(
+    here("2-data", "models", "water_temp_stats.rds")
+  )
+)
+
+# Saved final environmental rasters
+raster_results <- list(
+  "Dissolved oxygen" = readRDS(
+    here("2-data", "models", "do_rast.rds")
+  ),
+  "Salinity" = readRDS(
+    here("2-data", "models", "sal_rast.rds")
+  ),
+  "Turbidity" = readRDS(
+    here("2-data", "models", "turb_rast.rds")
+  ),
+  "Water temperature" = readRDS(
+    here("2-data", "models", "water_temp_rast.rds")
+  )
+)
+
+study_area <- readRDS(
+  here("2-data", "processed", "study_area.rds")
+)
+
+oyster_points <- readRDS(
+  here("2-data", "processed", "oyster_pts_0903.rds")
+)
+
+# Values available for inline narrative statements
+total_raw_observations <- sum(map_int(raw_data, nrow))
+
+total_unique_raw_sites <- n_distinct(
+  unlist(
+    map(raw_data, "Location_Identifier"),
+    use.names = FALSE
+  ),
+  na.rm = TRUE
+)
+
+total_processed_bins <- sum(map_int(processed_data, nrow))
+total_oyster_points <- nrow(oyster_points)
+```
+
+## Water-Quality Data Coverage
+
+<!--
+Narrative to add:
+
+- Report the total raw observations and unique monitoring sites.
+- Describe differences in data availability among parameters.
+- Refer to Table @tbl-raw-data-summary.
+- Describe the effects of warm-season filtering and spatial aggregation.
+- Refer to Table @tbl-processed-data-summary.
+- Explain that chlorophyll-a was excluded because its retained spatial coverage was inadequate.
+
+Useful inline values:
+
+- Total raw observations: `r scales::comma(total_raw_observations)`
+- Unique raw monitoring sites: `r scales::comma(total_unique_raw_sites)`
+- Total processed spatial bins: `r scales::comma(total_processed_bins)`
+-->
+
+```{r}
+#| label: tbl-raw-data-summary
+#| tbl-cap: "Summary of raw water-quality data available for each environmental parameter."
+#| echo: false
+#| warning: false
+
+raw_summary <- imap_dfr(
+  raw_data,
+  \(data, parameter) {
+    result_values <- suppressWarnings(
+      as.numeric(as.character(data$Result_Measure))
+    )
+
+    sample_dates <- as.Date(data$Activity_StartDate)
+
+    reported_units <- unique(
+      trimws(as.character(data$Result_MeasureUnit))
+    )
+
+    reported_units <- reported_units[
+      !is.na(reported_units) & reported_units != ""
+    ]
+
+    tibble(
+      Parameter = parameter,
+      `Total observations` = nrow(data),
+      `Numeric results` = sum(!is.na(result_values)),
+      `Unique stations` = n_distinct(
+        data$Location_Identifier,
+        na.rm = TRUE
+      ),
+      `Begin date` = min(sample_dates, na.rm = TRUE),
+      `End date` = max(sample_dates, na.rm = TRUE),
+      `Reported units` = paste(reported_units, collapse = ", ")
+    )
+  }
+) |>
+  arrange(desc(`Total observations`)) |>
+  mutate(
+    across(
+      c(`Total observations`, `Numeric results`, `Unique stations`),
+      scales::comma
+    ),
+    `Begin date` = format(`Begin date`, "%m/%d/%Y"),
+    `End date` = format(`End date`, "%m/%d/%Y")
+  )
+
+kable(
+  raw_summary,
+  booktabs = TRUE,
+  align = c("l", "r", "r", "r", "c", "c", "l")
+)
+```
+
+```{r}
+#| label: tbl-processed-data-summary
+#| tbl-cap: "Summary of processed warm-season water-quality data used to evaluate environmental coverage and generate interpolation inputs."
+#| echo: false
+#| warning: false
+
+processed_summary <- imap_dfr(
+  processed_data,
+  \(data, parameter) {
+    tibble(
+      Parameter = parameter,
+      `Spatial bins` = nrow(data),
+      `Unique stations` = sum(data$n_stations, na.rm = TRUE),
+      `Included observations` = sum(data$total_n, na.rm = TRUE),
+      `First year` = min(data$first_year, na.rm = TRUE),
+      `Last year` = max(data$last_year, na.rm = TRUE),
+      Units = parameter_units[[parameter]]
+    )
+  }
+) |>
+  mutate(
+    across(
+      c(`Spatial bins`, `Unique stations`, `Included observations`),
+      scales::comma
+    )
+  )
+
+kable(
+  processed_summary,
+  booktabs = TRUE,
+  align = c("l", "r", "r", "r", "c", "c", "l")
+)
+```
+
+```{r}
+#| label: fig-monitoring-coverage
+#| fig-cap: "Spatial distribution of monitoring stations represented in each raw water-quality dataset."
+#| fig-width: 10
+#| fig-height: 8
+#| echo: false
+#| warning: false
+
+monitoring_sites <- imap_dfr(
+  raw_data,
+  \(data, parameter) {
+    data |>
+      dplyr::select(Location_Identifier, geometry) |>
+      dplyr::filter(!is.na(Location_Identifier)) |>
+      dplyr::group_by(Location_Identifier) |>
+      dplyr::slice(1) |>
+      dplyr::ungroup() |>
+      dplyr::mutate(parameter = parameter)
+  }
+) |>
+  st_as_sf() |>
+  st_transform(st_crs(study_area))
+
+ggplot() +
+  geom_sf(
+    data = study_area,
+    fill = "grey95",
+    color = "grey45",
+    linewidth = 0.25
+  ) +
+  geom_sf(
+    data = monitoring_sites,
+    color = "#2166AC",
+    size = 0.7,
+    alpha = 0.65
+  ) +
+  facet_wrap(~parameter, ncol = 2) +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+```
+
+## IPDW Parameter Sensitivity
+
+<!--
+Narrative to add:
+
+- Describe the overall response of MAE to distance power and maximum range.
+- Identify the final parameter combination used for each variable.
+- Note when several combinations produced nearly equivalent error.
+- Refer to Figure @fig-ipdw-sensitivity.
+-->
+
+```{r}
+#| label: fig-ipdw-sensitivity
+#| fig-cap: "Mean MAE across distance-power and maximum-range combinations evaluated using repeated five-fold spatial cross-validation. Red outlines identify the parameter combinations used for the final interpolation models."
+#| fig-width: 12
+#| fig-height: 8
+#| echo: false
+#| warning: false
+
+plot_sensitivity <- function(result, stats, parameter) {
+  power_levels <- sort(unique(result$summary$dist_power))
+  range_levels <- sort(unique(result$summary$max_range))
+
+  plot_data <- result$summary |>
+    mutate(
+      dist_power = factor(dist_power, levels = power_levels),
+      max_range = factor(max_range, levels = range_levels)
+    )
+
+  selected_data <- result$summary |>
+    filter(
+      near(dist_power, stats$dist_power[[1]]),
+      max_range == stats$max_range[[1]]
+    ) |>
+    mutate(
+      dist_power = factor(dist_power, levels = power_levels),
+      max_range = factor(max_range, levels = range_levels)
+    )
+
+  ggplot(
+    plot_data,
+    aes(
+      x = dist_power,
+      y = max_range,
+      fill = mean_MAE
+    )
+  ) +
+    geom_tile() +
+    geom_tile(
+      data = selected_data,
+      fill = NA,
+      color = "red",
+      linewidth = 1.2
+    ) +
+    geom_text(
+      aes(
+        label = sprintf("%.2f", mean_MAE),
+        color = mean_MAE > median(mean_MAE, na.rm = TRUE)
+      ),
+      size = 3
+    ) +
+    scale_fill_viridis_c(
+      direction = -1,
+      name = "Mean MAE"
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "black", "TRUE" = "white"),
+      guide = "none"
+    ) +
+    labs(
+      title = parameter,
+      x = "Distance power",
+      y = "Maximum range (m)"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(
+      panel.grid = element_blank(),
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+}
+
+sensitivity_plots <- imap(
+  sensitivity_results,
+  \(result, parameter) {
+    plot_sensitivity(
+      result = result,
+      stats = model_stats[[parameter]],
+      parameter = parameter
+    )
+  }
+)
+
+wrap_plots(sensitivity_plots, ncol = 2) +
+  plot_annotation(
+    title = "IPDW Parameter Sensitivity Analysis",
+    subtitle = "Repeated five-fold spatial cross-validation"
+  )
+```
+
+## IPDW Spatial Cross-Validation Performance
+
+<!--
+Narrative to add:
+
+- Report the selected distance power and maximum range for each parameter.
+- Compare repeated mean MAE, RMSE, bias, and coverage among parameters.
+- Interpret errors in the original units shown in the table.
+- Describe these values as internal spatial cross-validation results.
+- Refer to Table @tbl-ipdw-validation.
+-->
+
+```{r}
+#| label: tbl-ipdw-validation
+#| tbl-cap: "Selected IPDW parameters and repeated spatial cross-validation performance. Values in parentheses are standard deviations across random spatial partitions."
+#| echo: false
+#| warning: false
+
+validation_summary <- imap_dfr(
+  model_stats,
+  \(stats, parameter) {
+    selected_power <- stats$dist_power[[1]]
+    selected_range <- stats$max_range[[1]]
+
+    repeated_results <- sensitivity_results[[parameter]]$summary |>
+      filter(
+        near(dist_power, selected_power),
+        max_range == selected_range
+      ) |>
+      slice(1)
+
+    if (nrow(repeated_results) != 1) {
+      stop("Selected parameter combination is missing for ", parameter)
+    }
+
+    tibble(
+      Parameter = parameter,
+      Units = parameter_units[[parameter]],
+      `Distance power` = selected_power,
+      `Maximum range (km)` = selected_range / 1000,
+      `Mean MAE (SD)` = sprintf(
+        "%.3f (%.3f)",
+        repeated_results$mean_MAE,
+        repeated_results$sd_MAE
+      ),
+      `Mean RMSE (SD)` = sprintf(
+        "%.3f (%.3f)",
+        repeated_results$mean_RMSE,
+        repeated_results$sd_RMSE
+      ),
+      `Mean bias` = sprintf(
+        "%.3f",
+        repeated_results$mean_Bias
+      ),
+      `Mean coverage` = scales::percent(
+        repeated_results$mean_coverage,
+        accuracy = 0.1
+      )
+    )
+  }
+)
+
+kable(
+  validation_summary,
+  booktabs = TRUE,
+  align = c("l", "l", "r", "r", "r", "r", "r", "r")
+)
+```
+
+## Environmental Predictor Surfaces
+
+<!--
+Narrative to add:
+
+- Report the prediction range for each environmental surface.
+- Describe the major spatial gradients visible in Figure @fig-environmental-rasters.
+- Identify areas with limited or missing prediction coverage.
+- Refer to Table @tbl-raster-summary for numerical ranges and cell counts.
+- Reserve ecological explanations for the Discussion section.
+-->
+
+```{r}
+#| label: tbl-raster-summary
+#| tbl-cap: "Summary of final IPDW environmental predictor rasters."
+#| echo: false
+#| warning: false
+
+raster_summary <- imap_dfr(
+  raster_results,
+  \(raster_layer, parameter) {
+    raster_values <- getValues(raster_layer)
+    raster_resolution <- res(raster_layer)
+
+    tibble(
+      Parameter = parameter,
+      Units = parameter_units[[parameter]],
+      Minimum = min(raster_values, na.rm = TRUE),
+      Maximum = max(raster_values, na.rm = TRUE),
+      `Predicted cells` = sum(!is.na(raster_values)),
+      `Cell size` = paste0(
+        raster_resolution[[1]],
+        " x ",
+        raster_resolution[[2]],
+        " m"
+      )
+    )
+  }
+) |>
+  mutate(
+    Minimum = sprintf("%.2f", Minimum),
+    Maximum = sprintf("%.2f", Maximum),
+    `Predicted cells` = scales::comma(`Predicted cells`)
+  )
+
+kable(
+  raster_summary,
+  booktabs = TRUE,
+  align = c("l", "l", "r", "r", "r", "c")
+)
+```
+
+```{r}
+#| label: fig-environmental-rasters
+#| fig-cap: "Final IPDW prediction surfaces used as environmental inputs for habitat-suitability modeling. Each panel uses its own measurement scale."
+#| fig-width: 10
+#| fig-height: 8
+#| echo: false
+#| warning: false
+
+raster_palettes <- c(
+  "Dissolved oxygen" = "YlGnBu",
+  "Salinity" = "Viridis",
+  "Turbidity" = "Inferno",
+  "Water temperature" = "Plasma"
+)
+
+old_par <- par(
+  mfrow = c(2, 2),
+  mar = c(2, 2, 3, 5)
+)
+
+iwalk(
+  raster_results,
+  \(raster_layer, parameter) {
+    raster::plot(
+      raster_layer,
+      col = hcl.colors(100, raster_palettes[[parameter]]),
+      main = paste0(
+        parameter,
+        " (",
+        parameter_units[[parameter]],
+        ")"
+      ),
+      axes = FALSE,
+      box = FALSE
+    )
+  }
+)
+
+par(old_par)
+```
+
+## Oyster Occurrence Data
+
+<!--
+Narrative to add:
+
+- Report the number of oyster occurrence points available for modeling.
+- Describe their spatial distribution within the Pensacola Bay System.
+- Identify any visible clustering or geographic gaps.
+- Explain any later filtering or thinning after those steps are completed.
+- Refer to Figure @fig-oyster-occurrences.
+
+Useful inline value:
+
+- Oyster occurrence points: `r scales::comma(total_oyster_points)`
+-->
+
+```{r}
+#| label: fig-oyster-occurrences
+#| fig-cap: "Spatial distribution of Eastern oyster occurrence points within the Pensacola Bay System."
+#| fig-width: 8
+#| fig-height: 7
+#| echo: false
+#| warning: false
+
+oyster_points_map <- oyster_points |>
+  st_transform(st_crs(study_area))
+
+ggplot() +
+  geom_sf(
+    data = study_area,
+    fill = "#D9EEF5",
+    color = "grey35",
+    linewidth = 0.35
+  ) +
+  geom_sf(
+    data = oyster_points_map,
+    color = "#B2182B",
+    size = 0.8,
+    alpha = 0.55
+  ) +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank()
+  )
+```
+
+## MaxEnt Model Tuning and Selection
+
+<!--
+The MaxEnt scripts and saved outputs do not exist yet. The following block is a template.
+
+Expected file:
+
+2-data/models/maxent_tuning_results.rds
+
+Expected columns:
+
+- feature_class
+- regularization_multiplier
+- mean_auc
+- mean_omission_rate
+- mean_boyce
+- delta_aicc
+- selected
+
+Narrative to add after modeling:
+
+- Report the number of candidate configurations evaluated.
+- Identify the selected feature class and regularization multiplier.
+- Compare the selected model with the strongest alternatives.
+- Refer to Table @tbl-maxent-selection.
+-->
+
+```{r}
+#| label: tbl-maxent-selection
+#| tbl-cap: "Performance of the leading candidate MaxEnt configurations."
+#| echo: false
+#| warning: false
+#| eval: false
+
+maxent_tuning <- readRDS(
+  here("2-data", "models", "maxent_tuning_results.rds")
+)
+
+maxent_tuning_table <- maxent_tuning |>
+  arrange(desc(selected), delta_aicc) |>
+  slice_head(n = 10) |>
+  transmute(
+    `Feature class` = feature_class,
+    `Regularization multiplier` = regularization_multiplier,
+    `Mean AUC` = sprintf("%.3f", mean_auc),
+    `Mean omission rate` = sprintf("%.3f", mean_omission_rate),
+    `Mean Boyce index` = sprintf("%.3f", mean_boyce),
+    `Delta AICc` = sprintf("%.2f", delta_aicc),
+    Selected = if_else(selected, "Yes", "No")
+  )
+
+kable(
+  maxent_tuning_table,
+  booktabs = TRUE,
+  align = c("l", "r", "r", "r", "r", "r", "c")
+)
+```
+
+## Environmental-Variable Influence
+
+<!--
+Expected files:
+
+2-data/models/maxent_variable_importance.rds
+2-data/models/maxent_response_curves.rds
+
+Expected importance columns:
+
+- variable
+- contribution
+- permutation_importance
+
+Expected response-curve columns:
+
+- variable
+- value
+- suitability
+
+Narrative to add:
+
+- Identify the most influential predictors.
+- Compare contribution and permutation importance.
+- Describe the direction and shape of the strongest modeled relationships.
+- Refer to Figures @fig-variable-importance and @fig-response-curves.
+-->
+
+```{r}
+#| label: fig-variable-importance
+#| fig-cap: "Relative contribution and permutation importance of environmental predictors in the selected MaxEnt model."
+#| fig-width: 9
+#| fig-height: 6
+#| echo: false
+#| warning: false
+#| eval: false
+
+variable_importance <- readRDS(
+  here("2-data", "models", "maxent_variable_importance.rds")
+)
+
+importance_long <- variable_importance |>
+  pivot_longer(
+    cols = c(contribution, permutation_importance),
+    names_to = "metric",
+    values_to = "importance"
+  ) |>
+  mutate(
+    metric = recode(
+      metric,
+      contribution = "Contribution",
+      permutation_importance = "Permutation importance"
+    ),
+    variable = fct_reorder(variable, importance, .fun = max)
+  )
+
+ggplot(
+  importance_long,
+  aes(
+    x = importance,
+    y = variable,
+    fill = metric
+  )
+) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("#2166AC", "#B2182B")) +
+  labs(
+    x = "Importance (%)",
+    y = NULL,
+    fill = NULL
+  ) +
+  theme_minimal() +
+  theme(panel.grid.major.y = element_blank())
+```
+
+```{r}
+#| label: fig-response-curves
+#| fig-cap: "Response curves for environmental predictors included in the selected MaxEnt model."
+#| fig-width: 10
+#| fig-height: 7
+#| echo: false
+#| warning: false
+#| eval: false
+
+response_curves <- readRDS(
+  here("2-data", "models", "maxent_response_curves.rds")
+)
+
+ggplot(
+  response_curves,
+  aes(
+    x = value,
+    y = suitability
+  )
+) +
+  geom_line(color = "#2166AC", linewidth = 0.8) +
+  facet_wrap(~variable, scales = "free_x") +
+  labs(
+    x = "Environmental value",
+    y = "Predicted suitability"
+  ) +
+  theme_minimal()
+```
+
+## Predicted Oyster Habitat Suitability
+
+<!--
+Expected file:
+
+2-data/models/maxent_suitability.rds
+
+Expected object:
+
+- A RasterLayer with continuous suitability values from 0 to 1.
+
+Narrative to add:
+
+- Report the range and distribution of suitability predictions.
+- Describe the locations of high and low suitability.
+- Identify gaps or edge effects.
+- Refer to Figure @fig-maxent-suitability.
+-->
+
+```{r}
+#| label: fig-maxent-suitability
+#| fig-cap: "Predicted Eastern oyster habitat suitability from the selected MaxEnt model."
+#| fig-width: 10
+#| fig-height: 5
+#| echo: false
+#| warning: false
+#| eval: false
+
+maxent_suitability <- readRDS(
+  here("2-data", "models", "maxent_suitability.rds")
+)
+
+suitability_values <- getValues(maxent_suitability)
+suitability_values <- suitability_values[!is.na(suitability_values)]
+
+old_par <- par(
+  mfrow = c(1, 2),
+  mar = c(4, 4, 3, 5)
+)
+
+raster::plot(
+  maxent_suitability,
+  col = hcl.colors(100, "YlGn"),
+  zlim = c(0, 1),
+  main = "Predicted habitat suitability",
+  axes = FALSE,
+  box = FALSE
+)
+
+hist(
+  suitability_values,
+  breaks = 30,
+  col = "#66A61E",
+  border = "white",
+  main = "Distribution of predictions",
+  xlab = "Predicted suitability"
+)
+
+par(old_par)
+```
+
+## Comparison with the Existing HSI
+
+<!--
+Expected files:
+
+2-data/models/maxent_suitability.rds
+2-data/models/hsi_suitability.rds
+
+Both rasters must use the same CRS, resolution, origin, extent, alignment, mask, and a 0 to 1 scale before this Results code is run.
+
+Narrative to add:
+
+- Report the cell-level correlation and difference metrics.
+- Describe the overall spatial agreement.
+- Identify where MaxEnt predicts greater or lower suitability than the HSI.
+- Refer to Table @tbl-hsi-comparison and Figures @fig-hsi-comparison and @fig-hsi-scatter.
+-->
+
+```{r}
+#| label: tbl-hsi-comparison
+#| tbl-cap: "Cell-level comparison between MaxEnt and HSI habitat-suitability predictions."
+#| echo: false
+#| warning: false
+#| eval: false
+
+maxent_suitability <- readRDS(
+  here("2-data", "models", "maxent_suitability.rds")
+)
+
+hsi_suitability <- readRDS(
+  here("2-data", "models", "hsi_suitability.rds")
+)
+
+compareRaster(
+  maxent_suitability,
+  hsi_suitability,
+  extent = TRUE,
+  rowcol = TRUE,
+  crs = TRUE,
+  res = TRUE,
+  orig = TRUE,
+  stopiffalse = TRUE
+)
+
+comparison_data <- tibble(
+  maxent = getValues(maxent_suitability),
+  hsi = getValues(hsi_suitability)
+) |>
+  drop_na()
+
+hsi_comparison <- tibble(
+  Metric = c(
+    "Pearson correlation",
+    "Spearman correlation",
+    "Mean signed difference",
+    "Mean absolute difference",
+    "Root mean square difference",
+    "Cells within 0.10 suitability units"
+  ),
+  Value = c(
+    sprintf("%.3f", cor(comparison_data$maxent, comparison_data$hsi)),
+    sprintf(
+      "%.3f",
+      cor(
+        comparison_data$maxent,
+        comparison_data$hsi,
+        method = "spearman"
+      )
+    ),
+    sprintf(
+      "%.3f",
+      mean(comparison_data$maxent - comparison_data$hsi)
+    ),
+    sprintf(
+      "%.3f",
+      mean(abs(comparison_data$maxent - comparison_data$hsi))
+    ),
+    sprintf(
+      "%.3f",
+      sqrt(mean((comparison_data$maxent - comparison_data$hsi)^2))
+    ),
+    scales::percent(
+      mean(abs(comparison_data$maxent - comparison_data$hsi) <= 0.10),
+      accuracy = 0.1
+    )
+  )
+)
+
+kable(
+  hsi_comparison,
+  booktabs = TRUE,
+  align = c("l", "r")
+)
+```
+
+```{r}
+#| label: fig-hsi-comparison
+#| fig-cap: "Spatial comparison of MaxEnt and HSI habitat-suitability predictions. Positive differences indicate greater suitability predicted by MaxEnt."
+#| fig-width: 12
+#| fig-height: 5
+#| echo: false
+#| warning: false
+#| eval: false
+
+suitability_difference <- maxent_suitability - hsi_suitability
+
+difference_limit <- max(
+  abs(range(getValues(suitability_difference), na.rm = TRUE))
+)
+
+old_par <- par(
+  mfrow = c(1, 3),
+  mar = c(2, 2, 3, 5)
+)
+
+raster::plot(
+  maxent_suitability,
+  col = hcl.colors(100, "YlGn"),
+  zlim = c(0, 1),
+  main = "MaxEnt",
+  axes = FALSE,
+  box = FALSE
+)
+
+raster::plot(
+  hsi_suitability,
+  col = hcl.colors(100, "YlGn"),
+  zlim = c(0, 1),
+  main = "HSI",
+  axes = FALSE,
+  box = FALSE
+)
+
+raster::plot(
+  suitability_difference,
+  col = hcl.colors(100, "Blue-Red 3"),
+  zlim = c(-difference_limit, difference_limit),
+  main = "MaxEnt minus HSI",
+  axes = FALSE,
+  box = FALSE
+)
+
+par(old_par)
+```
+
+```{r}
+#| label: fig-hsi-scatter
+#| fig-cap: "Cell-level relationship between MaxEnt and HSI habitat-suitability predictions. The dashed line represents perfect agreement."
+#| fig-width: 7
+#| fig-height: 6
+#| echo: false
+#| warning: false
+#| eval: false
+
+set.seed(42)
+
+comparison_plot_data <- comparison_data |>
+  slice_sample(n = min(20000, n()))
+
+ggplot(
+  comparison_plot_data,
+  aes(
+    x = hsi,
+    y = maxent
+  )
+) +
+  geom_point(
+    color = "#2166AC",
+    alpha = 0.15,
+    size = 0.7
+  ) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "grey30"
+  ) +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
+  labs(
+    x = "HSI suitability",
+    y = "MaxEnt suitability"
+  ) +
+  theme_minimal()
+```
+
+## Summary of Major Results
+
+<!--
+Narrative to add:
+
+- Summarize the environmental data coverage and interpolation performance.
+- Identify the predictors with the greatest influence on MaxEnt.
+- Summarize the distribution of high-suitability habitat.
+- State the overall level of agreement between MaxEnt and the HSI.
+- Identify where the largest differences occurred.
+-->

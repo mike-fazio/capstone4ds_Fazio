@@ -5,6 +5,7 @@ library(tmap)
 library(knitr)
 library(tibble)
 library(ipdw)
+library(ggplot2)
 
 tmap_mode("plot")
 

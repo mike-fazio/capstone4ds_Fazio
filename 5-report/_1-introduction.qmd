@@ -28,7 +28,7 @@ Perhaps the most influential and widely reported environmental driver of oyster 
 ::: {.landscape} 
 
 ```{r}
-#| label: 1-tbl-environmental-drivers
+#| label: tbl-environmental-drivers
 #| tbl-cap: "Common environmental drivers of Eastern Oyster habitat suitability."
 
 

@@ -1,5 +1,12 @@
 # Set Up 
 ```{r} 
+# Load packages and functions from setup script
+source(
+  here::here(
+    "3-scripts",
+    "0-setup.r"
+  )
+)
 
 sites <- get_wq_sites()
 
@@ -46,7 +53,7 @@ max_rng <- c(
 ```
 
 
-# Chlorophyll-a (**MAY DROP**)
+# Chlorophyll-a (***DROPPED****)
 
 ```{r}
 
@@ -324,7 +331,7 @@ saveRDS(do_stats, file = here::here("2-data", "models", "do_stats.rds"))
 saveRDS(do_rast, file = here::here("2-data", "models", "do_rast.rds"))
 ```
 
-# Turbidiity
+# Turbidiity (***FINALIZED****)
 ```{r}
 turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
 
@@ -393,4 +400,26 @@ saveRDS(
   file = here::here("2-data", "models", "turb_stats.rds")
 )
 
+```
+
+# PBS Depth Raster
+
+```{r}
+
+pbs_depth <- terra::rast(here::here("2-data","raw","pbs_depth_0903_10m.tif"))
+
+pbs_depth <- pbs_depth %>%
+  terra::project(
+    terra::rast(cost_raster),
+    method = "bilinear"
+  ) %>%
+  terra::crop(
+    terra::vect(study_area)
+  ) %>%
+  terra::mask(
+    terra::vect(study_area)
+  )
+  
+
+terra::plot(pbs_depth)
 ```

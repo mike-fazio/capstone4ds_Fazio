@@ -39,7 +39,7 @@ length(unique(all_sites$Location_Identifier))
 ```
 
 ```{r}
-#| label: load processed data sets for results report
+#| label: load-processed-data-sets-for-results-report
 #| echo: false
 #| output: false
 
@@ -52,6 +52,8 @@ do <- readRDS(here::here("2-data", "processed", "do_proc.rds"))
 sal <- readRDS(here::here("2-data", "processed", "sal_proc.rds"))
 
 turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
+
+water_temp <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
 
 ```
 
@@ -111,7 +113,7 @@ knitr::kable(
 )
 ```
 
-After processing and spatial aggregation, there were a total of `{r} sum(length(chla), length(do), length(sal), length(turb)) ` records each representing the mean value for that location (@tbl-processed-data-summary). Chlorophyll-a processing resulted in 754 observations summarized within 27 spatial bins using 48 stations. Dissolved oxygen had 3072 observations summarized into 68 bins across 145 stations. Salinity had 3,400 observations summarized into 67 bins with 135 stations, and turbidity retained 1563 observations within 61 spatial bins using 122 unique stations.
+After processing and spatial aggregation, there were a total of `{r} sum(length(chla), length(do), length(sal), length(turb), length(water_temp)) ` records each representing the mean value for that location (@tbl-processed-data-summary). Chlorophyll-a processing resulted in 754 observations summarized within 27 spatial bins using 48 stations. Dissolved oxygen had 3072 observations summarized into 68 bins across 145 stations. Salinity had 3,400 observations summarized into 67 bins with 135 stations, and turbidity retained 1563 observations within 61 spatial bins using 122 unique stations.
 
 ```{r}
 #| label: tbl-processed-data-summary
@@ -123,14 +125,16 @@ processed_data <- list(
   "Chlorophyll-a" = chla,
   "Dissolved oxygen" = do,
   "Salinity" = sal,
-  "Turbidity" = turb
+  "Turbidity" = turb,
+  "Water temperature" = water_temp
 )
 
 parameter_units <- c(
   "Chlorophyll-a" = "µg/L",
   "Dissolved oxygen" = "mg/L",
   "Salinity" = "ppt",
-  "Turbidity" = "NTU"
+  "Turbidity" = "NTU",
+  "Water temperature" = "°C"
 )
 
 processed_summary <- purrr::imap_dfr(
@@ -176,7 +180,7 @@ knitr::kable(
 
 *Water Quality Mean Observation Data Distribution*
 
-Mean Chlorophyll-a values ranged from `{r} round(min(chla$mean),2) ` to `{r} round(max(chla$mean),2)`ug/L with an average mean of `{r} round(mean(chla$mean),2)`ug/L. The distribution was heavily skewed to the right due to an extreme outlier of 60ug/L.
+Mean Chlorophyll-a values ranged from `{r} round(min(chla$mean),2) ` to `{r} round(max(chla$mean),2)`ug/L with an average mean of `{r} round(mean(chla$mean),2)`ug/L. The distribution was heavily skewed to the right due to an extreme outlier of 60ug/L. 
 
 ```{r}
 #| label: fig-processed-mean-distributions
@@ -185,30 +189,6 @@ Mean Chlorophyll-a values ranged from `{r} round(min(chla$mean),2) ` to `{r} rou
 #| fig-height: 8
 #| echo: false
 #| warning: false
-
-water_temp <- readRDS(
-  here::here(
-    "2-data",
-    "processed",
-    "water_temp_proc.rds"
-  )
-)
-
-processed_data <- list(
-  "Chlorophyll-a" = chla,
-  "Dissolved oxygen" = do,
-  "Salinity" = sal,
-  "Turbidity" = turb,
-  "Water temperature" = water_temp
-)
-
-parameter_units <- c(
-  "Chlorophyll-a" = "µg/L",
-  "Dissolved oxygen" = "mg/L",
-  "Salinity" = "ppt",
-  "Turbidity" = "NTU",
-  "Water temperature" = "°C"
-)
 
 parameter_order <- names(processed_data)
 

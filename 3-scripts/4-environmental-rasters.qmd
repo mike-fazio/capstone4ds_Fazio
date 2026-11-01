@@ -520,11 +520,39 @@ pbs_depth <- pbs_depth %>%
   terra::mask(
     terra::vect(study_area)
   )
+
+terra::saveRDS(pbs_depth, here::here("2-data", "processed", "depth_rast.rds"))
   
 
 terra::plot(pbs_depth)
 
 ```
+
+# Bottom Sediment
+
+```{r}
+
+pbs_sed <- terra::rast(here::here("2-data","raw","pbs_sed_0903_reclass.tif"))
+
+pbs_sed <- pbs_sed %>%
+  terra::project(
+    terra::rast(cost_raster),
+    method = "mode"
+  ) %>%
+  terra::crop(
+    terra::vect(study_area)
+  ) %>%
+  terra::mask(
+    terra::vect(study_area)
+  ) 
+
+terra::saveRDS(pbs_sed, here::here("2-data", "processed", "sed_rast.rds"))
+  
+
+terra::plot(pbs_sed)
+
+```
+
 
 ```{r}
 library(patchwork)

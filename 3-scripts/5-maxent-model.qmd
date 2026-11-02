@@ -99,9 +99,15 @@ plot(bg)
 ```
 
 ```{r}
-occ_cv <- occ_xy %>%
-  dplyr::transmute(
-    pb = 1
+
+occ_cv <- data.frame(
+  x = occ_xy[, 1],
+  y = occ_xy[, 2],
+  pb = 1
+) %>%
+  sf::st_as_sf(
+    coords = c("x", "y"),
+    crs = target_crs
   )
 
 bg_cv <- data.frame(
@@ -158,7 +164,7 @@ occ_sac$range_table
 ```
 
 ```{r}
-block_sizes <- c(500, 1000, 1500, 2500, 3000, 5000)
+block_sizes <- c(2500, 5000, 7500, 10000, 12500)
 
 
 # Create folds
@@ -171,7 +177,9 @@ spatial_folds <- purrr::map(
     k = 5,
     size = .x, 
     selection = "random",
-    iteration = 100,
+    iteration = 1000,
+    balance = TRUE,
+    presence_bg = TRUE,
     seed = 42,
     progress = TRUE,
     report = TRUE,
@@ -179,40 +187,12 @@ spatial_folds <- purrr::map(
   )
 )
 
-cv_10k_4 <- blockCV::cv_spatial(
+spatial_folds <- blockCV::cv_spatial(
   x = cv_pts,
   column = "pb",
   r = terra::rast(mask),
-  k = 4,
-  size = 10000,
-  selection = "random",
-  iteration = 1000,
-  seed = 42,
-  progress = TRUE,
-  report = TRUE,
-  plot = TRUE
-)
-
-cv_12k_4 <- blockCV::cv_spatial(
-  x = cv_pts,
-  column = "pb",
-  r = terra::rast(mask),
-  k = 4,
-  size = 12500,
-  selection = "random",
-  iteration = 1000,
-  seed = 42,
-  progress = TRUE,
-  report = TRUE,
-  plot = TRUE
-)
-
-cv_10k <- blockCV::cv_spatial(
-  x = cv_pts,
-  column = "pb",
-  r = terra::rast(mask),
-  k = 3,
-  size = 10000,
+  k = 5,
+  size = 5000,
   selection = "random",
   iteration = 1000,
   balance = TRUE,
@@ -222,101 +202,69 @@ cv_10k <- blockCV::cv_spatial(
   report = TRUE,
   plot = TRUE
 )
-
-cv_12k <- blockCV::cv_spatial(
-  x = cv_pts,
-  column = "pb",
-  r = terra::rast(mask),
-  k = 3,
-  size = 12500,
-  selection = "random",
-  iteration = 1000,
-  balance = TRUE,
-  presence_bg = TRUE,
-  seed = 42,
-  progress = TRUE,
-  report = TRUE,
-  plot = TRUE
-)
-
 ```
 
 ```{r}
 folds <- spatial_folds$folds_list
 
-cv_models <- vector(
-  "list",
-  length(folds)
-)
-
-cv_evals <- vector(
-  "list",
-  length(folds)
-)
-
-cv_results <- vector(
-  "list",
-  length(folds)
-)
+cv_models <- vector("list", length(folds))
+cv_evals  <- vector("list", length(folds))
+cv_results <- vector("list", length(folds))
 
 for (i in seq_along(folds)) {
 
-  # Row indices assigned by blockCV
   train_idx <- folds[[i]][[1]]
   test_idx  <- folds[[i]][[2]]
 
-  # Presence coordinates
-  p_train <- occ_xy[
-    train_idx,
-    ,
-    drop = FALSE
-  ]
+  train_sf <- cv_pts[train_idx, ]
+  test_sf  <- cv_pts[test_idx, ]
 
-  p_test <- occ_xy[
-    test_idx,
-    ,
-    drop = FALSE
-  ]
+  p_train <- sf::st_coordinates(
+    train_sf[train_sf$pb == 1, ]
+  )
 
-  # Fit MaxEnt
+  a_train <- sf::st_coordinates(
+    train_sf[train_sf$pb == 0, ]
+  )
+
+  p_test <- sf::st_coordinates(
+    test_sf[test_sf$pb == 1, ]
+  )
+
+  a_test <- sf::st_coordinates(
+    test_sf[test_sf$pb == 0, ]
+  )
+
   m <- dismo::maxent(
     x = predictors_raster,
     p = p_train,
-    a = bg,
+    a = a_train,
     factors = "sediment",
     removeDuplicates = FALSE
   )
 
-  # Evaluate on held-out occurrence points
   e <- dismo::evaluate(
     p = p_test,
-    a = bg,
+    a = a_test,
     model = m,
     x = predictors_raster
   )
 
-  # Store fitted model
   cv_models[[i]] <- m
-
-  # Store evaluation object
   cv_evals[[i]] <- e
 
-  # Store summary metrics
   cv_results[[i]] <- data.frame(
     fold = i,
-    train_n = nrow(p_train),
-    test_n = nrow(p_test),
+    train_presence = nrow(p_train),
+    test_presence = nrow(p_test),
+    train_background = nrow(a_train),
+    test_background = nrow(a_test),
     auc = e@auc
   )
-
-  cat(
-    "Fold", i,
-    "| train:", nrow(p_train),
-    "| test:", nrow(p_test),
-    "| AUC:", round(e@auc, 3),
-    "\n"
-  )
 }
+
+cv_results <- dplyr::bind_rows(cv_results)
+cv_results
 
 ```
 

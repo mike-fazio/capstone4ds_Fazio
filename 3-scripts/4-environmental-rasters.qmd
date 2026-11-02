@@ -50,6 +50,16 @@ max_rng <- c(
   20000
 )
 
+chla_clean <- readRDS(
+  here::here(
+  "2-data",
+  "processed",
+  "chla_proc.rds"
+  )
+)
+
+
+
 ```
 
 
@@ -472,9 +482,9 @@ table(turb_stats)
 turb_rast <- ipdw_manual(
   turb, 
   cost_raster, 
-  range = mr, 
+  range = 10000, 
   "mean", 
-  dist_power = dp
+  dist_power = 0.25
   )  
 
 

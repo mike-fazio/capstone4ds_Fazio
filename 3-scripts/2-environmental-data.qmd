@@ -94,10 +94,10 @@ chla_proc <- proc_sf_wq_data(
   bin_size = bin)
 
 # Plot Data Distribution
-param_means_hist(chla_proc, "Chlorophyll-a (µg/L)")
+param_means_hist(chla_proc, "Chlorophyll-a (µg/L)", "Chl_a")
 
 # Plot Spatial Distribution
-param_means_map(chla_proc, "Chlorophyll-a (µg/L)")
+param_means_map(chla_proc, "Chlorophyll-a (µg/L)", "Chl_a")
 
 ```
 
@@ -137,10 +137,10 @@ sal_proc <- proc_sf_wq_data(
   bin_size = bin)
 
 # Plot Data Distribution
-param_means_hist(sal_proc, "Salinity (ppt)")
+param_means_hist(sal_proc, "Salinity (ppt)", "Sal")
 
 # View Spatial Distribution
-param_means_map(sal_proc, "Salinity (ppt)")
+param_means_map(sal_proc, "Salinity (ppt)", "Sal")
 
 ```
 
@@ -180,10 +180,10 @@ water_temp_proc <- proc_sf_wq_data(
   ) 
 
 # Plot Data Distribution
-param_means_hist(water_temp_proc, "Water Temperature (°C)")
+param_means_hist(water_temp_proc, "Water Temperature (°C)", "Temp")
 
 # View Spatial Distribution
-param_means_map(water_temp_proc, "Water Temperature (°C)")
+param_means_map(water_temp_proc, "Water Temperature (°C)", "Temp")
 
 #rm(water_temp_raw)
 ```
@@ -221,14 +221,13 @@ do_proc <- proc_sf_wq_data(
   wq_data = do_raw,
   study_area = study_area,
   output_name = "do_proc", 
-  bin_size = bin) %>% 
-    filter(total_n > 1)
+  bin_size = bin)
 
 # Plot Data Distribution
-param_means_hist(do_proc, "Dissolved Oxygen (mg/L)")
+param_means_hist(do_proc, "Dissolved Oxygen (mg/L)", "DO")
 
 # View Spatial Distribution
-param_means_map(do_proc, "Dissolved Oxygen (mg/L)")
+param_means_map(do_proc, "Dissolved Oxygen (mg/L)", "DO")
 
 #rm(do_raw)
 
@@ -263,14 +262,13 @@ turbidity_proc <- proc_sf_wq_data(
   turbidity_raw,
   study_area = study_area,
   output_name = "turb_proc",
-  bin = bin) %>% 
-    filter(total_n > 1)
+  bin = bin) 
 
 # Plot Data Distribution
-param_means_hist(turbidity_proc, "Turbidity (NTU)")
+param_means_hist(turbidity_proc, "Turbidity (NTU)", "Turb")
 
 # View Spatial Distribution
-param_means_map(turbidity_proc, "Turbidity (NTU)")
+param_means_map(turbidity_proc, "Turbidity (NTU)", "Turb")
 
 #rm(turbidity_raw)
 ```
@@ -286,6 +284,8 @@ wq_summary <- bind_rows(
   turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
   water_temp_proc %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
 )
+
+write_csv2(wq_summary, here::here("4-tables-and-figures", "tables", "processed_wq_data_summary.csv"))
 ```
 
 Retrieve Oyster Data:

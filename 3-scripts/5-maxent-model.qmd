@@ -1,0 +1,397 @@
+```{r}
+source(here::here("3-scripts", "0-setup.r"))
+
+do_rast <- terra::rast(readRDS(here::here("2-data", "models", "do_ipdw.rds")))
+sal_rast <- terra::rast(readRDS(here::here("2-data", "models", "sal_ipdw.rds")))
+turb_rast <- terra::rast(readRDS(here::here("2-data", "models", "turb_ipdw.rds")))
+water_temp_rast <- terra::rast(readRDS(here::here("2-data", "models", "water_temp_ipdw.rds")))
+depth_rast <- terra::rast(here::here("2-data", "processed", "depth_rast.rds"))
+sed_rast <- terra::rast(here::here("2-data", "processed", "sed_rast.rds"))
+occ <- readRDS(here::here("2-data", "processed", "oyster_pts_0903.rds" ))
+
+target_crs <- "ESRI:103021"
+```
+
+
+```{r}
+do_rast <- terra::resample(
+  do_rast,
+  depth_rast,
+  method = "bilinear"
+)
+
+sal_rast <- terra::resample(
+  sal_rast,
+  depth_rast,
+  method = "bilinear"
+)
+
+turb_rast <- terra::resample(
+  turb_rast,
+  depth_rast,
+  method = "bilinear"
+)
+
+water_temp_rast <- terra::resample(
+  water_temp_rast,
+  depth_rast,
+  method = "bilinear"
+)
+
+occ <- sf::st_transform(
+  occ,
+  "ESRI:103021"
+)
+
+occ_xy <- sf::st_coordinates(occ)
+```
+
+```{r}
+
+# Convert terra predictors to raster::RasterStack
+predictors_raster <- raster::stack(
+  raster::raster(do_rast),
+  raster::raster(sal_rast),
+  raster::raster(turb_rast),
+  raster::raster(water_temp_rast),
+  raster::raster(depth_rast),
+  raster::raster(sed_rast)
+)
+
+names(predictors_raster) <- c(
+  "dissolved_oxygen",
+  "salinity",
+  "turbidity",
+  "water_temperature",
+  "depth",
+  "sediment"
+)
+
+```
+
+```{r}
+# create mask to  background points
+mask_terra <- terra::rast(predictors_raster[[1]])
+
+# Rasterize study area polygon
+mask_terra <- terra::rasterize(
+  terra::vect(study_area),
+  mask_terra,
+  field = 1,
+  background = NA
+)
+
+# Convert for dismo
+mask <- raster::raster(mask_terra)
+crs(mask) = target_crs
+
+set.seed(42)
+
+bg <- dismo::randomPoints(
+  mask = mask,
+  n = 5000,
+  p = occ_xy,
+  excludep = TRUE
+)
+
+plot(bg)
+
+```
+
+```{r}
+
+occ_cv <- data.frame(
+  x = occ_xy[, 1],
+  y = occ_xy[, 2],
+  pb = 1
+) %>%
+  sf::st_as_sf(
+    coords = c("x", "y"),
+    crs = target_crs
+  )
+
+bg_cv <- data.frame(
+  x = bg[, 1],
+  y = bg[, 2],
+  pb = 0
+) %>%
+  sf::st_as_sf(
+    coords = c("x", "y"),
+    crs = target_crs
+  )
+
+cv_pts <- rbind(
+  occ_cv,
+  bg_cv
+)
+```
+
+# Determine Spatial Auto Correlation to determine fold size
+```{r}
+continuous_predictors <- c(
+  do_rast,
+  sal_rast,
+  turb_rast,
+  water_temp_rast,
+  depth_rast
+)
+
+names(continuous_predictors) <- c(
+  "dissolved_oxygen",
+  "salinity",
+  "turbidity",
+  "water_temperature",
+  "depth"
+)
+
+spat_corr <- blockCV::cv_spatial_autocor(
+  r = continuous_predictors,
+  num_sample = 5000,
+  plot = TRUE,
+  progress = TRUE
+)
+
+occ_sac <- blockCV::cv_spatial_autocor(
+  x = cv_pts,
+  column = "pb",
+  plot = TRUE,
+  progress = TRUE
+)
+
+occ_sac$range
+occ_sac$range_table
+
+```
+
+```{r}
+block_sizes <- c(2500, 5000, 7500, 10000, 12500)
+
+
+# Create folds
+spatial_folds <- purrr::map(
+  block_sizes,
+  ~blockCV::cv_spatial(
+    x = cv_pts,
+    column = "pb",
+    r = terra::rast(mask),
+    k = 5,
+    size = .x, 
+    selection = "random",
+    iteration = 1000,
+    balance = TRUE,
+    presence_bg = TRUE,
+    seed = 42,
+    progress = TRUE,
+    report = TRUE,
+    plot = TRUE
+  )
+)
+
+spatial_folds <- blockCV::cv_spatial(
+  x = cv_pts,
+  column = "pb",
+  r = terra::rast(mask),
+  k = 5,
+  size = 5000,
+  selection = "random",
+  iteration = 1000,
+  balance = TRUE,
+  presence_bg = TRUE,
+  seed = 42,
+  progress = TRUE,
+  report = TRUE,
+  plot = TRUE
+)
+```
+
+```{r}
+folds <- spatial_folds$folds_list
+
+cv_models <- vector("list", length(folds))
+cv_evals  <- vector("list", length(folds))
+cv_results <- vector("list", length(folds))
+
+for (i in seq_along(folds)) {
+
+  train_idx <- folds[[i]][[1]]
+  test_idx  <- folds[[i]][[2]]
+
+  train_sf <- cv_pts[train_idx, ]
+  test_sf  <- cv_pts[test_idx, ]
+
+  p_train <- sf::st_coordinates(
+    train_sf[train_sf$pb == 1, ]
+  )
+
+  a_train <- sf::st_coordinates(
+    train_sf[train_sf$pb == 0, ]
+  )
+
+  p_test <- sf::st_coordinates(
+    test_sf[test_sf$pb == 1, ]
+  )
+
+  a_test <- sf::st_coordinates(
+    test_sf[test_sf$pb == 0, ]
+  )
+
+  m <- dismo::maxent(
+    x = predictors_raster,
+    p = p_train,
+    a = a_train,
+    factors = "sediment",
+    removeDuplicates = FALSE
+  )
+
+  e <- dismo::evaluate(
+    p = p_test,
+    a = a_test,
+    model = m,
+    x = predictors_raster
+  )
+
+  cv_models[[i]] <- m
+  cv_evals[[i]] <- e
+
+  cv_results[[i]] <- data.frame(
+    fold = i,
+    train_presence = nrow(p_train),
+    test_presence = nrow(p_test),
+    train_background = nrow(a_train),
+    test_background = nrow(a_test),
+    auc = e@auc
+  )
+}
+
+cv_results <- dplyr::bind_rows(cv_results)
+cv_results
+
+```
+
+```{r}
+cv_results <- dplyr::bind_rows(
+  cv_results
+)
+
+cv_results
+
+cv_summary <- cv_results %>%
+  dplyr::summarise(
+    mean_auc = mean(auc),
+    sd_auc = sd(auc),
+    min_auc = min(auc),
+    max_auc = max(auc)
+  )
+
+cv_summary
+
+```
+
+```{r}
+
+final_model <- dismo::maxent(
+  x = predictors_raster,
+  p = occ_xy,
+  a = bg,
+  factors = "sediment",
+  removeDuplicates = FALSE
+)
+
+```
+
+```{r}
+
+suitability <- raster::predict(
+  final_model,
+  predictors_raster
+)
+
+suitability <- terra::rast(
+  suitability
+)
+
+terra::crs(suitability) <- target_crs
+
+names(suitability) <- "maxent_suitability"
+```
+
+
+```{r}
+
+# plot showing importance of each variable
+plot(me)
+
+# response curves
+response(me)
+
+# predict to entire dataset
+r <- predict(me, predictors_raster) 
+
+#testing
+# background data
+bg <- randomPoints(predictors_raster, 10000)
+
+#simplest way to use 'evaluate'
+e1 <- evaluate(me, p=occtest, a=bg, x=predictors_raster)
+
+# alternative 1
+# extract values
+pvtest <- data.frame(extract(predictors_raster, occtest))
+avtest <- data.frame(extract(predictors_raster, bg))
+
+e2 <- evaluate(me, p=pvtest, a=avtest)
+e2
+
+# alternative 2 
+# predict to testing points 
+testp <- predict(me, pvtest) 
+head(testp)
+testa <- predict(me, avtest) 
+
+e3 <- evaluate(p=testp, a=testa)
+e3
+threshold(e3)
+
+plot(e3, 'ROC')
+
+terra::crs(pred) <- "ESRI:103021"
+terra::crs(r) <- "ESRI:103021"
+
+
+```
+
+```{r}
+
+suitability <- terra::rast(r)
+
+terra::crs(suitability) <- "ESRI:103021"
+
+names(suitability) <- "suitability"
+
+tmap_mode("plot")
+
+suitability_map <-
+  tm_shape(suitability) +
+  tm_raster(
+    col.scale = tm_scale_continuous(
+      values = "viridis",
+      limits = c(0, 1)
+    ),
+    col.legend = tm_legend(
+      title = "Suitability"
+    )
+  ) +
+  tm_shape(occ) +
+  tm_dots(
+    fill = "black",
+    size = 0.05
+  ) +
+  tm_layout(
+    frame = FALSE
+  ) +
+  tm_title(
+    "Eastern Oyster Habitat Suitability"
+  )
+
+suitability_map
+```

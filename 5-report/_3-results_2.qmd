@@ -89,19 +89,26 @@ model_stats <- list(
   )
 )
 
+raster_results <- list(
+  "Dissolved Oxygen" = do_rast,
+  "Salinity" = sal_rast,
+  "Turbidity" = turb_rast,
+  "Water Temperature" = water_temp_rast
+)
+
 # Saved final environmental rasters
 raster_results <- list(
   "Dissolved oxygen" = readRDS(
-    here("2-data", "models", "do_rast.rds")
+    here("2-data", "models", "do_ipdw.rds")
   ),
   "Salinity" = readRDS(
-    here("2-data", "models", "sal_rast.rds")
+    here("2-data", "models", "sal_ipdw.rds")
   ),
   "Turbidity" = readRDS(
-    here("2-data", "models", "turb_rast.rds")
+    here("2-data", "models", "turb_ipdw.rds")
   ),
   "Water temperature" = readRDS(
-    here("2-data", "models", "water_temp_rast.rds")
+    here("2-data", "models", "water_temp_ipdw.rds")
   )
 )
 

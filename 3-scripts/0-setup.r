@@ -6,6 +6,7 @@ library(knitr)
 library(tibble)
 library(ipdw)
 library(ggplot2)
+library(blockCV)
 
 tmap_mode("plot")
 

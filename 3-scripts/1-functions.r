@@ -455,10 +455,18 @@ param_means_map <- function(x, param_label) {
     tmap::tm_title("Mean Observed Monitoring Location Values", fontface = 2) +
     tmap::tm_compass(type = "8star")
 
-  outpath <- here::here('4-tables-and-figures', 'maps')
   outname <- paste0(param_label, " - Means.png")
 
-  tmap::tmap_save(p_map, filename = paste0(outpath, outname))
+  outpath <- here::here(
+    "4-tables-and-figures",
+    "maps",
+    outname
+  )
+
+  tmap::tmap_save(
+    p_map,
+    filename = outpath
+  )
 
   return(p_map)
 }
@@ -470,7 +478,8 @@ param_means_map <- function(x, param_label) {
 # -----------------------------------------------------------------------------
 
 param_means_hist <- function(x, param_label) {
-  ggplot2::ggplot(x, ggplot2::aes(x = mean)) +
+  p_plot <-
+    ggplot2::ggplot(x, ggplot2::aes(x = mean)) +
     ggplot2::geom_histogram(
       binwidth = 0.5,
       color = "white",
@@ -489,6 +498,19 @@ param_means_hist <- function(x, param_label) {
       strip.text = ggplot2::element_text(face = "bold"),
       #panel.grid.minor = element_blank()
     )
+
+  outname <- paste0(param_label, " - Means.png")
+
+  outpath <- here::here(
+    "4-tables-and-figures",
+    "figs",
+    outname
+  )
+
+  ggplot2::ggsave(
+    filename = outpath,
+    plot = p_plot
+  )
 }
 
 # -----------------------------------------------------------------------------

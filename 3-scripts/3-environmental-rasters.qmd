@@ -1,14 +1,18 @@
 # Set Up 
 ```{r} 
+#| label: set-up
+
 # Load packages and functions from setup script
 source(
   here::here(
     "3-scripts",
-    "0-setup.r"
+    "1-functions.r"
   )
 )
 
 sites <- get_wq_sites()
+
+study_area <- get_study_area()
 
 study_extent <- study_area %>%
   sf::st_bbox() %>%
@@ -29,8 +33,6 @@ cost_raster <- ipdw::costrasterGen(
   resolution = 100
 )
 
-
-
 dist_pwr <- c(
   0.25,
   0.5,
@@ -50,7 +52,7 @@ max_rng <- c(
   20000
 )
 
-chla_clean <- readRDS(
+chla_proc <- readRDS(
   here::here(
   "2-data",
   "processed",
@@ -58,6 +60,37 @@ chla_clean <- readRDS(
   )
 )
 
+sal_proc <- readRDS(
+  here::here(
+  "2-data",
+  "processed",
+  "sal_proc.rds"
+  )
+)
+
+water_temp_proc <- readRDS(
+  here::here(
+  "2-data",
+  "processed",
+  "water_temp_proc.rds"
+  )
+)
+
+do_proc <- readRDS(
+  here::here(
+  "2-data",
+  "processed",
+  "do_proc.rds"
+  )
+)
+
+turb_proc <- readRDS(
+  here::here(
+  "2-data",
+  "processed",
+  "turb_proc.rds"
+  )
+)
 
 
 ```
@@ -66,9 +99,10 @@ chla_clean <- readRDS(
 # Chlorophyll-a (***DROPPED****)
 
 ```{r}
+#| label: chla-sensitivity-check
 
-chla_test <- ipdw_sensitivity(
-  chla_clean,
+chla_sensitivity <- ipdw_sensitivity(
+  chla_proc,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -77,12 +111,45 @@ chla_test <- ipdw_sensitivity(
   max_ranges = max_rng
 )
 
-chla_test
+# save distance power output for later reference
+saveRDS(
+  chla_sensitivity,
+  file = here::here("2-data", "models", "chla_sensitivity_test.rds")
+)
+
+ggplot(
+  chla_sensitivity$summary,
+  aes(
+    x = factor(dist_power),
+    y = factor(max_range),
+    fill = mean_MAE
+  )
+) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%.2f", mean_MAE))) +
+  scale_fill_viridis_c(direction = -1) +
+  labs(
+    title = "Chlorophyll-a IPDW Sensitivity",
+    x = "Distance Power",
+    y = "Maximum Range (m)",
+    fill = "Mean MAE"
+  ) +
+  theme_minimal()
+
+ggsave("chla_sens_plot", path = here::here("4-tables-and-figures", "figs"), device = "png")
 
 ```
 
+
+
 ```{r}
-chla_ipdw <- ipdw_manual(chla_clean, cost_raster, 20000, "mean", dist_power = 1)
+chla_ipdw <- ipdw_manual(
+  chla_proc, 
+  cost_raster, 
+  10000, 
+  "mean", 
+  dist_power = 0.25
+  )
 
 plot(
   chla_ipdw,
@@ -93,13 +160,14 @@ plot(
 
 # Salinity (***FINALIZED****)
 
-## Eval Sensitivity
 Test model sensitivity against distance power X max range interactions
 ```{r}
+#| label: run-sal-sensitivity
+
 # SAL
 
 sal_sensitivity <- ipdw_sensitivity(
-  sal_clean,
+  sal_proc,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -115,11 +183,6 @@ saveRDS(
   sal_sensitivity,
   file = here::here("2-data", "models", "salinity_sensitivity_test.rds")
 )
-
-```
-
-```{r}
-# create heatmap to evaluate sensitivity
 
 ggplot(
   sal_sensitivity$summary,
@@ -144,11 +207,8 @@ ggsave("sal_sens_plot", path = here::here("4-tables-and-figures"), device = "png
 
 ```
 
-## Run model using tuned parameters
-
 ```{r}
-
-sal_proc <- readRDS(here::here("2-data", "processed", "sal_proc.rds"))
+#| label: run-sal-model-after-fitting
 
 set.seed(42) 
 
@@ -188,21 +248,15 @@ plot(
   )
 )
 
-```
-
-## Save model results
-
-```{r}
 saveRDS(sal_stats, file = here::here("2-data", "models", "sal_stats.rds"))
 saveRDS(sal_rast, file = here::here("2-data", "models", "sal_rast.rds"))
 
 ```
 
-
 # Water Temp (***FINALIZED****)
 
 ```{r}
-water_temp_proc <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
+#| label: run-waterTemp-sensitivity
 
 water_temp_sensitivity <- ipdw_sensitivity(
   water_temp,
@@ -222,9 +276,6 @@ saveRDS(
   file = here::here("2-data", "models", "water_temp_sensitivity_test.rds")
 )
 
-```
-
-```{r}
 # create heatmap to evaluate sensitivity
 
 ggplot(
@@ -251,32 +302,28 @@ ggsave("water_temp_sens_plot", path = here::here("4-tables-and-figures"), device
 ```
 
 ```{r}
-water_temp <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
+#| label: run-waterTemp-model
+
+# Add max range and distance power
+mr = 10000
+dp = 0.25
 
 set.seed(42) 
 
 folds <- blockCV::cv_spatial(
-        x = water_temp,
+        x = water_temp_proc,
         k = 5,
         size = 5000,
         selection = "random",
         plot = FALSE
       )
 
-
-```
-
-```{r}
-mr = 10000
-dp = .25
-
-
 water_temp_stats <- ipdw_stats(
   water_temp, 
   cost_raster, 
   folds = folds, 
-  dist_pwr = dp,
-  max_range = mr, 
+  dist_pwr = 10000,
+  max_range = 0.25, 
   value_col = "mean")
 
 table(water_temp_stats)
@@ -284,11 +331,10 @@ table(water_temp_stats)
 water_temp_rast <- ipdw_manual(
   water_temp, 
   cost_raster, 
-  range = mr, 
+  range = 10000, 
   "mean", 
-  dist_power = dp
+  dist_power = 0.25
   )  
-
 
 plot(
   water_temp_rast,
@@ -301,10 +347,7 @@ plot(
   )
 )
 
-```
 
-## Save Results
-```{r}
 saveRDS(
   water_temp_rast,
   file = here::here("2-data", "models", "water_temp_rast.rds")
@@ -314,14 +357,15 @@ saveRDS(
   file = here::here("2-data", "models", "water_temp_stats.rds")
 )
 
+
+
 ```
 
 # Dissolved Oxygen (***FINALIZED****)
 
 Test disance power sensitivity
 ```{r}
-do <- readRDS(here::here("2-data", "processed", "do_proc.rds"))
-
+#| label: run-do-sensitivity
 
 do_sensitivity <- ipdw_sensitivity(
   do_proc,
@@ -338,9 +382,6 @@ saveRDS(
   file = here::here("2-data", "models", "do_sensitivity_test.rds")
 )
 
-```
-
-```{r}
 # create heatmap to evaluate sensitivity
 
 ggplot(
@@ -366,10 +407,11 @@ ggsave("do_sens_plot", path = here::here("4-tables-and-figures"), device = "png"
 
 ```
 
-```{r}
-set.seed(42) 
 
-do_proc <- readRDS(here::here("2-data", "processed", "do_proc.rds"))
+```{r}
+#| label: run-DO-model
+
+set.seed(42) 
 
 folds <- blockCV::cv_spatial(
         x = do_proc,
@@ -408,19 +450,16 @@ plot(
   )
 )
 
-```
+# save D.O. ipdw results
 
-## Save model results
-
-```{r}
 saveRDS(do_stats, file = here::here("2-data", "models", "do_stats.rds"))
 saveRDS(do_rast, file = here::here("2-data", "models", "do_rast.rds"))
+
 ```
 
 # Turbidiity (***FINALIZED****)
 ```{r}
-turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
-
+#| label: run-turb-sensitivity
 
 turb_sensitivity <- ipdw_sensitivity(
   turb,
@@ -436,9 +475,7 @@ saveRDS(
   turb_sensitivity,
   file = here::here("2-data", "models", "turb_sensitivity_test.rds")
 )
-```
 
-```{r}
 # create heatmap to evaluate sensitivity
 
 ggplot(
@@ -465,16 +502,22 @@ ggsave("turb_sens_plot", path = here::here("4-tables-and-figures"), device = "pn
 ```
 
 ```{r}
-mr = 10000
-dp = .250
+#| label: run-fitted-turb-model
 
+folds <- blockCV::cv_spatial(
+        x = turb_proc,
+        k = 5,
+        size = 5000,
+        selection = "random",
+        plot = FALSE
+      )
 
 turb_stats <- ipdw_stats(
   turb, 
   cost_raster, 
   folds = folds, 
-  dist_pwr = dp,
-  max_range = mr, 
+  dist_pwr = .25,
+  max_range = 10000, 
   value_col = "mean")
 
 table(turb_stats)
@@ -487,7 +530,6 @@ turb_rast <- ipdw_manual(
   dist_power = 0.25
   )  
 
-
 plot(
   turb_rast,
   main = sprintf("DP = %.2f | MR = %d m", dp, mr),
@@ -499,9 +541,8 @@ plot(
   )
 )
 
-```
+# save results
 
-```{r}
 saveRDS(
   turb_rast,
   file = here::here("2-data", "models", "turb_rast.rds")
@@ -511,11 +552,13 @@ saveRDS(
   file = here::here("2-data", "models", "turb_stats.rds")
 )
 
+
 ```
 
 # PBS Depth Raster
 
 ```{r}
+#| label: prepare-depth-raster
 
 pbs_depth <- terra::rast(here::here("2-data","raw","pbs_depth_0903_10m.tif"))
 
@@ -541,6 +584,7 @@ terra::plot(pbs_depth)
 # Bottom Sediment
 
 ```{r}
+#| label: prepare-sediment-raster
 
 pbs_sed <- terra::rast(here::here("2-data","raw","pbs_sed_0903_reclass.tif"))
 
@@ -558,13 +602,14 @@ pbs_sed <- pbs_sed %>%
 
 terra::saveRDS(pbs_sed, here::here("2-data", "processed", "sed_rast.rds"))
   
-
 terra::plot(pbs_sed)
 
 ```
 
 
 ```{r}
+#| label: create-heatmap-figure
+
 library(patchwork)
 
 # Reusable heatmap function
@@ -667,7 +712,7 @@ sensitivity_plot
 
 # Export for capstone
 ggsave(
-  "4-tables-and-figures/ipdw-sensitivity.png",
+  "4-tables-and-figures/figs/ipdw-sensitivity.png",
   plot = sensitivity_plot,
   width = 14,
   height = 9,

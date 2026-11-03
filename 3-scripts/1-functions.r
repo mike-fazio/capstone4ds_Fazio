@@ -422,7 +422,7 @@ proc_sf_wq_data <- function(
 #  spatial distribution.
 # -----------------------------------------------------------------------------
 
-param_means_map <- function(x, param_label) {
+param_means_map <- function(x, param_label, out_name) {
   my_bbox <- sf::st_bbox(get_study_area())
 
   p_map <-
@@ -455,7 +455,7 @@ param_means_map <- function(x, param_label) {
     tmap::tm_title("Mean Observed Monitoring Location Values", fontface = 2) +
     tmap::tm_compass(type = "8star")
 
-  outname <- paste0(param_label, " - Means.png")
+  outname <- paste0(out_name, " - Means.png")
 
   outpath <- here::here(
     "4-tables-and-figures",
@@ -477,7 +477,7 @@ param_means_map <- function(x, param_label) {
 #  statistical distribution.
 # -----------------------------------------------------------------------------
 
-param_means_hist <- function(x, param_label) {
+param_means_hist <- function(x, param_label, out_name) {
   p_plot <-
     ggplot2::ggplot(x, ggplot2::aes(x = mean)) +
     ggplot2::geom_histogram(
@@ -499,7 +499,7 @@ param_means_hist <- function(x, param_label) {
       #panel.grid.minor = element_blank()
     )
 
-  outname <- paste0(param_label, " - Means.png")
+  outname <- paste0(out_name, " - Means.png")
 
   outpath <- here::here(
     "4-tables-and-figures",

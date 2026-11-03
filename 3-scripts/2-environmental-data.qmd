@@ -79,11 +79,8 @@ chla_raw <- get_sf_wq_data(
 table(chla_raw$Result_MeasureUnit)
 
 # inspect data for extreme outliers
-chla_raw <- find_outliers(chla_raw)
+view(find_outliers(chla_raw))
 
-chla_raw <- chla_raw %>%
-  #filter(Result_MeasureUnit != "" & Result_ResultDetectionCondition != "Not Detected" & Result_Measure < 100) %>%
-  mutate(Result_Measure = as.numeric(Result_Measure))
 
 ```
 
@@ -94,21 +91,13 @@ chla_proc <- proc_sf_wq_data(
   wq_data = chla_raw, 
   study_area = study_area,
   output_name = "chla_proc", 
-  bin_size = bin) %>% 
-    filter(
-      total_n > 1 
-      )
+  bin_size = bin)
 
 # Plot Data Distribution
 param_means_hist(chla_proc, "Chlorophyll-a (µg/L)")
 
 # Plot Spatial Distribution
 param_means_map(chla_proc, "Chlorophyll-a (µg/L)")
-
-hist(chla_proc$mean)
-
-#rm(chla_raw)
-
 
 ```
 
@@ -136,10 +125,6 @@ table(salinity_raw$Result_MeasureUnit)
 
 view(find_outliers(salinity_raw))
 
-# drop unwanted measurements 
-salinity_raw <- salinity_raw %>%
-  filter(Result_Measure != 2190 & Result_Measure != 322) # Drop extreme outliers
-
 ```
 
 ```{r}
@@ -150,8 +135,6 @@ sal_proc <- proc_sf_wq_data(
   study_area = study_area, 
   output_name = "sal_proc",
   bin_size = bin)
-
-sal_proc <- sal_proc %>% filter(total_n > 1)
 
 # Plot Data Distribution
 param_means_hist(sal_proc, "Salinity (ppt)")
@@ -195,7 +178,7 @@ water_temp_proc <- proc_sf_wq_data(
   output_name = "water_temp_proc", 
   bin_size = bin
   ) 
-  
+
 # Plot Data Distribution
 param_means_hist(water_temp_proc, "Water Temperature (°C)")
 

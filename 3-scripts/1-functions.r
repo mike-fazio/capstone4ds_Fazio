@@ -188,10 +188,6 @@ find_outliers <- function(df) {
   df <- df %>%
     mutate(
       Result_Measure = as.numeric(Result_Measure)
-    ) %>%
-    filter(
-      # Select warm season (May-October)
-      lubridate::month(Activity_StartDate) %in% 5:10
     )
 
   # Calculate quantiles and IQR
@@ -213,18 +209,19 @@ find_outliers <- function(df) {
   )
 
   # Flag outliers and perform initial filtering
-  df_flagged <- df %>%
+  df <- df %>%
     mutate(
-      outlier = (Result_Measure < (Q1 - 1.5 * iqr_value) |
-        Result_Measure > (Q3 + 1.5 * iqr_value))
-    ) %>%
-    filter(
-      outlier
+      is_outlier = ifelse(
+        (Result_Measure < (Q1 - 1.5 * iqr_value) |
+          Result_Measure > (Q3 + 1.5 * iqr_value)),
+        1,
+        0
+      )
     )
 
-  print(paste("Number of outliers detected: ", sum(df_flagged$outlier)))
+  print(paste("Number of outliers flagged: ", sum(df$is_outlier, na.rm = TRUE)))
 
-  return(df_flagged)
+  return(df)
 }
 
 # -----------------------------------------------------------------------------
@@ -234,7 +231,12 @@ find_outliers <- function(df) {
 #  using spatial polygons (bins) rather than just summarizing on Location ID.
 # -----------------------------------------------------------------------------
 
-proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
+proc_sf_wq_data <- function(
+  wq_data,
+  study_area,
+  output_name,
+  bin_size = 500
+) {
   # create spatial grid overlaying study_area
   sa_grid <-
     sf::st_make_grid(
@@ -245,15 +247,22 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
       square = FALSE,
       flat_topped = TRUE
     ) %>%
+
+    # Make into simple spatial feature
     sf::st_sf() %>%
+
     # Clip grid to study area
     sf::st_intersection(
       study_area
     ) %>%
+
     # Assign unique IDs
     dplyr::mutate(
       bin_id = dplyr::row_number()
     )
+
+  # Flag outliers
+  wq_data <- find_outliers(wq_data)
 
   wq_filtered <- wq_data %>%
     dplyr::filter(
@@ -272,6 +281,7 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
       # convert measurements to numeric
       Result_Measure = as.numeric(Result_Measure)
     ) %>%
+
     # assign spatial bin IDs to observations
     sf::st_join(
       sa_grid["bin_id"],
@@ -287,8 +297,23 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
       year
     ) %>%
     dplyr::summarise(
-      annual_mean = mean(Result_Measure),
-      annual_n = n(),
+      # Mean calculated from non-outliers only
+      annual_mean = mean(
+        Result_Measure[is_outlier == 0],
+        na.rm = TRUE
+      ),
+
+      # Number of observations used in mean
+      annual_n = sum(
+        is_outlier == 0,
+        na.rm = TRUE
+      ),
+
+      # Number of observations excluded as outliers
+      annual_outliers = sum(
+        is_outlier == 1,
+        na.rm = TRUE
+      ),
 
       # Station metadata
       location_name = first(Location_Name),
@@ -303,11 +328,29 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
       Location_Identifier
     ) %>%
     dplyr::summarise(
-      station_mean = mean(annual_mean),
-      station_sd = sd(annual_mean),
+      station_mean = mean(
+        annual_mean,
+        na.rm = TRUE
+      ),
+
+      station_sd = sd(
+        annual_mean,
+        na.rm = TRUE
+      ),
 
       years_sampled = dplyr::n(),
-      total_n = sum(annual_n),
+
+      # Valid observations
+      total_n = sum(
+        annual_n,
+        na.rm = TRUE
+      ),
+
+      # Outliers removed
+      total_outliers = sum(
+        annual_outliers,
+        na.rm = TRUE
+      ),
 
       first_year = min(year),
       last_year = max(year),
@@ -322,21 +365,52 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
     sf::st_drop_geometry() %>%
     dplyr::group_by(bin_id) %>%
     dplyr::summarise(
-      mean = mean(station_mean),
-      sd = sd(station_mean),
+      mean = mean(
+        station_mean,
+        na.rm = TRUE
+      ),
+
+      sd = sd(
+        station_mean,
+        na.rm = TRUE
+      ),
+
       n_stations = dplyr::n(),
-      total_n = sum(total_n),
+
+      # Observations actually used
+      total_n = sum(
+        total_n,
+        na.rm = TRUE
+      ),
+
+      # Observations excluded as outliers
+      total_outliers = sum(
+        total_outliers,
+        na.rm = TRUE
+      ),
+
+      # All observations before outlier removal
+      total_records = total_n + total_outliers,
+
       first_year = min(first_year),
       last_year = max(last_year),
+
       .groups = "drop"
     )
 
   # join summary back to grid before converting to points
   wq_binned <- sa_grid %>%
-    dplyr::inner_join(bin_summary, by = "bin_id") %>%
+    dplyr::inner_join(
+      bin_summary,
+      by = "bin_id"
+    ) %>%
     sf::st_point_on_surface()
 
-  outname <- paste0(output_name, ".rds")
+  outname <- paste0(
+    output_name,
+    ".rds"
+  )
+
   saveRDS(wq_binned, here::here("2-data", "processed", outname))
 
   return(wq_binned)
@@ -351,7 +425,8 @@ proc_sf_wq_data <- function(wq_data, study_area, output_name, bin_size = 500) {
 param_means_map <- function(x, param_label) {
   my_bbox <- sf::st_bbox(get_study_area())
 
-  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  p_map <-
+    tmap::tm_basemap("Esri.WorldGrayCanvas") +
     tmap::tm_shape(x, bbox = my_bbox) +
     tmap::tm_dots(
       fill = "mean",
@@ -379,6 +454,13 @@ param_means_map <- function(x, param_label) {
     ) +
     tmap::tm_title("Mean Observed Monitoring Location Values", fontface = 2) +
     tmap::tm_compass(type = "8star")
+
+  outpath <- here::here('4-tables-and-figures', 'maps')
+  outname <- paste0(param_label, " - Means.png")
+
+  tmap::tmap_save(p_map, filename = paste0(outpath, outname))
+
+  return(p_map)
 }
 
 # -----------------------------------------------------------------------------

@@ -114,7 +114,7 @@ chla_sensitivity <- ipdw_sensitivity(
 # save distance power output for later reference
 saveRDS(
   chla_sensitivity,
-  file = here::here("2-data", "models", "chla_sensitivity_test.rds")
+  file = here::here("2-data", "models", "sensitivity_test_chla.rds")
 )
 
 ggplot(
@@ -153,7 +153,13 @@ chla_ipdw <- ipdw_manual(
 
 plot(
   chla_ipdw,
-  main = "Chlorophyll-a IPDW"
+  main = "Chlorophyll-a Prediction Surface \n(DP = 0.25 | MR = 10km)",
+  sub = sprintf(
+    "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
+    sal_stats$MAE,
+    sal_stats$RMSE,
+    sal_stats$Bias
+  )
 )
 
 ```
@@ -176,12 +182,10 @@ sal_sensitivity <- ipdw_sensitivity(
   max_ranges = max_rng
 )
 
-sal_sensitivity
-
 # save distance power output for later reference
 saveRDS(
   sal_sensitivity,
-  file = here::here("2-data", "models", "salinity_sensitivity_test.rds")
+  file = here::here("2-data", "models", "sensitivity_test_sal.rds")
 )
 
 ggplot(
@@ -203,7 +207,7 @@ ggplot(
   ) +
   theme_minimal()
 
-ggsave("sal_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+ggsave("sal_sens_plot.png", path = here::here("4-tables-and-figures"))
 
 ```
 
@@ -229,7 +233,7 @@ sal_stats <- ipdw_stats(
   value_col = "mean")
 
 
-sal_rast <- ipdw_manual(
+sal_ipdw <- ipdw_manual(
   sal_proc, 
   cost_raster, 
   range = 10000, 
@@ -238,8 +242,8 @@ sal_rast <- ipdw_manual(
   )  
 
 plot(
-  sal_rast,
-  main = "DP = 0.25, MR = 10 km",
+  sal_ipdw,
+  main = "Salinity Prediction Surface \n(DP = 0.25 | MR = 10km)",
   sub = sprintf(
     "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
     sal_stats$MAE,
@@ -248,8 +252,9 @@ plot(
   )
 )
 
-saveRDS(sal_stats, file = here::here("2-data", "models", "sal_stats.rds"))
-saveRDS(sal_rast, file = here::here("2-data", "models", "sal_rast.rds"))
+
+saveRDS(sal_stats, file = here::here("2-data", "models", "stats_sal.rds"))
+saveRDS(sal_ipdw, file = here::here("2-data", "models", "ipdw_sal.rds"))
 
 ```
 
@@ -268,12 +273,10 @@ water_temp_sensitivity <- ipdw_sensitivity(
   max_ranges = max_rng
 )
 
-water_temp_sensitivity
-
 # save distance power output for later reference
 saveRDS(
   water_temp_sensitivity,
-  file = here::here("2-data", "models", "water_temp_sensitivity_test.rds")
+  file = here::here("2-data", "models", "sensitivity_test_water_temp.rds")
 )
 
 # create heatmap to evaluate sensitivity
@@ -297,16 +300,12 @@ ggplot(
   ) +
   theme_minimal()
 
-ggsave("water_temp_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+ggsave("water_temp_sens_plot.png", path = here::here("4-tables-and-figures"))
 
 ```
 
 ```{r}
 #| label: run-waterTemp-model
-
-# Add max range and distance power
-mr = 10000
-dp = 0.25
 
 set.seed(42) 
 
@@ -336,7 +335,7 @@ water_temp_rast <- ipdw_manual(
 
 plot(
   water_temp_rast,
-  main = sprintf("DP = %.2f | MR = %d m", dp, mr),
+  main = "Water Temp Pred. Surface \n(DP = 0.25 | MR = 10km)",
   sub = sprintf(
     "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
     water_temp_stats$MAE,
@@ -348,14 +347,12 @@ plot(
 
 saveRDS(
   water_temp_rast,
-  file = here::here("2-data", "models", "water_temp_rast.rds")
+  file = here::here("2-data", "models", "ipdw_water_temp.rds")
 )
 saveRDS(
   water_temp_stats,
-  file = here::here("2-data", "models", "water_temp_stats.rds")
+  file = here::here("2-data", "models", "stats_water_temp.rds")
 )
-
-
 
 ```
 
@@ -377,7 +374,7 @@ do_sensitivity <- ipdw_sensitivity(
 
 saveRDS(
   do_sensitivity,
-  file = here::here("2-data", "models", "do_sensitivity_test.rds")
+  file = here::here("2-data", "models", "sensitivity_test_do.rds")
 )
 
 # create heatmap to evaluate sensitivity
@@ -401,7 +398,7 @@ ggplot(
   ) +
   theme_minimal()
 
-ggsave("do_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+ggsave("do_sens_plot.png", path = here::here("4-tables-and-figures"))
 
 ```
 
@@ -423,11 +420,9 @@ do_stats <- ipdw_stats(
   do_proc, 
   cost_raster, 
   folds = folds, 
-  dist_pwr = .25, 
+  dist_pwr = 0.25, 
   max_range = 10000, 
   value_col = "mean")
-
-do_stats
 
 do_rast <- ipdw_manual(
   do_proc, 
@@ -439,7 +434,7 @@ do_rast <- ipdw_manual(
 
 plot(
   do_rast,
-  main = "DP = 0.25, MR = 10 km",
+  main = "Dissolved Oxygen Prediction Surface \n(DP = 0.25 | MR = 10km)",
   sub = sprintf(
     "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
     do_stats$MAE,
@@ -450,8 +445,8 @@ plot(
 
 # save D.O. ipdw results
 
-saveRDS(do_stats, file = here::here("2-data", "models", "do_stats.rds"))
-saveRDS(do_rast, file = here::here("2-data", "models", "do_rast.rds"))
+saveRDS(do_stats, file = here::here("2-data", "models", "stats_do.rds"))
+saveRDS(do_rast, file = here::here("2-data", "models", "ipdw_do.rds"))
 
 ```
 
@@ -471,7 +466,7 @@ turb_sensitivity <- ipdw_sensitivity(
 
 saveRDS(
   turb_sensitivity,
-  file = here::here("2-data", "models", "turb_sensitivity_test.rds")
+  file = here::here("2-data", "models", "sensitivity_test_turb.rds")
 )
 
 # create heatmap to evaluate sensitivity
@@ -495,7 +490,7 @@ ggplot(
   ) +
   theme_minimal()
 
-ggsave("turb_sens_plot", path = here::here("4-tables-and-figures"), device = "png")
+ggsave("turb_sens_plot.png", path = here::here("4-tables-and-figures"))
 
 ```
 
@@ -528,11 +523,11 @@ turb_ipdw <- ipdw_manual(
   dist_power = 0.25
   )  
 
-turb_rast <- terra::rast(turb_ipdw) # TODO: NEED TO FIX ALL RASTER TO BE CORRECT TYPE.
+#turb_rast <- terra::rast(turb_ipdw) # TODO: NEED TO FIX ALL RASTER TO BE CORRECT TYPE.
 
 plot(
-  turb_rast,
-  main = sprintf("DP = %.2f | MR = %d m", dp, mr),
+  turb_ipdw,
+  main = "Turbidity Prediction Surface \n(DP = 0.25 | MR = 10km)",
   sub = sprintf(
     "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
     turb_stats$MAE,
@@ -541,15 +536,15 @@ plot(
   )
 )
 
-# save results
 
+# save results
 saveRDS(
-  turb_rast,
-  file = here::here("2-data", "models", "turb_rast.rds")
+  turb_ipdw,
+  file = here::here("2-data", "models", "ipdw_turb.rds")
 )
 saveRDS(
   turb_stats,
-  file = here::here("2-data", "models", "turb_stats.rds")
+  file = here::here("2-data", "models", "stats_turb.rds")
 )
 
 
@@ -574,7 +569,7 @@ pbs_depth <- pbs_depth %>%
     terra::vect(study_area)
   )
 
-terra::saveRDS(pbs_depth, here::here("2-data", "processed", "depth_rast.rds"))
+terra::saveRDS(pbs_depth, here::here("2-data", "processed", "rast_depth.rds"))
   
 
 terra::plot(pbs_depth)
@@ -600,7 +595,7 @@ pbs_sed <- pbs_sed %>%
     terra::vect(study_area)
   ) 
 
-terra::saveRDS(pbs_sed, here::here("2-data", "processed", "sed_rast.rds"))
+terra::saveRDS(pbs_sed, here::here("2-data", "processed", "rast_sed.rds"))
   
 terra::plot(pbs_sed)
 
@@ -675,22 +670,22 @@ plot_sensitivity <- function(data, parameter) {
 
 # Generate individual plots
 p_do <- plot_sensitivity(
-  do_sensitivity$summary,
+  sensitivity_do$summary,
   "Dissolved Oxygen"
 )
 
 p_sal <- plot_sensitivity(
-  sal_sensitivity$summary,
+  sensitivity_sal$summary,
   "Salinity"
 )
 
 p_turb <- plot_sensitivity(
-  turb_sensitivity$summary,
+  sensitivity_turb$summary,
   "Turbidity"
 )
 
 p_temp <- plot_sensitivity(
-  water_temp_sensitivity$summary,
+  sensitivity_water_temp$summary,
   "Water Temperature"
 )
 
@@ -720,3 +715,7 @@ ggsave(
 )
 
 ```
+
+# Summarize prediction results
+
+#TODO:CREATE OUTPUT OF PRECITION SUMMARY STATS

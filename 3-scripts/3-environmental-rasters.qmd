@@ -569,7 +569,7 @@ pbs_depth <- pbs_depth %>%
     terra::vect(study_area)
   )
 
-terra::saveRDS(pbs_depth, here::here("2-data", "processed", "rast_depth.rds"))
+terra::writeRaster(pbs_depth, here::here("2-data", "rasters", "rast_depth.tif"))
   
 
 terra::plot(pbs_depth)
@@ -718,4 +718,78 @@ ggsave(
 
 # Summarize prediction results
 
-#TODO:CREATE OUTPUT OF PRECITION SUMMARY STATS
+```{r}
+#| label: prediction-summary-stats
+
+prediction_stack <- c(
+  terra::rast(ipdw_do),
+  terra::rast(ipdw_sal),
+  terra::rast(ipdw_turb),
+  terra::rast(ipdw_water_temp)
+)
+
+names(prediction_stack) <- c(
+  "Dissolved oxygen",
+  "Salinity",
+  "Turbidity",
+  "Water temperature"
+)
+
+prediction_summary <- terra::global(
+  prediction_rasters,
+  fun = c("min", "max", "mean", "sd", "notNA"),
+  na.rm = TRUE
+) |>
+  tibble::rownames_to_column("parameter") |>
+  dplyr::rename(
+    minimum = min,
+    maximum = max,
+    predicted_cells = notNA
+  ) |>
+  dplyr::mutate(
+    units = c("mg/L", "ppt", "NTU", "degrees C"),
+    cell_size_m = paste(terra::res(prediction_rasters), collapse = " x "),
+    .after = parameter
+  )
+
+readr::write_csv(
+  prediction_summary,
+  here::here(
+    "4-tables-and-figures",
+    "tables",
+    "prediction_summary_stats.csv"
+  )
+)
+
+prediction_summary
+
+tm_shape(prediction_stack[[2]]) +
+  tm_raster(
+    col.scale = tm_scale_continuous(values = gray.colors(10)),
+    col.legend = tm_legend_hide()
+  ) +
+  tm_shape(occ_cv) +
+  tm_dots(
+    fill = "pb",
+    fill.scale = tm_scale_categorical(),
+    size = 0.5,
+    fill_alpha = 0.5
+  )
+```
+
+# Prepare rasters for MaxEnt
+```{r}
+# load other rasters
+depth <- rast(here::here("2-data", "raw", "pbs_depth_0903_10m.tif"))
+sed <- rast(here::here("2-data", "raw", "pbs_sed_0903_10m.tif"))
+
+prediction_stack <- c(
+  terra::rast(ipdw_do),
+  terra::rast(ipdw_sal),
+  terra::rast(ipdw_turb),
+  terra::rast(ipdw_water_temp),
+  terra::rast(depth),
+  terra::rast()
+)
+
+```

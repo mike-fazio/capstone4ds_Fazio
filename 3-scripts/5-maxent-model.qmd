@@ -1,12 +1,15 @@
 ```{r}
-source(here::here("3-scripts", "0-setup.r"))
+library(terra)
+library(blockCV)
 
-do_rast <- terra::rast(readRDS(here::here("2-data", "models", "do_ipdw.rds")))
-sal_rast <- terra::rast(readRDS(here::here("2-data", "models", "sal_ipdw.rds")))
-turb_rast <- terra::rast(readRDS(here::here("2-data", "models", "turb_ipdw.rds")))
-water_temp_rast <- terra::rast(readRDS(here::here("2-data", "models", "water_temp_ipdw.rds")))
-depth_rast <- terra::rast(here::here("2-data", "processed", "depth_rast.rds"))
-sed_rast <- terra::rast(here::here("2-data", "processed", "sed_rast.rds"))
+source(here::here("3-scripts", "1-functions.r"))
+
+do_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_do.rds")))
+sal_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_sal.rds")))
+turb_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_turb.rds")))
+water_temp_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_water_temp.rds")))
+depth_rast <- rast(here::here("2-data", "processed", "depth_rast.rds"))
+sed_rast <- rast(here::here("2-data", "processed", "sed_rast.rds"))
 occ <- readRDS(here::here("2-data", "processed", "oyster_pts_0903.rds" ))
 
 target_crs <- "ESRI:103021"
@@ -14,25 +17,25 @@ target_crs <- "ESRI:103021"
 
 
 ```{r}
-do_rast <- terra::resample(
+do_rast <- resample(
   do_rast,
   depth_rast,
   method = "bilinear"
 )
 
-sal_rast <- terra::resample(
+sal_rast <- resample(
   sal_rast,
   depth_rast,
   method = "bilinear"
 )
 
-turb_rast <- terra::resample(
+turb_rast <- resample(
   turb_rast,
   depth_rast,
   method = "bilinear"
 )
 
-water_temp_rast <- terra::resample(
+water_temp_rast <- resample(
   water_temp_rast,
   depth_rast,
   method = "bilinear"
@@ -71,11 +74,11 @@ names(predictors_raster) <- c(
 
 ```{r}
 # create mask to  background points
-mask_terra <- terra::rast(predictors_raster[[1]])
+mask_terra <- rast(predictors_raster[[1]])
 
 # Rasterize study area polygon
-mask_terra <- terra::rasterize(
-  terra::vect(study_area),
+mask_terra <- rasterize(
+  vect(study_area),
   mask_terra,
   field = 1,
   background = NA
@@ -144,7 +147,7 @@ names(continuous_predictors) <- c(
   "depth"
 )
 
-spat_corr <- blockCV::cv_spatial_autocor(
+spat_corr <- cv_spatial_autocor(
   r = continuous_predictors,
   num_sample = 5000,
   plot = TRUE,
@@ -173,7 +176,7 @@ spatial_folds <- purrr::map(
   ~blockCV::cv_spatial(
     x = cv_pts,
     column = "pb",
-    r = terra::rast(mask),
+    r = rast(mask),
     k = 5,
     size = .x, 
     selection = "random",
@@ -190,7 +193,7 @@ spatial_folds <- purrr::map(
 spatial_folds <- blockCV::cv_spatial(
   x = cv_pts,
   column = "pb",
-  r = terra::rast(mask),
+  r = rast(mask),
   k = 5,
   size = 5000,
   selection = "random",
@@ -306,11 +309,11 @@ suitability <- raster::predict(
   predictors_raster
 )
 
-suitability <- terra::rast(
+suitability <- rast(
   suitability
 )
 
-terra::crs(suitability) <- target_crs
+crs(suitability) <- target_crs
 
 names(suitability) <- "maxent_suitability"
 ```
@@ -354,17 +357,17 @@ threshold(e3)
 
 plot(e3, 'ROC')
 
-terra::crs(pred) <- "ESRI:103021"
-terra::crs(r) <- "ESRI:103021"
+crs(pred) <- "ESRI:103021"
+crs(r) <- "ESRI:103021"
 
 
 ```
 
 ```{r}
 
-suitability <- terra::rast(r)
+suitability <- rast(r)
 
-terra::crs(suitability) <- "ESRI:103021"
+crs(suitability) <- "ESRI:103021"
 
 names(suitability) <- "suitability"
 

@@ -259,7 +259,7 @@ saveRDS(sal_rast, file = here::here("2-data", "models", "sal_rast.rds"))
 #| label: run-waterTemp-sensitivity
 
 water_temp_sensitivity <- ipdw_sensitivity(
-  water_temp,
+  water_temp_proc,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -319,17 +319,15 @@ folds <- blockCV::cv_spatial(
       )
 
 water_temp_stats <- ipdw_stats(
-  water_temp, 
+  water_temp_proc, 
   cost_raster, 
   folds = folds, 
   dist_pwr = 10000,
   max_range = 0.25, 
   value_col = "mean")
 
-table(water_temp_stats)
-
 water_temp_rast <- ipdw_manual(
-  water_temp, 
+  water_temp_proc, 
   cost_raster, 
   range = 10000, 
   "mean", 
@@ -462,7 +460,7 @@ saveRDS(do_rast, file = here::here("2-data", "models", "do_rast.rds"))
 #| label: run-turb-sensitivity
 
 turb_sensitivity <- ipdw_sensitivity(
-  turb,
+  turb_proc,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
@@ -513,7 +511,7 @@ folds <- blockCV::cv_spatial(
       )
 
 turb_stats <- ipdw_stats(
-  turb, 
+  turb_proc, 
   cost_raster, 
   folds = folds, 
   dist_pwr = .25,
@@ -522,13 +520,15 @@ turb_stats <- ipdw_stats(
 
 table(turb_stats)
 
-turb_rast <- ipdw_manual(
-  turb, 
+turb_ipdw <- ipdw_manual(
+  turb_proc, 
   cost_raster, 
   range = 10000, 
   "mean", 
   dist_power = 0.25
   )  
+
+turb_rast <- terra::rast(turb_ipdw) # TODO: NEED TO FIX ALL RASTER TO BE CORRECT TYPE.
 
 plot(
   turb_rast,

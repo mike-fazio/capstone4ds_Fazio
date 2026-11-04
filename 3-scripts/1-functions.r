@@ -1,3 +1,5 @@
+library(tidyverse)
+
 # -----------------------------------------------------------------------------
 #  DEFINE STUDY AREA FUNCTION -
 #  Creates singular study area polygon from chosen WBIDs. WBID data from FDEP.

@@ -1,168 +1,211 @@
+# Set Up
 ```{r}
+library(tidyverse)
+library(sf)
 library(terra)
 library(blockCV)
+library(dismo)
 
 source(here::here("3-scripts", "1-functions.r"))
 
-do_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_do.rds")))
-sal_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_sal.rds")))
-turb_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_turb.rds")))
-water_temp_rast <- rast(readRDS(here::here("2-data", "models", "ipdw_water_temp.rds")))
-depth_rast <- rast(here::here("2-data", "processed", "depth_rast.rds"))
-sed_rast <- rast(here::here("2-data", "processed", "sed_rast.rds"))
-occ <- readRDS(here::here("2-data", "processed", "oyster_pts_0903.rds" ))
-
-target_crs <- "ESRI:103021"
+trg_crs <- "EPSG:6440"
 ```
 
-
-```{r}
-do_rast <- resample(
-  do_rast,
-  depth_rast,
-  method = "bilinear"
-)
-
-sal_rast <- resample(
-  sal_rast,
-  depth_rast,
-  method = "bilinear"
-)
-
-turb_rast <- resample(
-  turb_rast,
-  depth_rast,
-  method = "bilinear"
-)
-
-water_temp_rast <- resample(
-  water_temp_rast,
-  depth_rast,
-  method = "bilinear"
-)
-
-occ <- sf::st_transform(
-  occ,
-  "ESRI:103021"
-)
-
-occ_xy <- sf::st_coordinates(occ)
-```
+# Load Data
 
 ```{r}
 
-# Convert terra predictors to raster::RasterStack
-predictors_raster <- raster::stack(
-  raster::raster(do_rast),
-  raster::raster(sal_rast),
-  raster::raster(turb_rast),
-  raster::raster(water_temp_rast),
-  raster::raster(depth_rast),
-  raster::raster(sed_rast)
+p <- readRDS(here::here('2-data', 'processed', 'oys_proc.rds'))
+
+r_depth <- rast(here::here("2-data", "rasters", "rast_depth.tif"))
+r_do <- rast(here::here("2-data", "rasters", "rast_do.tif"))
+r_sal <-rast(here::here("2-data", "rasters", "rast_sal.tif"))
+r_sed <-rast(here::here("2-data", "rasters", "rast_sed.tif"))
+r_turb <-rast(here::here("2-data", "rasters", "rast_turb.tif"))
+r_wTemp <-rast(here::here("2-data", "rasters", "rast_wTemp.tif"))
+
+r_stack <- c(r_depth, r_do, r_sal, r_sed, r_turb, r_wTemp)
+
+names(r_stack) <- c(
+  "Depth",
+  "Dissolved Oxygen",
+  "Salinity",
+  "Sediment",
+  "Turbidity",
+  "Water Temperature"
 )
 
-names(predictors_raster) <- c(
-  "dissolved_oxygen",
-  "salinity",
-  "turbidity",
-  "water_temperature",
-  "depth",
-  "sediment"
-)
+plot(r_stack)
 
 ```
 
-```{r}
-# create mask to  background points
-mask_terra <- rast(predictors_raster[[1]])
+# Prepare Point Data
 
-# Rasterize study area polygon
-mask_terra <- rasterize(
-  vect(study_area),
-  mask_terra,
-  field = 1,
-  background = NA
+## Species Occurance 
+
+```{r}
+#| label: load-and-prepare-oyster-data
+
+p <- p %>%
+  mutate(
+    pb = 1,
+    x = st_coordinates(p)[, "X"],
+    y = st_coordinates(p)[, "Y"],
+  ) %>%
+    dplyr::select(
+      pb,
+      x,
+      y,
+      geometry
+    ) %>%
+      st_transform(crs = trg_crs)
+
+sa <- get_study_area()
+sa <- st_transform(sa, crs = trg_crs)
+
+plot(st_geometry(sa))
+
+points(
+  st_geometry(p),
+  pch = 1
+)
+```
+
+## Species Background Points
+
+```{r}
+sa_vector <- terra::vect(sa) %>%
+  terra::project(
+    trg_crs
+  )
+
+mask <- terra::rasterize(
+  sa_vector,
+  r_stack[[1]],
+  field = 0,
+  background = NA,
+  touches = TRUE
 )
 
-# Convert for dismo
-mask <- raster::raster(mask_terra)
-crs(mask) = target_crs
+mask <- raster::raster(mask)
+
+terra::plot(mask)
+
+p_xy <- st_coordinates(p)[, c("X", "Y"), drop = FALSE]
 
 set.seed(42)
 
-bg <- dismo::randomPoints(
+b <- randomPoints(
   mask = mask,
-  n = 5000,
-  p = occ_xy,
-  excludep = TRUE
+  n = 500,
+  p = p_xy
 )
 
-plot(bg)
+b <- b %>%
+  as.data.frame() %>%
+  st_as_sf(
+    coords = c("x", "y"),
+    crs = trg_crs
+  )
+```
+
+
+#### Map P-Bg Points
+```{r}
+#| Draw-map
+tmap::tmap_mode("plot")
+
+tmap::tm_shape(mask) +
+  tmap::tm_raster(
+    col.scale = tmap::tm_scale(values = "grey90"),
+    col.legend = tmap::tm_legend_hide()
+  ) +
+  tmap::tm_shape(sa) +
+  tmap::tm_borders(col = "black", lwd = 1.5) +
+  tmap::tm_shape(p) +
+  tmap::tm_symbols(
+    fill = "red",
+    col = "red",
+    shape = 16,
+    size = 0.50
+  ) +
+  tmap::tm_shape(b) +
+  tmap::tm_symbols(
+    fill = NA,
+    col = "black",
+    shape = 16,
+    size = 0.50
+  ) +
+  tmap::tm_layout(
+    frame = FALSE,
+    legend.show = FALSE
+  )
 
 ```
 
-```{r}
+## Create final data inputs 
 
-occ_cv <- data.frame(
-  x = occ_xy[, 1],
-  y = occ_xy[, 2],
+```{r}
+#| label: final-prep-for-model
+
+# Convert terra predictors to raster::RasterStack
+r_stack <- raster::stack(r_stack)
+
+p_coordinates <- sf::st_coordinates(p)
+
+# Create single presence - background dataset
+p_xy <- data.frame(
+  x = p_coordinates[,"X"],
+  y = p_coordinates[, "Y"],
   pb = 1
 ) %>%
   sf::st_as_sf(
     coords = c("x", "y"),
-    crs = target_crs
+    crs = trg_crs
   )
 
-bg_cv <- data.frame(
-  x = bg[, 1],
-  y = bg[, 2],
+b_coordinates <- sf::st_coordinates(b)
+
+b_xy <- data.frame(
+  x = b_coordinates[, "X"],
+  y = b_coordinates[, "Y"],
   pb = 0
 ) %>%
   sf::st_as_sf(
     coords = c("x", "y"),
-    crs = target_crs
+    crs = trg_crs
   )
 
-cv_pts <- rbind(
-  occ_cv,
-  bg_cv
+pb <- rbind(
+  p_xy,
+  b_xy
 )
 ```
 
-# Determine Spatial Auto Correlation to determine fold size
+# Determine Spatial Auto Correlation 
 ```{r}
-continuous_predictors <- c(
-  do_rast,
-  sal_rast,
-  turb_rast,
-  water_temp_rast,
-  depth_rast
-)
+#| label: determine autocorrelation
 
-names(continuous_predictors) <- c(
-  "dissolved_oxygen",
-  "salinity",
-  "turbidity",
-  "water_temperature",
-  "depth"
-)
+cor_stack <- c(r_depth, r_sal, r_turb, r_wTemp)
 
-spat_corr <- cv_spatial_autocor(
-  r = continuous_predictors,
+names(cor_stack) <- c("Depth", "Salinity", "Turbidity", "Water Temperature")
+
+r_cor <- cv_spatial_autocor(
+  r = cor_stack,
   num_sample = 5000,
   plot = TRUE,
   progress = TRUE
 )
 
-occ_sac <- blockCV::cv_spatial_autocor(
-  x = cv_pts,
+p_cor <- cv_spatial_autocor(
+  x = pb,
   column = "pb",
   plot = TRUE,
   progress = TRUE
 )
 
-occ_sac$range
-occ_sac$range_table
+p_cor$range
+p_cor$range_table
 
 ```
 

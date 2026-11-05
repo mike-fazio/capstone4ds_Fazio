@@ -296,6 +296,8 @@ https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapS
 
 oyster_reefs <- get_oyster_reefs()
 
+oyster_reefs <- st_transform(oyster_reefs, trg_crs)
+
 tm_basemap("Esri.WorldGrayCanvas") +
     tm_shape(oyster_reefs, bbox = study_area) +
     tm_dots(
@@ -320,4 +322,6 @@ tm_basemap("Esri.WorldGrayCanvas") +
     ) +
     tm_title("Oyster Beds in Pensacola Bay System", fontface = 2) +
     tm_compass(type = "8star")
+
+saveRDS(oyster_reefs, here::here("2-data", "processed", "oys_proc.rds"))  
 ```

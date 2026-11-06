@@ -325,3 +325,84 @@ tm_basemap("Esri.WorldGrayCanvas") +
 
 saveRDS(oyster_reefs, here::here("2-data", "processed", "oys_proc.rds"))  
 ```
+
+## Attempt 2 - Random Sampling SDM 
+
+```{r}
+set.seed(42)
+maxent()
+
+p <- pb %>%
+  dplyr::select(pb, geometry) %>%
+  dplyr::filter(pb == 1)
+
+b <- pb %>%
+  dplyr::select(pb, geometry) %>%
+  dplyr::filter(pb == 0)
+
+
+# withhold 20% for testing
+fold_p <- kfold(p, k = 5)
+fold_b <- kfold(b, k = 5)
+
+p_test  <- p[fold_p == 1, ]
+p_train <- p[fold_p != 1, ]
+
+b_test  <- b[fold_b == 1, ]
+b_train <- b[fold_b != 1, ]
+
+# convert to coordinates for model
+p_xy <- st_coordinates(p_train)
+b_xy <- st_coordinates(b_train)
+
+sdm <- dismo::maxent(
+  x = r_stack,
+  p = p_xy,
+  b = b_xy
+)
+
+plot(sdm)
+
+response(sdm)
+
+#test model
+
+p_xy <- st_coordinates(p_test)
+b_xy <- st_coordinates(b_test)
+
+eval <- evaluate(p_xy, b_xy, sdm, r_stack)
+
+eval
+
+eval_tbl <- data.frame(
+  Metric = c("AUC", "Correlation", "Max TPR + TNR Threshold", "N Presences", "N Absences"),
+  Value = c(
+    eval@auc,
+    eval@cor,
+    eval@t[which.max(eval@TPR + eval@TNR)],
+    eval@np,
+    eval@na
+  )
+)
+
+knitr::kable(eval_tbl, caption = "Model Evaluation Metrics (Spatial Cross-Validation)")
+
+kfold_pred <- predict(r_stack, sdm)
+
+kfold_pred_df <- as.data.frame(kfold_pred , xy = TRUE) %>% 
+  na.omit()
+
+plot(kfold_pred)
+
+map +
+  geom_raster(data = kfold_pred_df, aes(x = x, y = y, fill = layer)) +
+  scale_fill_viridis_c(name = "Suitability") + 
+  labs(
+    title = "Oyster Habitat Suitability", 
+    subtitle = "MaxEnt - K-Folds Sampling Approach", 
+      ) + 
+  xlab("Longitude") + 
+  ylab("Latitude" )
+
+```
+

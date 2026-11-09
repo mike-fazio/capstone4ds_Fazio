@@ -78,7 +78,8 @@ Of the `r nrow(occurrences)` oyster records, `r sum(valid_presence)` had complet
 #| label: fig-maxent-points
 #| fig-cap: "Eastern oyster presence and background points used in the MaxEnt model."
 
-study_area <- get_study_area() %>% sf::st_transform(sf::st_crs(model_points))
+study_area <- readRDS(here::here("2-data", "processed", "study_area_0903.rds")) %>%
+  sf::st_transform(sf::st_crs(model_points))
 model_points$point_type <- ifelse(pb == 1L, "Presence", "Background")
 
 tmap_mode("plot")

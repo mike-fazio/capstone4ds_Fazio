@@ -14,9 +14,10 @@ source(
   )
 )
 
-trg_crs <- "EPSG:6440" # NAD 83 Florida North 
+trg_crs <- "EPSG:6440" # NAD 83 Florida State Plane North 
 
-study_area <-  st_transform(get_study_area(), trg_crs)
+study_area <- readRDS(here::here("2-data", "processed", "study_area.rds")) %>%
+  st_transform(trg_crs)
 
 study_extent <- study_area %>%
   st_bbox() %>%
@@ -103,7 +104,7 @@ turb_proc <- readRDS(
 
 ## Chlorophyll-a (***DROPPED****)
 
-```{r}
+
 #| label: chla-sensitivity-check
 #| eval: false
 
@@ -144,11 +145,7 @@ ggplot(
 
 ggsave("chla_sens_plot", path = here::here("4-tables-and-figures", "figs"), device = "png")
 
-```
 
-
-
-```{r}
 #| eval: false
 chla_ipdw <- ipdw_manual(
   chla_proc, 
@@ -163,13 +160,13 @@ plot(
   main = "Chlorophyll-a Prediction Surface \n(DP = 0.25 | MR = 10km)",
   sub = sprintf(
     "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
-    sal_stats$MAE,
-    sal_stats$RMSE,
-    sal_stats$Bias
+    chla_stats$MAE,
+    chla_stats$RMSE,
+    chla_stats$Bias
   )
 )
 
-```
+
 
 ## Salinity (***FINALIZED****)
 
@@ -506,6 +503,7 @@ ggsave("turb_sens_plot.png", path = here::here("4-tables-and-figures"))
 
 ```{r}
 #| label: run-fitted-turb-model
+set.seed(42)
 
 folds <- blockCV::cv_spatial(
         x = turb_proc,

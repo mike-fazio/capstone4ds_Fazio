@@ -9,42 +9,37 @@ get_study_area <- function() {
   file_path <- here::here(
     "2-data",
     "processed",
-    "study_area_0903.rds"
+    "study_area.rds"
   )
 
-  if (file.exists(file_path)) {
-    study_area <- readRDS(file_path)
-  } else {
-    #wbid <- sf::st_read(here::here("2-data","raw","Waterbody_IDs.shp"))
-    wbid <- sf::st_read(
-      "https://ca.dep.state.fl.us/arcgis/rest/services/OpenData/WBIDS/MapServer/0/query?outFields=*&where=1%3D1&f=geojson"
+  wbid <- sf::st_read(
+    "https://ca.dep.state.fl.us/arcgis/rest/services/OpenData/WBIDS/MapServer/0/query?outFields=*&where=1%3D1&f=geojson"
+  )
+
+  # List of relevant WBIDs
+  study_area_wbid_list <- c(
+    "548GA",
+    "548GB",
+    "548H",
+    "548C",
+    "548D",
+    "548B",
+    "548AA",
+    "548AB",
+    "548AC"
+  )
+
+  study_area <- wbid %>%
+    # Filter results to only include desired WBIDs
+    filter(WBID %in% study_area_wbid_list) %>%
+    # Dissolve all polygons into one geometry
+    summarise() %>%
+    sf::st_transform(
+      # re-project to Florida Albers NAD 2011 State Plane North (EPSG: 0903)
+      crs = "+proj=lcc +lat_0=29 +lon_0=-84.5 +lat_1=29.5833333333333 +lat_2=30.75 +x_0=600000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
     )
 
-    # List of relevant WBIDs
-    study_area_wbid_list <- c(
-      "548GA",
-      "548GB",
-      "548H",
-      "548C",
-      "548D",
-      "548B",
-      "548AA",
-      "548AB",
-      "548AC"
-    )
-
-    study_area <- wbid %>%
-      # Filter results to only include desired WBIDs
-      filter(WBID %in% study_area_wbid_list) %>%
-      # Dissolve all polygons into one geometry
-      summarise() %>%
-      sf::st_transform(
-        # re-project to Florida Albers NAD 2011 State Plane North (EPSG: 0903)
-        crs = "+proj=lcc +lat_0=29 +lon_0=-84.5 +lat_1=29.5833333333333 +lat_2=30.75 +x_0=600000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-      )
-
-    saveRDS(study_area, file_path)
-  }
+  saveRDS(study_area, file_path)
 
   return(study_area)
 }
@@ -52,8 +47,7 @@ get_study_area <- function() {
 
 # -----------------------------------------------------------------------------
 #  DEFINE SITE DATA RETRIEVAL FUNCTION -
-#  Checks if data already exists. If so, loads data, else retrieves from EPA
-#  WQP.
+#  Downloads monitoring sites from EPA WQP and saves the study area subset.
 # -----------------------------------------------------------------------------
 
 get_wq_sites <- function(study_area) {
@@ -63,47 +57,42 @@ get_wq_sites <- function(study_area) {
     "wq_sites.rds"
   )
 
-  # Load data if it exists; otherwise download
-  if (file.exists(out_path)) {
-    pbs_sites <- readRDS(out_path)
-  } else {
-    # Query WQP and cache result
-    wqp_sites <- dataRetrieval::whatWQPsites(
-      countycode = c("US:12:033", "US:12:113"),
-      siteType = "Estuary",
-      legacy = FALSE
+  # Query WQP
+  wqp_sites <- dataRetrieval::whatWQPsites(
+    countycode = c("US:12:033", "US:12:113"),
+    siteType = "Estuary",
+    legacy = FALSE
+  )
+
+  # Filter sites to Pensacola Bay System
+  pbs_sites <- wqp_sites %>%
+    select(
+      Org_Identifier,
+      Org_FormalName,
+      Location_Identifier,
+      Location_Longitude,
+      Location_Latitude
+    ) %>%
+    filter(
+      !is.na(Location_Longitude),
+      !is.na(Location_Latitude)
+    ) %>%
+    sf::st_as_sf(
+      coords = c(
+        "Location_Longitude",
+        "Location_Latitude"
+      ),
+      crs = 4326,
+      remove = TRUE
+    ) %>%
+    sf::st_transform(sf::st_crs(study_area)) %>%
+    sf::st_filter(
+      study_area,
+      .predicate = sf::st_within
     )
 
-    # Filter sites to Pensacola Bay System
-    pbs_sites <- wqp_sites %>%
-      select(
-        Org_Identifier,
-        Org_FormalName,
-        Location_Identifier,
-        Location_Longitude,
-        Location_Latitude
-      ) %>%
-      filter(
-        !is.na(Location_Longitude),
-        !is.na(Location_Latitude)
-      ) %>%
-      sf::st_as_sf(
-        coords = c(
-          "Location_Longitude",
-          "Location_Latitude"
-        ),
-        crs = 4326,
-        remove = TRUE
-      ) %>%
-      sf::st_transform(sf::st_crs(study_area)) %>%
-      sf::st_filter(
-        study_area,
-        .predicate = sf::st_within
-      )
-
-    # Save to file
-    saveRDS(pbs_sites, out_path)
-  }
+  # Save to file
+  saveRDS(pbs_sites, out_path)
 
   return(pbs_sites)
 }
@@ -111,8 +100,7 @@ get_wq_sites <- function(study_area) {
 
 # -----------------------------------------------------------------------------
 #  DEFINE SPATIAL WQ DATA RETRIEVAL FUNCTION -
-#  Uses study area polygon instead of site list. Checks if data already exists.
-#  If so, loads data, else retrieves from EPA WQP.
+#  Downloads measurements from EPA WQP, joins site geometry, and saves them.
 # -----------------------------------------------------------------------------
 
 get_sf_wq_data <- function(
@@ -121,8 +109,7 @@ get_sf_wq_data <- function(
   to_date,
   study_area,
   sites,
-  output_name,
-  force = FALSE
+  output_name
 ) {
   # Create file name based on user-provided input
   file_name <- paste0(output_name, ".rds")
@@ -134,48 +121,30 @@ get_sf_wq_data <- function(
     file_name
   )
 
-  if (file.exists(out_path) && !force) {
-    # Load previously downloaded data
-    pbs_df <- readRDS(out_path)
-  } else {
-    # Download data from WQP API
-    wq_df <- dataRetrieval::readWQPdata(
-      countycode = c("US:12:033", "US:12:113"),
-      siteType = "Estuary",
-      characteristicName = param,
-      startDateLo = from_date,
-      startDateHi = to_date,
-      dataProfile = "narrow",
-      service = "ResultWQX3",
-      ignore_attributes = FALSE
+  # Download data from WQP API
+  wq_df <- dataRetrieval::readWQPdata(
+    countycode = c("US:12:033", "US:12:113"),
+    siteType = "Estuary",
+    characteristicName = param,
+    startDateLo = from_date,
+    startDateHi = to_date,
+    dataProfile = "narrow",
+    service = "ResultWQX3",
+    ignore_attributes = FALSE
+  )
+
+  # Join site geometry and keep results within the study area
+  pbs_df <- wq_df %>%
+    inner_join(sites, by = "Location_Identifier") %>%
+    sf::st_as_sf() %>%
+    sf::st_transform(sf::st_crs(study_area)) %>%
+    sf::st_filter(
+      study_area,
+      .predicate = sf::st_within
     )
 
-    # Add geometry data using sites
-    wq_df <- wq_df %>%
-      inner_join(
-        y = sites,
-        by = "Location_Identifier"
-      )
-
-    # Filter results to sites within study area
-    pbs_df <- wq_df %>%
-      sf::st_as_sf(
-        coords = c(
-          "Location_Longitude",
-          "Location_Latitude"
-        ),
-        crs = 4326,
-        remove = TRUE
-      ) %>%
-      sf::st_transform(sf::st_crs(study_area)) %>%
-      sf::st_filter(
-        study_area,
-        .predicate = sf::st_within
-      )
-
-    # Save dataset
-    saveRDS(pbs_df, out_path)
-  }
+  # Save dataset
+  saveRDS(pbs_df, out_path)
 
   return(pbs_df)
 }
@@ -424,8 +393,8 @@ proc_sf_wq_data <- function(
 #  spatial distribution.
 # -----------------------------------------------------------------------------
 
-param_means_map <- function(x, param_label, out_name) {
-  my_bbox <- sf::st_bbox(get_study_area())
+param_means_map <- function(x, param_label, out_name, study_area) {
+  my_bbox <- sf::st_bbox(study_area)
 
   p_map <-
     tmap::tm_basemap("Esri.WorldGrayCanvas") +
@@ -517,39 +486,31 @@ param_means_hist <- function(x, param_label, out_name) {
 
 # -----------------------------------------------------------------------------
 #  DEFINE OYSTER REEF RETRIEVAL FUNCTION -
-#  Checks for oyster reef data and if not existing downloads from FWC server
+#  Downloads oyster reefs from FWC and saves points within the study area.
 # -----------------------------------------------------------------------------
 
-get_oyster_reefs <- function() {
+get_oyster_reefs <- function(study_area) {
   file_path <- here::here(
     "2-data",
     "processed",
     "oys_proc.rds"
   )
 
-  if (file.exists(file_path)) {
-    oyster_reefs <- readRDS(file_path)
-  } else {
-    oysters <- sf::read_sf(
-      "https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson"
-    )
+  oysters <- sf::read_sf(
+    "https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson"
+  )
 
-    study_area <- get_study_area()
+  oyster_reefs <- oysters %>%
+    sf::st_transform(sf::st_crs(study_area)) %>%
+    sf::st_make_valid() %>%
+    sf::st_centroid() %>%
+    sf::st_filter(
+      study_area,
+      .predicate = sf::st_within
+    ) %>%
+    sf::st_transform("EPSG:6440")
 
-    oyster_reefs <- oysters %>%
-      sf::st_transform(sf::st_crs(study_area)) %>%
-      sf::st_make_valid() %>%
-      sf::st_centroid() %>%
-      sf::st_filter(
-        study_area,
-        .predicate = sf::st_within
-      )
-
-    saveRDS(
-      oyster_reefs,
-      file_path
-    )
-  }
+  saveRDS(oyster_reefs, file_path)
 
   return(oyster_reefs)
 }

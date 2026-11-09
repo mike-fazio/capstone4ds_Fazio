@@ -11,16 +11,8 @@ source(
   )
 )
 
-trg_crs <- "EPSG:6440"
-study_area <- get_study_area()
-
-pbs_sites <- get_wq_sites(study_area)
-
-start_date <- "2005-01-01" # Beginning date of WQ data
-
-end_date <- "2025-01-01" # Ending date of WQ data
-
-force_toggle <- FALSE # TRUE or FALSE, determines if new API download occurs
+# Load the saved study area. Call get_study_area() explicitly to update it.
+study_area <- readRDS(here::here("2-data", "processed", "study_area.rds"))
 
 bin = 2000
 ```
@@ -54,26 +46,15 @@ tmap_save(
 )
 
 study_map
-
-
 ```
 
 
-# Retrieve WQ data using study-area sites and selected parameters
+# Load and process saved water-quality data
 
 ## Chlorophyll-a
 
 ```{r}
-# Retrieve Data 
-chla_raw <- get_sf_wq_data(
-  param = "Chlorophyll a, corrected for pheophytin",
-  from_date = start_date,
-  to_date = end_date,
-  sites = pbs_sites,
-  study_area = study_area,
-  output_name = "chla_raw",
-  force = force_toggle
-)
+chla_raw <- readRDS(here::here("2-data", "raw", "chla_raw.rds"))
 
 ```
 
@@ -100,7 +81,7 @@ chla_proc <- proc_sf_wq_data(
 param_means_hist(chla_proc, "Chlorophyll-a (µg/L)", "Chl_a")
 
 # Plot Spatial Distribution
-param_means_map(chla_proc, "Chlorophyll-a (µg/L)", "Chl_a")
+param_means_map(chla_proc, "Chlorophyll-a (µg/L)", "Chl_a", study_area)
 
 ```
 
@@ -108,15 +89,7 @@ param_means_map(chla_proc, "Chlorophyll-a (µg/L)", "Chl_a")
 
 ```{r}
 
-salinity_raw <- get_sf_wq_data(
-  param = "Salinity",
-  from_date = start_date,
-  to_date = end_date,
-  study_area = study_area,
-  sites = pbs_sites,
-  output_name = "salinity_raw",
-  force = force_toggle  
-)
+salinity_raw <- readRDS(here::here("2-data", "raw", "salinity_raw.rds"))
 
 ```
 
@@ -143,7 +116,7 @@ sal_proc <- proc_sf_wq_data(
 param_means_hist(sal_proc, "Salinity (ppt)", "Sal")
 
 # View Spatial Distribution
-param_means_map(sal_proc, "Salinity (ppt)", "Sal")
+param_means_map(sal_proc, "Salinity (ppt)", "Sal", study_area)
 
 ```
 
@@ -151,15 +124,7 @@ param_means_map(sal_proc, "Salinity (ppt)", "Sal")
 ## Water Temperature
 
 ```{r}
-water_temp_raw <- get_sf_wq_data(
-  param = "Temperature, water",
-  from_date = start_date,
-  to_date = end_date,
-  study_area = study_area,
-  sites = pbs_sites,
-  output_name = "water_temp_raw",
-  force = force_toggle
-)
+water_temp_raw <- readRDS(here::here("2-data", "raw", "water_temp_raw.rds"))
 ```
 
 ### Clean Water Temp Data
@@ -186,7 +151,7 @@ water_temp_proc <- proc_sf_wq_data(
 param_means_hist(water_temp_proc, "Water Temperature (°C)", "Temp")
 
 # View Spatial Distribution
-param_means_map(water_temp_proc, "Water Temperature (°C)", "Temp")
+param_means_map(water_temp_proc, "Water Temperature (°C)", "Temp", study_area)
 
 #rm(water_temp_raw)
 ```
@@ -195,15 +160,7 @@ param_means_map(water_temp_proc, "Water Temperature (°C)", "Temp")
 ## Dissolved Oxygen
 
 ```{r}
-do_raw <- get_sf_wq_data(
-  param = "Dissolved oxygen (DO)",
-  from_date = start_date,
-  to_date = end_date,
-  study_area = study_area,
-  sites = pbs_sites,
-  output_name = "do",
-  force = force_toggle
-)
+do_raw <- readRDS(here::here("2-data", "raw", "do.rds"))
 ```
 
 ### Clean DO Data
@@ -230,7 +187,7 @@ do_proc <- proc_sf_wq_data(
 param_means_hist(do_proc, "Dissolved Oxygen (mg/L)", "DO")
 
 # View Spatial Distribution
-param_means_map(do_proc, "Dissolved Oxygen (mg/L)", "DO")
+param_means_map(do_proc, "Dissolved Oxygen (mg/L)", "DO", study_area)
 
 #rm(do_raw)
 
@@ -239,15 +196,7 @@ param_means_map(do_proc, "Dissolved Oxygen (mg/L)", "DO")
 ## Turbidity 
 ```{r}
 
-turbidity_raw <- get_sf_wq_data(
-  param = "Turbidity",
-  from_date = start_date,
-  to_date = end_date,
-  study_area = study_area,
-  sites = pbs_sites,
-  output_name = "turb_raw",
-  force = force_toggle
-)
+turbidity_raw <- readRDS(here::here("2-data", "raw", "turb_raw.rds"))
 
 ```
 
@@ -271,7 +220,7 @@ turbidity_proc <- proc_sf_wq_data(
 param_means_hist(turbidity_proc, "Turbidity (NTU)", "Turb")
 
 # View Spatial Distribution
-param_means_map(turbidity_proc, "Turbidity (NTU)", "Turb")
+param_means_map(turbidity_proc, "Turbidity (NTU)", "Turb", study_area)
 
 #rm(turbidity_raw)
 ```
@@ -288,18 +237,16 @@ wq_summary <- bind_rows(
   water_temp_proc %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
 )
 
-write_csv2(wq_summary, here::here("4-tables-and-figures", "tables", "processed_wq_data_summary.csv"))
+saveRDS(wq_summary, here::here("4-tables-and-figures", "tables", "processed_wq_data_summary.rds"))
 ```
 
-Retrieve Oyster Data:
+## Oyster Reefs
 
 https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson
 
 ```{r}
 
-oyster_reefs <- get_oyster_reefs()
-
-oyster_reefs <- st_transform(oyster_reefs, trg_crs)
+oyster_reefs <- readRDS(here::here("2-data", "processed", "oys_proc.rds"))
 
 tm_basemap("Esri.WorldGrayCanvas") +
     tm_shape(oyster_reefs, bbox = study_area) +
@@ -325,7 +272,5 @@ tm_basemap("Esri.WorldGrayCanvas") +
     ) +
     tm_title("Oyster Beds in Pensacola Bay System", fontface = 2) +
     tm_compass(type = "8star")
-
-saveRDS(oyster_reefs, here::here("2-data", "processed", "oys_proc.rds"))  
 ```
 

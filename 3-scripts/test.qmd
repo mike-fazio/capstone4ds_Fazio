@@ -197,16 +197,8 @@ distance_power_test <- function(
 
 ```{r}
 
-sa <- get_study_area()
-
-chl_a <- get_spatial_wq_data(
-  param = "Chlorophyll a, corrected for pheophytin",
-  from_date = start_date,
-  to_date = end_date,
-  study_area = sa,
-  output_name = "chl_a_mgL",
-  force = TRUE
-)
+study_area <- readRDS(here::here("2-data", "processed", "study_area_0903.rds"))
+chl_a <- readRDS(here::here("2-data", "raw", "chla_raw.rds"))
 
 plot(chl_a$geometry)
 

@@ -54,7 +54,7 @@ from much larger datasets in the coming data gathering.
 #| label: 2-create-study-area
 #| output: false
 
-study_area <- get_study_area()
+study_area <- readRDS(here::here("2-data", "processed", "study_area_0903.rds"))
 
 tm_shape(study_area) +
   tm_polygons(fill_alpha = 0, col = "red", lwd = 2) +
@@ -76,7 +76,7 @@ programs (@wqp_2026). For this analysis, site data for Escambia and Santa Rosa C
 #| fig-cap: "Pensacola Bay System with monitoring sites"
 #| fig-align: center
 
-pbs_sites <- get_wq_sites(study_area)
+pbs_sites <- readRDS(here::here("2-data", "processed", "wq_sites.rds"))
 
 ## Add sites to map for visualization
 tm_shape(pbs_sites) +

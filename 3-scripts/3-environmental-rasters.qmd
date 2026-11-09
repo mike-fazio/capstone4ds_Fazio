@@ -1,6 +1,6 @@
 # Set Up 
 ```{r} 
-##| label: set-up
+#| label: set-up
 library(tidyverse)
 library(sf)
 library(terra)
@@ -16,8 +16,6 @@ source(
 
 trg_crs <- "EPSG:6440" # NAD 83 Florida North 
 
-sites <- get_wq_sites()
-
 study_area <-  st_transform(get_study_area(), trg_crs)
 
 study_extent <- study_area %>%
@@ -32,12 +30,12 @@ land_barrier <- st_difference(
   st_as_sf()
 
 cost_raster <- ipdw::costrasterGen(
-  xymat = sites,
   pols = land_barrier,
   extent = "polys",
   projstr = st_crs(study_area)$proj4string,
   resolution = 100
 )
+raster::crs(cost_raster) <- st_crs(study_area)$wkt
 
 dist_pwr <- c(
   0.25,
@@ -72,7 +70,7 @@ sal_proc <- readRDS(
   "processed",
   "sal_proc.rds"
   )
-)
+) %>% st_transform(trg_crs)
 
 water_temp_proc <- readRDS(
   here::here(
@@ -80,7 +78,7 @@ water_temp_proc <- readRDS(
   "processed",
   "water_temp_proc.rds"
   )
-)
+) %>% st_transform(trg_crs)
 
 do_proc <- readRDS(
   here::here(
@@ -88,7 +86,7 @@ do_proc <- readRDS(
   "processed",
   "do_proc.rds"
   )
-)
+) %>% st_transform(trg_crs)
 
 turb_proc <- readRDS(
   here::here(
@@ -96,7 +94,7 @@ turb_proc <- readRDS(
   "processed",
   "turb_proc.rds"
   )
-)
+) %>% st_transform(trg_crs)
 
 
 ```
@@ -106,7 +104,8 @@ turb_proc <- readRDS(
 ## Chlorophyll-a (***DROPPED****)
 
 ```{r}
-##| label: chla-sensitivity-check
+#| label: chla-sensitivity-check
+#| eval: false
 
 chla_sensitivity <- ipdw_sensitivity(
   chla_proc,
@@ -150,6 +149,7 @@ ggsave("chla_sens_plot", path = here::here("4-tables-and-figures", "figs"), devi
 
 
 ```{r}
+#| eval: false
 chla_ipdw <- ipdw_manual(
   chla_proc, 
   cost_raster, 
@@ -175,7 +175,7 @@ plot(
 
 Test model sensitivity against distance power X max range interactions
 ```{r}
-##| label: run-sal-sensitivity
+#| label: run-sal-sensitivity
 
 ## SAL
 
@@ -219,7 +219,7 @@ ggsave("sal_sens_plot.png", path = here::here("4-tables-and-figures"))
 ```
 
 ```{r}
-##| label: run-sal-model-after-fitting
+#| label: run-sal-model-after-fitting
 
 set.seed(42) 
 
@@ -268,7 +268,7 @@ saveRDS(sal_ipdw, file = here::here("2-data", "models", "ipdw_sal.rds"))
 ## Water Temp (***FINALIZED****)
 
 ```{r}
-##| label: run-waterTemp-sensitivity
+#| label: run-waterTemp-sensitivity
 
 water_temp_sensitivity <- ipdw_sensitivity(
   water_temp_proc,
@@ -312,7 +312,7 @@ ggsave("water_temp_sens_plot.png", path = here::here("4-tables-and-figures"))
 ```
 
 ```{r}
-##| label: run-waterTemp-model
+#| label: run-waterTemp-model
 
 set.seed(42) 
 
@@ -328,8 +328,8 @@ stats_water_temp <- ipdw_stats(
   water_temp_proc, 
   cost_raster, 
   folds = folds, 
-  dist_pwr = 10000,
-  max_range = 0.25, 
+  dist_pwr = 0.25,
+  max_range = 10000,
   value_col = "mean")
 
 ipdw_water_temp <- ipdw_manual(
@@ -345,9 +345,9 @@ plot(
   main = "Water Temp Pred. Surface \n(DP = 0.25 | MR = 10km)",
   sub = sprintf(
     "MAE = %.3f | RMSE = %.3f | Bias = %.3f",
-    water_temp_stats$MAE,
-    water_temp_stats$RMSE,
-    water_temp_stats$Bias
+    stats_water_temp$MAE,
+    stats_water_temp$RMSE,
+    stats_water_temp$Bias
   )
 )
 
@@ -368,7 +368,7 @@ saveRDS(
 
 Test disance power sensitivity
 ```{r}
-##| label: run-do-sensitivity
+#| label: run-do-sensitivity
 
 do_sensitivity <- ipdw_sensitivity(
   do_proc,
@@ -412,7 +412,7 @@ ggsave("do_sens_plot.png", path = here::here("4-tables-and-figures"))
 
 
 ```{r}
-##| label: run-DO-model
+#| label: run-DO-model
 
 set.seed(42) 
 
@@ -455,7 +455,6 @@ plot(
 
 saveRDS(do_stats, file = here::here("2-data", "models", "stats_do.rds"))
 saveRDS(do_ipdw, file = here::here("2-data", "models", "ipdw_do.rds"))
-writeRaster(do_ipdw, here::here("2-data", "rasters", "rast_do.tif"))
 
 ```
 
@@ -463,14 +462,14 @@ writeRaster(do_ipdw, here::here("2-data", "rasters", "rast_do.tif"))
 
 ## Turbidiity (***FINALIZED****)
 ```{r}
-##| label: run-turb-sensitivity
+#| label: run-turb-sensitivity
 
 turb_sensitivity <- ipdw_sensitivity(
   turb_proc,
   cost_raster,
   n_seeds = 5,
   value_col = "mean",
-  unit = "mg/L",
+  unit = "NTU",
   dist_powers = dist_pwr,
   max_ranges = max_rng
 )
@@ -506,7 +505,7 @@ ggsave("turb_sens_plot.png", path = here::here("4-tables-and-figures"))
 ```
 
 ```{r}
-##| label: run-fitted-turb-model
+#| label: run-fitted-turb-model
 
 folds <- blockCV::cv_spatial(
         x = turb_proc,
@@ -556,8 +555,6 @@ saveRDS(
   file = here::here("2-data", "models", "stats_turb.rds")
 )
 
-## write to raster
-writeRaster(turb_ipdw, here::here("2-data", "rasters", "rast_turb.tif"))
 ```
 
 
@@ -565,12 +562,12 @@ writeRaster(turb_ipdw, here::here("2-data", "rasters", "rast_turb.tif"))
 ## Summarize sensivity and prediction results
 
 ```{r}
-##| label: prediction-summary-stats
+#| label: prediction-summary-stats
 
 prediction_stack <- c(
-  rast(ipdw_do),
-  rast(ipdw_sal),
-  rast(ipdw_turb),
+  rast(do_ipdw),
+  rast(sal_ipdw),
+  rast(turb_ipdw),
   rast(ipdw_water_temp)
 )
 
@@ -582,19 +579,19 @@ names(prediction_stack) <- c(
 )
 
 prediction_summary <- global(
-  prediction_rasters,
+  prediction_stack,
   fun = c("min", "max", "mean", "sd", "notNA"),
   na.rm = TRUE
-) |>
-  tibble::rownames_to_column("parameter") |>
+) %>%
+  tibble::rownames_to_column("parameter") %>%
   dplyr::rename(
     minimum = min,
     maximum = max,
     predicted_cells = notNA
-  ) |>
+  ) %>%
   dplyr::mutate(
     units = c("mg/L", "ppt", "NTU", "degrees C"),
-    cell_size_m = paste(res(prediction_rasters), collapse = " x "),
+    cell_size_m = paste(res(prediction_stack), collapse = " x "),
     .after = parameter
   )
 
@@ -608,6 +605,10 @@ readr::write_csv(
 )
 
 prediction_summary
+```
+
+```{r}
+#| eval: false
 
 tm_shape(prediction_stack[[2]]) +
   tm_raster(
@@ -624,7 +625,7 @@ tm_shape(prediction_stack[[2]]) +
 ```
 
 ```{r}
-##| label: create-heatmap-figure
+#| label: create-heatmap-figure
 
 library(patchwork)
 
@@ -691,22 +692,22 @@ plot_sensitivity <- function(data, parameter) {
 
 ## Generate individual plots
 p_do <- plot_sensitivity(
-  sensitivity_do$summary,
+  do_sensitivity$summary,
   "Dissolved Oxygen"
 )
 
 p_sal <- plot_sensitivity(
-  sensitivity_sal$summary,
+  sal_sensitivity$summary,
   "Salinity"
 )
 
 p_turb <- plot_sensitivity(
-  sensitivity_turb$summary,
+  turb_sensitivity$summary,
   "Turbidity"
 )
 
 p_temp <- plot_sensitivity(
-  sensitivity_water_temp$summary,
+  water_temp_sensitivity$summary,
   "Water Temperature"
 )
 
@@ -716,11 +717,7 @@ sensitivity_plot <-
   (p_turb | p_temp) +
   plot_annotation(
     title = "IPDW Parameter Sensitivity Analysis",
-    subtitle = "Mean MAE from 5-fold spatial cross-validation",
-    caption = paste(
-      "Red outlines indicate the lowest MAE",
-      "for each environmental parameter."
-    )
+    subtitle = "Mean MAE from 5-fold spatial cross-validation"
   )
 
 ## Display
@@ -740,7 +737,7 @@ ggsave(
 # Prep rasters for SDM
 
 ```{r}
-#| label: create template for aligning rasters
+#| label: create-template-for-aligning-rasters
 
 r_template <- rast(cost_raster)
 crs(r_template) <- trg_crs
@@ -756,7 +753,7 @@ writeVector(r_mask, here::here("2-data", "sdm", "r_mask.gpkg"), overwrite = TRUE
 
 ## Sal Raster
 ```{r}
-##| label: prep-sal-raster-and-save-to-file 
+#| label: prep-sal-raster-and-save-to-file
 
 sal_ipdw <- readRDS(here::here("2-data", "models", "ipdw_sal.rds"))
 
@@ -775,7 +772,7 @@ writeRaster(r_sal, here::here("2-data", "rasters", "rast_sal.tif"), overwrite = 
 
 ## Water Temp Raster
 ```{r}
-##| label: prep-wTemp-raster-and-save-to-file 
+#| label: prep-wTemp-raster-and-save-to-file
 
 wTemp_ipdw <- readRDS(here::here("2-data", "models", "ipdw_water_temp.rds"))
 
@@ -815,7 +812,7 @@ writeRaster(r_do, here::here("2-data", "rasters", "rast_do.tif"), overwrite = TR
 
 ## Turdiity Raster
 ```{r}
-##| label: prep-turb-raster-and-save-to-file 
+#| label: prep-turb-raster-and-save-to-file
 
 turb_ipdw <- readRDS(here::here("2-data", "models", "ipdw_turb.rds"))
 
@@ -855,7 +852,7 @@ writeRaster(proc_depth, here::here("2-data", "rasters", "rast_depth.tif"), overw
 ## Bottom Sediment
 
 ```{r}
-##| label: prepare-sediment-raster
+#| label: prepare-sediment-raster
 
 raw_sed <- rast(here::here("2-data","raw","pbs_sed_0903_reclass.tif"))
 
@@ -871,6 +868,6 @@ proc_sed <- raw_sed %>%
 saveRDS(proc_sed, here::here("2-data", "processed", "proc_sed.rds"))
 writeRaster(proc_sed, here::here("2-data", "rasters", "rast_sed.tif"), overwrite = TRUE)  
 
-plot(r_sed)
+plot(proc_sed)
 ```
 

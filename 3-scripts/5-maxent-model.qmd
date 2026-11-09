@@ -1,777 +1,207 @@
-# Set Up
+# Setup
+
 ```{r}
-library(tidyverse)
+library(dplyr)
 library(sf)
 library(terra)
-library(blockCV)
-library(dismo)
+library(tmap)
 
 source(here::here("3-scripts", "1-functions.r"))
 
-trg_crs <- "EPSG:6440"
+raster_directory <- here::here("2-data", "rasters")
+model_directory <- here::here("2-data", "models")
+table_directory <- here::here("4-tables-and-figures", "tables")
+dir.create(table_directory, recursive = TRUE, showWarnings = FALSE)
 
-# Model output directories
-cv_directory <- here::here(
-  "2-data",
-  "models",
-  "maxent_cv"
-)
-
-final_directory <- here::here(
-  "2-data",
-  "models",
-  "maxent_final"
-)
-
-table_directory <- here::here(
-  "4-tables-and-figures",
-  "tables"
-)
+output_args <- "outputformat=logistic"
 ```
 
-# Load Data
+# Environmental predictors
+
+The predictors are depth (m), dissolved oxygen (mg/L), salinity (ppt), sediment class, turbidity (NTU), and water temperature (°C). All six share the same 100 m grid. The model uses cells with values for all six predictors.
 
 ```{r}
-
-p <- readRDS(here::here('2-data', 'processed', 'oys_proc.rds'))
-
-r_depth <- rast(here::here("2-data", "rasters", "rast_depth.tif"))
-r_do <- rast(here::here("2-data", "rasters", "rast_do.tif"))
-r_sal <-rast(here::here("2-data", "rasters", "rast_sal.tif"))
-r_sed <-rast(here::here("2-data", "rasters", "rast_sed.tif"))
-r_turb <-rast(here::here("2-data", "rasters", "rast_turb.tif"))
-r_wTemp <-rast(here::here("2-data", "rasters", "rast_wTemp.tif"))
-
-r_stack <- c(r_depth, r_do, r_sal, r_sed, r_turb, r_wTemp)
-
-names(r_stack) <- c(
-  "Depth",
-  "Dissolved Oxygen",
-  "Salinity",
-  "Sediment",
-  "Turbidity",
-  "Water Temperature"
+predictor_files <- c(
+  Depth = "rast_depth.tif",
+  "Dissolved Oxygen" = "rast_do.tif",
+  Salinity = "rast_sal.tif",
+  Sediment = "rast_sed.tif",
+  Turbidity = "rast_turb.tif",
+  "Water Temperature" = "rast_wTemp.tif"
 )
+predictors <- terra::rast(file.path(raster_directory, predictor_files))
+names(predictors) <- names(predictor_files)
 
-r_stack <- terra::project(r_stack, crs = trg_crs)
+valid_layers <- terra::app(is.finite(predictors), "sum")
+complete_mask <- terra::ifel(valid_layers == terra::nlyr(predictors), 1, NA)
 
-plot(r_stack)
-
+# Preserve the full CRS when converting to a RasterStack for dismo.
+model_stack <- terra::mask(predictors, complete_mask) %>% raster::stack()
+raster::crs(model_stack) <- terra::crs(predictors)
 ```
 
-## create mask for point generation
-```{r}
-predictors <- terra::rast(r_stack)
+# Presence and background points
 
-valid_layer_count  <- terra::app(
-  is.finite(predictors),
-  fun = "sum"
-)
-
-complete_mask <- terra::ifel(
-  valid_layer_count == terra::nlyr(predictors),
-  1,
-  NA
-)
-
-plot(complete_mask)
-
-```
-
-
-
-# Prepare Point Data
-
-## Species Occurance 
+Keep one oyster occurrence per complete predictor cell. Sample 1,000 background points from other complete cells.
 
 ```{r}
-#| label: load-and-prepare-oyster-data
+occurrences <- readRDS(here::here("2-data", "processed", "oys_proc.rds")) %>%
+  sf::st_transform(terra::crs(predictors))
 
-p_model <- sf::st_transform(p, trg_crs)
-
-p_values <- terra::extract(
-  predictors,
-  terra::vect(p_model),
-  ID = FALSE
-)
-
-valid_presence <- apply(
-  is.finite(as.matrix(p_values)),
-  1,
-  all
-)
-
-# Examine the one excluded presence
-p_model[!valid_presence, ]
-
-p <- p_model %>%
-  mutate(
-    pb = 1,
-    x = st_coordinates(p)[, "X"],
-    y = st_coordinates(p)[, "Y"],
-  ) %>%
-    dplyr::select(
-      pb,
-      x,
-      y,
-      geometry
-    ) %>%
-      st_transform(crs = trg_crs)
-
-sa <- get_study_area()
-sa <- st_transform(sa, crs = trg_crs)
-
-plot(st_geometry(sa))
-
-points(
-  st_geometry(p),
-  pch = 1
-)
-```
-
-## Species Background Points
-
-```{r}
-
-mask <- raster::raster(complete_mask)
-raster::crs(mask) <- trg_crs
-
-p_xy <- st_coordinates(p)[, c("X", "Y"), drop = FALSE]
+occurrence_cells <- terra::cellFromXY(predictors, sf::st_coordinates(occurrences))
+valid_presence <- !is.na(terra::values(complete_mask, mat = FALSE)[occurrence_cells])
+presences <- occurrences[valid_presence & !duplicated(occurrence_cells), ]
 
 set.seed(42)
-
-b <- randomPoints(
-  mask = mask,
+background <- dismo::randomPoints(
+  raster::raster(complete_mask),
   n = 1000,
-  p = p_xy, 
-  excludep = TRUE
-)
-
-b <- b %>%
+  p = sf::st_coordinates(presences)
+) %>%
   as.data.frame() %>%
-  st_as_sf(
-    coords = c("x", "y"),
-    crs = trg_crs
-  )
+  sf::st_as_sf(coords = c("x", "y"), crs = sf::st_crs(presences))
+
+model_points <- rbind(
+  sf::st_sf(pb = 1L, geometry = sf::st_geometry(presences)),
+  sf::st_sf(pb = 0L, geometry = sf::st_geometry(background))
+)
+pb <- model_points$pb
+point_values <- raster::extract(model_stack, sf::st_coordinates(model_points)) %>%
+  as.data.frame()
+stopifnot(nrow(background) == 1000L, all(is.finite(as.matrix(point_values))))
+point_values$Sediment <- factor(point_values$Sediment)
 ```
 
-#### Map P-Bg Points
-```{r}
-#| Draw-map
-tmap::tmap_mode("plot")
+Of the `r nrow(occurrences)` oyster records, `r sum(valid_presence)` had complete predictor values. After retaining one occurrence per cell, the model used `r nrow(presences)` presence points and `r nrow(background)` background points.
 
-tmap::tm_shape(mask) +
-  tmap::tm_raster(
-    col.scale = tmap::tm_scale(values = "grey90"),
-    col.legend = tmap::tm_legend_hide()
-  )  +
-  tmap::tm_shape(b) +
-  tmap::tm_symbols(
-    fill = NA,
-    #alpha = 0.25,
-    col = "black",
-    shape = 16,
-    size = 0.50
+```{r}
+#| label: fig-maxent-points
+#| fig-cap: "Eastern oyster presence and background points used in the MaxEnt model."
+
+study_area <- get_study_area() %>% sf::st_transform(sf::st_crs(model_points))
+model_points$point_type <- ifelse(pb == 1L, "Presence", "Background")
+
+tmap_mode("plot")
+tm_shape(complete_mask) +
+  tm_raster(col.scale = tm_scale(values = "grey90"), col.legend = tm_legend_hide()) +
+  tm_shape(study_area) +
+  tm_borders(col = "grey40") +
+  tm_shape(model_points) +
+  tm_dots(
+    fill = "point_type",
+    fill.scale = tm_scale_categorical(values = c(Background = "grey35", Presence = "red3")),
+    fill.legend = tm_legend(title = "Model points"),
+    size = 0.05
   ) +
-  tmap::tm_shape(sa) +
-  tmap::tm_borders(col = "black", lwd = 1.5) +
-  tmap::tm_shape(p) +
-  tmap::tm_symbols(
-    fill = "red",
-    col = "red",
-    shape = 16,
-    size = 0.50
-  )+
-  tmap::tm_layout(
-    frame = FALSE,
-    legend.show = FALSE
-  )
-
+  tm_layout(frame = FALSE)
 ```
 
-## Create final data inputs 
+# Spatial cross-validation
+
+Assign 5 km spatial blocks to five folds. Hold out one fold at a time and use AUC to measure how well the model ranks held-out presences relative to background points. Omission is the proportion of held-out presences below the 10th percentile of the training presence scores.
 
 ```{r}
-#| label: final-prep-for-model
+n_folds <- 5L
+fold_id <- blockCV::cv_spatial(
+  x = model_points,
+  column = "pb",
+  r = complete_mask,
+  k = n_folds,
+  size = 5000,
+  presence_bg = TRUE,
+  seed = 42,
+  plot = FALSE,
+  report = FALSE,
+  progress = FALSE
+)$folds_ids
 
-# Convert terra predictors to raster::RasterStack
-r_stack <- raster::stack(r_stack)
-raster::crs(r_stack) <- trg_crs
-
-p_coordinates <- sf::st_coordinates(p)
-
-# Create single presence - background dataset
-p_cv <- data.frame(
-  x = p_coordinates[,"X"],
-  y = p_coordinates[, "Y"],
-  pb = 1
-) %>%
-  sf::st_as_sf(
-    coords = c("x", "y"),
-    crs = trg_crs
-  )
-
-b_coordinates <- sf::st_coordinates(b)
-
-b_cv <- data.frame(
-  x = b_coordinates[, "X"],
-  y = b_coordinates[, "Y"],
-  pb = 0
-) %>%
-  sf::st_as_sf(
-    coords = c("x", "y"),
-    crs = trg_crs
-  )
-
-pb_cv <- rbind(
-  p_cv,
-  b_cv
-)
-```
-
-```{r}
-# Convert back to terra for blockCV
-r_cv <- terra::rast(r_stack)
-
-# Create common complete-predictor footprint
-valid_cell_count <- terra::app(
-  is.finite(r_cv),
-  fun = "sum"
-)
-
-complete_mask <- terra::ifel(
-  valid_cell_count == terra::nlyr(r_cv),
-  1,
-  NA
-)
-
-# Apply the common footprint to every predictor
-r_cv <- terra::mask(
-  r_cv,
-  complete_mask
-)
-
-# Extract predictor values at all presence-background points
-pb_values <- terra::extract(
-  r_cv,
-  terra::vect(pb_cv),
-  ID = FALSE
-)
-
-valid_pb <- apply(
-  is.finite(as.matrix(pb_values)),
-  1,
-  all
-)
-
-# Keep only points with complete predictor data
-pb_cv_model <- pb_cv[valid_pb, ]
-
-table(pb_cv_model$pb)
-
-```
-
-# Spatial Cross Validation using blockCV package
-
-
-```{r}
-# Get coordinates and corresponding raster cells
-pb_coordinates <- sf::st_coordinates(
-  pb_cv_model
-)[, c("X", "Y"), drop = FALSE]
-
-cell_id <- raster::cellFromXY(
-  r_stack[[1]],
-  pb_coordinates
-)
-
-presence_rows <- which(pb_cv_model$pb == 1)
-background_rows <- which(pb_cv_model$pb == 0)
-
-# Retain one presence per 100 m predictor cell
-presence_rows <- presence_rows[
-  !duplicated(cell_id[presence_rows])
-]
-
-presence_cells <- cell_id[presence_rows]
-
-# Remove background points from presence cells
-background_rows <- background_rows[
-  !cell_id[background_rows] %in% presence_cells
-]
-
-# Retain one background point per cell
-background_rows <- background_rows[
-  !duplicated(cell_id[background_rows])
-]
-
-model_rows <- c(
-  presence_rows,
-  background_rows
-)
-
-maxent_data <- pb_cv_model[
-  model_rows,
-]
-
-maxent_coordinates <- sf::st_coordinates(
-  maxent_data
-)[, c("X", "Y"), drop = FALSE]
-
-# Confirm every point has complete predictor data
-predictor_values <- raster::extract(
-  r_stack,
-  maxent_coordinates
-)
-
+fold_counts <- table(factor(fold_id, levels = seq_len(n_folds)), pb)
 stopifnot(
-  all(complete.cases(predictor_values)),
-  all(is.finite(as.matrix(predictor_values)))
+  "Each fold needs presence and background points" =
+    !anyNA(fold_id) && ncol(fold_counts) == 2L && all(fold_counts > 0L)
 )
 
-table(maxent_data$pb)
-```
+fold_metrics <- vector("list", n_folds)
+for (fold in seq_len(n_folds)) {
+  test <- fold_id == fold
+  train_presence <- !test & pb == 1L
+  test_presence <- test & pb == 1L
+  test_background <- test & pb == 0L
 
-```{r}
-set.seed(42)
-
-fold_id <- dismo::kfold(
-  x = data.frame(pb = maxent_data$pb),
-  k = 5,
-  by = maxent_data$pb
-)
-
-maxent_data$fold <- fold_id
-
-table(
-  fold = fold_id,
-  pb = maxent_data$pb
-)
-```
-
-
-```{r}
-cv_models <- vector(
-  mode = "list",
-  length = 5
-)
-
-cv_evaluations <- vector(
-  mode = "list",
-  length = 5
-)
-
-fold_metrics <- vector(
-  mode = "list",
-  length = 5
-)
-
-for (i in 1:5) {
-
-  train_rows <- fold_id != i
-  test_rows <- fold_id == i
-
-  presence_train <- maxent_coordinates[
-    train_rows & maxent_data$pb == 1,
-    ,
-    drop = FALSE
-  ]
-
-  background_train <- maxent_coordinates[
-    train_rows & maxent_data$pb == 0,
-    ,
-    drop = FALSE
-  ]
-
-  presence_test <- maxent_coordinates[
-    test_rows & maxent_data$pb == 1,
-    ,
-    drop = FALSE
-  ]
-
-  background_test <- maxent_coordinates[
-    test_rows & maxent_data$pb == 0,
-    ,
-    drop = FALSE
-  ]
-
-  fold_directory <- file.path(
-    cv_directory,
-    paste0("fold_", i)
+  fold_model <- dismo::maxent(
+    x = point_values[!test, ],
+    p = pb[!test],
+    path = file.path(model_directory, "maxent_cv", paste0("fold_", fold))
   )
+  scores <- dismo::predict(fold_model, point_values, args = output_args)
+  stopifnot(all(is.finite(scores)))
 
-  dir.create(
-    fold_directory,
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
+  evaluation <- dismo::evaluate(p = scores[test_presence], a = scores[test_background])
+  cutoff <- stats::quantile(scores[train_presence], probs = 0.10, names = FALSE)
 
-  cv_models[[i]] <- dismo::maxent(
-    x = r_stack,
-    p = presence_train,
-    a = background_train,
-    factors = "Sediment",
-    removeDuplicates = TRUE,
-    path = fold_directory
-  )
-
-  training_evaluation <- dismo::evaluate(
-    p = presence_train,
-    a = background_train,
-    model = cv_models[[i]],
-    x = r_stack,
-    args = "outputformat=logistic"
-  )
-
-  cv_evaluations[[i]] <- dismo::evaluate(
-    p = presence_test,
-    a = background_test,
-    model = cv_models[[i]],
-    x = r_stack,
-    args = "outputformat=logistic"
-  )
-
-  # Ten-percent training-presence threshold
-  threshold_10pct <- as.numeric(
-    stats::quantile(
-      training_evaluation@presence,
-      probs = 0.10,
-      na.rm = TRUE
-    )
-  )
-
-  test_omission <- mean(
-    cv_evaluations[[i]]@presence < threshold_10pct,
-    na.rm = TRUE
-  )
-
-  fold_metrics[[i]] <- data.frame(
-    fold = i,
-    training_presences = nrow(presence_train),
-    testing_presences = nrow(presence_test),
-    training_background = nrow(background_train),
-    testing_background = nrow(background_test),
-    test_auc = cv_evaluations[[i]]@auc,
-    threshold_10pct = threshold_10pct,
-    test_omission_10pct = test_omission
+  fold_metrics[[fold]] <- data.frame(
+    fold = fold,
+    training_presences = sum(train_presence),
+    testing_presences = sum(test_presence),
+    training_background = sum(!test & pb == 0L),
+    testing_background = sum(test_background),
+    test_auc = evaluation@auc,
+    threshold_10pct = cutoff,
+    test_omission_10pct = mean(scores[test_presence] < cutoff)
   )
 }
 
-fold_metrics <- do.call(
-  rbind,
-  fold_metrics
-)
-
-fold_metrics
-
-```
-
-### Summarize and save the CV results
-
-```{r}
-metric_summary <- data.frame(
-  folds = nrow(fold_metrics),
-  mean_test_auc = mean(
-    fold_metrics$test_auc,
-    na.rm = TRUE
-  ),
-  sd_test_auc = stats::sd(
-    fold_metrics$test_auc,
-    na.rm = TRUE
-  ),
-  mean_test_omission_10pct = mean(
-    fold_metrics$test_omission_10pct,
-    na.rm = TRUE
-  ),
-  sd_test_omission_10pct = stats::sd(
-    fold_metrics$test_omission_10pct,
-    na.rm = TRUE
+fold_metrics <- bind_rows(fold_metrics)
+metric_summary <- fold_metrics %>%
+  summarise(
+    folds = n(),
+    mean_test_auc = mean(test_auc),
+    sd_test_auc = stats::sd(test_auc),
+    mean_test_omission_10pct = mean(test_omission_10pct),
+    sd_test_omission_10pct = stats::sd(test_omission_10pct)
   )
-)
 
-metric_summary
+readr::write_csv(fold_metrics, file.path(table_directory, "maxent_cross_validation_metrics.csv"))
+readr::write_csv(metric_summary, file.path(table_directory, "maxent_cross_validation_summary.csv"))
 
-readr::write_csv(
-  fold_metrics,
-  file.path(
-    table_directory,
-    "maxent_cross_validation_metrics.csv"
-  )
-)
-
-readr::write_csv(
+knitr::kable(
   metric_summary,
-  file.path(
-    table_directory,
-    "maxent_cross_validation_summary.csv"
-  )
+  digits = 3,
+  col.names = c("Folds", "Mean AUC", "SD of AUC", "Mean omission", "SD of omission"),
+  caption = "MaxEnt spatial cross-validation results."
 )
-
 ```
 
-### Fit Final Model
+# Final model and habitat suitability
+
+Fit MaxEnt using all prepared presence and background points. Map relative habitat suitability on the 0 to 1 logistic scale.
 
 ```{r}
-all_presences <- maxent_coordinates[
-  maxent_data$pb == 1,
-  ,
-  drop = FALSE
-]
-
-all_background <- maxent_coordinates[
-  maxent_data$pb == 0,
-  ,
-  drop = FALSE
-]
+#| label: fig-maxent-suitability
+#| fig-cap: "Relative Eastern oyster habitat suitability in the Pensacola Bay System."
 
 final_model <- dismo::maxent(
-  x = r_stack,
-  p = all_presences,
-  a = all_background,
-  factors = "Sediment",
-  removeDuplicates = TRUE,
-  path = final_directory
+  x = point_values,
+  p = pb,
+  path = file.path(model_directory, "maxent_final")
 )
-
-saveRDS(
-  final_model,
-  here::here(
-    "2-data",
-    "models",
-    "maxent_final_model.rds"
-  )
-)
-
-```
-
-
-
-```{r}
+saveRDS(final_model, file.path(model_directory, "maxent_final_model.rds"))
 
 maxent_suitability <- dismo::predict(
-  object = final_model,
-  x = r_stack,
-  args = "outputformat=logistic",
-  filename = here::here(
-    "2-data",
-    "rasters",
-    "maxent_suitability.tif"
-  ),
+  final_model,
+  model_stack,
+  args = output_args,
+  filename = file.path(raster_directory, "maxent_suitability.tif"),
   format = "GTiff",
-  overwrite = TRUE,
-  progress = "text"
+  overwrite = TRUE
 )
 
-tmap_mode("plot")
-
-suitability_map <-
-  tm_shape(maxent_suitability) +
+tm_shape(maxent_suitability) +
   tm_raster(
-    col.scale = tm_scale_continuous(
-      values = "viridis",
-      limits = c(0, 1)
-    ),
-    col.legend = tm_legend(
-      title = "Suitability"
-    )
+    col.scale = tm_scale_continuous(values = "viridis", limits = c(0, 1)),
+    col.legend = tm_legend(title = "Relative suitability")
   ) +
-  tm_shape(p) +
-  tm_dots(
-    fill = "black",
-    size = 0.05
-  ) +
-  tm_layout(
-    frame = FALSE
-  ) +
-  tm_title(
-    "Eastern Oyster Habitat Suitability"
-  )
-
-suitability_map
-```
-
-## Attempt 2 - Random Sampling SDM 
-
-```{r}
-set.seed(42)
-maxent()
-
-p <- pb %>%
-  dplyr::select(pb, geometry) %>%
-  dplyr::filter(pb == 1)
-
-b <- pb %>%
-  dplyr::select(pb, geometry) %>%
-  dplyr::filter(pb == 0)
-
-
-# withhold 20% for testing
-fold_p <- kfold(p, k = 5)
-fold_b <- kfold(b, k = 5)
-
-p_test  <- p[fold_p == 1, ]
-p_train <- p[fold_p != 1, ]
-
-b_test  <- b[fold_b == 1, ]
-b_train <- b[fold_b != 1, ]
-
-sdm <- dismo::maxent(
-  x = r_stack,
-  p = st_coordinates(p_train),
-  a = st_coordinates(b_train),
-  factors = "Sediment",
-  removeDuplicates = TRUE
-)
-
-plot(sdm)
-
-response(sdm)
-
-#test model
-eval <- evaluate(
-  st_coordinates(p_test), 
-  st_coordinates(b_test), 
-  sdm, 
-  r_stack
-  )
-
-eval
-
-eval_tbl <- data.frame(
-  Metric = c("AUC", "Correlation", "Max TPR + TNR Threshold", "N Presences", "N Absences"),
-  Value = c(
-    eval@auc,
-    eval@cor,
-    eval@t[which.max(eval@TPR + eval@TNR)],
-    eval@np,
-    eval@na
-  )
-)
-
-knitr::kable(eval_tbl, caption = "Model Evaluation Metrics (Spatial Cross-Validation)")
-
-kfold_pred <- predict(r_stack, sdm)
-
-kfold_pred_df <- as.data.frame(kfold_pred , xy = TRUE) %>% 
-  na.omit()
-
-plot(kfold_pred)
-
-map +
-  geom_raster(data = kfold_pred_df, aes(x = x, y = y, fill = layer)) +
-  scale_fill_viridis_c(name = "Suitability") + 
-  labs(
-    title = "Oyster Habitat Suitability", 
-    subtitle = "MaxEnt - K-Folds Sampling Approach", 
-      ) + 
-  xlab("Longitude") + 
-  ylab("Latitude" )
-
-```
-
-## Attempt - CV Sampling
-
-```{r}
-#| label: CV SDM 
-#| output: false
-
-set.seed(42)
-
-pred_rast <- r_stack
-
-sdm_pts <- bind_rows(p, b)
-
-sdm_pts$pb <- as.integer(sdm_pts$pb)
-
-sb <- cv_spatial(
-  x = sdm_pts,
-  column = "pb",
-  k = 5,
-  size = 1000,        # block size in map units; if CRS is meters, this is 1000 m
-  selection = "random",
-  presence_bg = TRUE,
-  iteration = 100
-)
-
-fold_id <- 1
-
-train_pts <- sdm_pts[sb$folds_ids != fold_id, ]
-test_pts  <- sdm_pts[sb$folds_ids == fold_id, ]
-
-p_train <- train_pts %>% filter(pb == 1)
-b_train <- train_pts %>% filter(pb == 0)
-
-p_test <- test_pts %>% filter(pb == 1)
-b_test <- test_pts %>% filter(pb == 0)
-
-sdm_block <- dismo::maxent(
-  x = r_stack,
-  p = st_coordinates(p_train),
-  b = st_coordinates(b_train),
-  factors = "Sediment",
-  removeDuplicates = TRUE
-)
-
-eval_block <- dismo::evaluate(
-  p = st_coordinates(p_test),
-  a = st_coordinates(b_test),
-  model = sdm_block,
-  x = pred_rast
-)
-
-eval_block
-
-evalBlock_tbl <- data.frame(
-  Metric = c("AUC", "Correlation", "Max TPR + TNR Threshold", "N Presences", "N Background"),
-  Value = c(
-    eval_block@auc,
-    eval_block@cor,
-    eval_block@t[which.max(eval_block@TPR + eval_block@TNR)],
-    eval_block@np,
-    eval_block@na
-  )
-)
-
-cv_pred <- predict(pred_rast, sdm_block)
-
-cv_pred_df <- as.data.frame(cv_pred , xy = TRUE) %>% 
-  na.omit()
-
-plot(cv_pred)
- 
-```
-
-```{r}
-#| label: cv sdm results
-#| echo: false
-
-knitr::kable(evalBlock_tbl, caption = "Model Evaluation Metrics (Spatial Cross-Validation)")
-
-tmap_mode("plot")
-
-suitability_map <-
-  tm_shape(cv_pred) +
-  tm_raster(
-    col.scale = tm_scale_continuous(
-      values = "viridis",
-      limits = c(0, 1)
-    ),
-    col.legend = tm_legend(
-      title = "Suitability"
-    )
-  ) +
-  tm_shape(p) +
-  tm_dots(
-    fill = "black",
-    size = 0.05
-  ) +
-  tm_layout(
-    frame = FALSE
-  ) +
-  tm_title(
-    "Eastern Oyster Habitat Suitability"
-  )
-
-suitability_map
-
+  tm_shape(presences) +
+  tm_dots(fill = "black", size = 0.05) +
+  tm_layout(frame = FALSE)
 ```

@@ -1,5 +1,6 @@
 ```{r}
 library(tidyverse)
+library(sf)
 library(tmap)
 
 # Load functions 
@@ -10,6 +11,7 @@ source(
   )
 )
 
+trg_crs <- "EPSG:6440"
 study_area <- get_study_area()
 
 pbs_sites <- get_wq_sites(study_area)
@@ -42,6 +44,7 @@ tmap_save(
   tm = study_map,
   filename = here::here(
     "4-tables-and-figures",
+    "maps",
     "study_area.png"
   ),
   width = 8,
@@ -262,7 +265,7 @@ turbidity_proc <- proc_sf_wq_data(
   turbidity_raw,
   study_area = study_area,
   output_name = "turb_proc",
-  bin = bin) 
+  bin_size = bin)
 
 # Plot Data Distribution
 param_means_hist(turbidity_proc, "Turbidity (NTU)", "Turb")
@@ -281,7 +284,7 @@ wq_summary <- bind_rows(
   sal_proc %>% st_drop_geometry() %>% mutate(parameter = "Salinity (ppt)"),
   do_proc %>% st_drop_geometry() %>% mutate(parameter = "Dissolved Oxygen (mg/L)"),
   chla_proc %>% st_drop_geometry() %>% mutate(parameter = "Chlorophyll-a (µg/L)"),
-  turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (FTU)"),
+  turbidity_proc %>% st_drop_geometry() %>% mutate(parameter = "Turbidity (NTU)"),
   water_temp_proc %>% st_drop_geometry() %>% mutate(parameter = "Temperature (°C)")
 )
 
@@ -316,7 +319,7 @@ tm_basemap("Esri.WorldGrayCanvas") +
     tm_shape(study_area, bbox = study_area) +
     tm_borders(
       col = "red"
-    )
+    ) +
     tm_layout(
       inner.margins = c(0.2, 0.2, 0.2, 0.2)
     ) +

@@ -55,13 +55,22 @@ turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
 
 water_temp <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
 
+raster_summary <- readr::read_csv(
+  here::here("4-tables-and-figures", "tables", "prediction_summary_stats.csv"),
+  show_col_types = FALSE
+)
+raster_ranges <- setNames(
+  sprintf("%.2f to %.2f %s", raster_summary$minimum, raster_summary$maximum, raster_summary$units),
+  raster_summary$parameter
+)
+
 ```
 
 # Results
 
 *Water Quality Observations*
 
-Queried water quality observations for a twenty year period between 2005 and 2025 returned 25,665 observations from 174 unique sampling sites located within the PBS (@tbl-raw-data-summary). Water temperature returned the largest number of records (7,161), followed by salinity (6,994), dissolved oxygen (6,261), turbidity (3,402), and chlorophyll-a (1,847). Chlorophyll-a only had measurements at 54 stations compared to the 146-169 for the other parameters.  
+Queried water quality observations for a twenty year period between 2005 and 2025 returned `r scales::comma(sum(vapply(raw_data, nrow, integer(1))))` observations from `r dplyr::n_distinct(all_sites$Location_Identifier, na.rm = TRUE)` unique sampling sites located within the PBS (@tbl-raw-data-summary). Water temperature returned the largest number of records (`r scales::comma(nrow(water_temp_raw))`), followed by salinity (`r scales::comma(nrow(sal_raw))`), dissolved oxygen (`r scales::comma(nrow(do_raw))`), turbidity (`r scales::comma(nrow(turb_raw))`), and chlorophyll-a (`r scales::comma(nrow(chla_raw))`). Chlorophyll-a only had measurements at `r dplyr::n_distinct(chla_raw$Location_Identifier, na.rm = TRUE)` stations.
 
 ```{r}
 #| label: tbl-raw-data-summary
@@ -96,7 +105,7 @@ raw_summary <- purrr::imap_dfr(
       `Reported Units` = paste(reported_units, collapse = ", ")
     )
   }
-) |>
+) %>%
   dplyr::arrange(dplyr::desc(`Total Observations`)) %>%
   dplyr::mutate(
     `Total Observations` = scales::comma(`Total Observations`),
@@ -109,11 +118,11 @@ raw_summary <- purrr::imap_dfr(
 knitr::kable(
   raw_summary,
   booktabs = TRUE,
-  align = c("l", "r", "r", "r", "c", "c", "l")
+  align = c("l", "r", "r", "l")
 )
 ```
 
-After processing and spatial aggregation, there were a total of `{r} sum(length(chla), length(do), length(sal), length(turb), length(water_temp)) ` records each representing the mean value for that location (@tbl-processed-data-summary). Chlorophyll-a processing resulted in the fewest  754 observations summarized within 27 spatial bins using 48 stations. Dissolved oxygen had 3072 observations summarized into 68 bins across 145 stations. Salinity had 3,400 observations summarized into 67 bins with 135 stations, and turbidity retained 1563 observations within 61 spatial bins using 122 unique stations. Chlorophyll-a was excluded from the final prediction rasters due to poor spatial distribution and limited data availability.
+After processing and spatial aggregation, there were `r sum(nrow(chla), nrow(do), nrow(sal), nrow(turb), nrow(water_temp))` parameter-specific spatial bins (@tbl-processed-data-summary). Chlorophyll-a was excluded from the final prediction rasters due to poor spatial distribution and limited data availability.
 
 ```{r}
 #| label: tbl-processed-data-summary
@@ -130,11 +139,11 @@ processed_data <- list(
 )
 
 parameter_units <- c(
-  "Chlorophyll-a" = "µg/L",
+  "Chlorophyll-a" = "ug/L",
   "Dissolved oxygen" = "mg/L",
   "Salinity" = "ppt",
   "Turbidity" = "NTU",
-  "Water temperature" = "°C"
+  "Water temperature" = "degrees C"
 )
 
 processed_summary <- purrr::imap_dfr(
@@ -143,7 +152,7 @@ processed_summary <- purrr::imap_dfr(
     tibble::tibble(
       Parameter = parameter,
       `Spatial bins` = nrow(data),
-      `Unique Stations` = sum(
+      `Station-bin pairs` = sum(
         data$n_stations,
         na.rm = TRUE
       ),
@@ -162,10 +171,10 @@ processed_summary <- purrr::imap_dfr(
       Units = parameter_units[[parameter]],
     )
   }
-) |>
+) %>%
   dplyr::mutate(
     `Spatial bins` = scales::comma(`Spatial bins`),
-    `Unique Stations` = scales::comma(`Unique Stations`),
+    `Station-bin pairs` = scales::comma(`Station-bin pairs`),
     `Total Observations` = scales::comma(
       `Total Observations`
     )
@@ -180,7 +189,7 @@ knitr::kable(
 
 *Water Quality Mean Observation Data Distribution*
 
-Spatially binned mean Chlorophyll-a values ranged from `{r} round(min(chla$mean),2) ` to `{r} round(max(chla$mean),2)`ug/L with an average mean of `{r} round(mean(chla$mean),2)`ug/L. The distribution was heavily skewed to the right due to an extreme outlier of 60ug/L. Dissolved Oxygen was normally distributed with values ranging from `{r} round(min(do$mean),2) ` to `{r} round(max(do$mean),2)`mg/L with an average mean of `{r} round(mean(chla$mean),2)`ug/L. Salinity was normally distributed with a minimum value of `{r} round(min(sal$mean),2) ` to `{r} round(max(sal$mean),2)` with an average mean of `{r} round(mean(sal$mean),2)`PPT. Turbidity was right skewed and had a minimum value of `{r} round(min(turb$mean),2) ` to `{r} round(max(turb$mean),2)` with an average mean of `{r} round(mean(turb$mean),2)`NTU. Water temperature was highly variable and had a minimum value of `{r} round(min(water_temp$mean),2) ` to `{r} round(max(water_temp$mean),2)` with an average mean of `{r} round(mean(water_temp$mean),2)`degrees C.
+Chlorophyll-a bin means ranged from `r round(min(chla$mean, na.rm = TRUE), 2)` to `r round(max(chla$mean, na.rm = TRUE), 2)` µg/L, with an overall mean of `r round(mean(chla$mean, na.rm = TRUE), 2)` µg/L. Dissolved oxygen bin means ranged from `r round(min(do$mean, na.rm = TRUE), 2)` to `r round(max(do$mean, na.rm = TRUE), 2)` mg/L, with an overall mean of `r round(mean(do$mean, na.rm = TRUE), 2)` mg/L. Salinity bin means ranged from `r round(min(sal$mean, na.rm = TRUE), 2)` to `r round(max(sal$mean, na.rm = TRUE), 2)` ppt, with an overall mean of `r round(mean(sal$mean, na.rm = TRUE), 2)` ppt. Turbidity bin means ranged from `r round(min(turb$mean, na.rm = TRUE), 2)` to `r round(max(turb$mean, na.rm = TRUE), 2)` NTU, with an overall mean of `r round(mean(turb$mean, na.rm = TRUE), 2)` NTU. Water temperature bin means ranged from `r round(min(water_temp$mean, na.rm = TRUE), 2)` to `r round(max(water_temp$mean, na.rm = TRUE), 2)` °C, with an overall mean of `r round(mean(water_temp$mean, na.rm = TRUE), 2)` °C.
 
 ```{r}
 #| label: fig-processed-mean-distributions
@@ -202,14 +211,14 @@ parameter_labels <- paste0(
 processed_mean_data <- purrr::imap_dfr(
   processed_data,
   \(data, parameter) {
-    data |>
-      sf::st_drop_geometry() |>
+    data %>%
+      sf::st_drop_geometry() %>%
       dplyr::transmute(
         parameter = parameter,
         value = .data$mean
       )
   }
-) |>
+) %>%
   dplyr::mutate(
     parameter = factor(
       parameter,
@@ -226,8 +235,8 @@ processed_mean_data <- purrr::imap_dfr(
     )
   )
 
-processed_medians <- processed_mean_data |>
-  dplyr::group_by(parameter_label) |>
+processed_medians <- processed_mean_data %>%
+  dplyr::group_by(parameter_label) %>%
   dplyr::summarise(
     median_value = median(
       value,
@@ -276,26 +285,38 @@ ggplot2::ggplot(
 
 ## IPDW Interpolation Sensitivity and Prediction
 
-Model sensitivity was evaluated for each parameter evaluating 36 combinations of max range and distance power values using five repititions of five-fold spatial cross-validation [@fig-ipdw-sensitivity]. Following evaluation of model sensitivity, a distance power of 0.25 and max rank of 10km was selected for all parameters. 
+Model sensitivity was evaluated for each parameter evaluating 36 combinations of max range and distance power values using five repetitions of five-fold spatial cross-validation [@fig-ipdw-sensitivity]. Following evaluation of model sensitivity, a distance power of 0.25 and range of 10 km was selected for all parameters.
 
-The selected setting yielded the lowest repeated mean absolute error (MAE) for salinity (2.364 ppt). Dissolved oxygen and water temperature had slightly lower MAEs at a distance power of 0.50 and a 10 km range: 0.433 mg/L and 0.955 °C, respectively, compared with 0.443 mg/L and 0.964 °C at the selected settings. Turbidity had its lowest MAE at a distance power of 0.50 and a 5 km range (1.127 NTU), although this combination provided a mean withheld-bin prediction coverage of 99.7%, compared with 100% at the selected setting. Thus, the final settings did not uniformly minimize MAE across the four parameters and overall raster smoothness was favored over absolute lower MAE as such gradients are more ecologically representative of reality.
+The final settings did not uniformly minimize MAE across the four parameters. A common setting was retained to favor smoother surfaces and consider coverage alongside MAE.
 
-![Sensitivity analysis for predictor variables.](4-tables-and-figures/ipdw-sensitivity.png){#fig-ipdw-sensitivity}
+![Sensitivity analysis for predictor variables.](4-tables-and-figures/figs/ipdw-sensitivity.png){#fig-ipdw-sensitivity}
 
 
-| Parameter | Units | Mean MAE (SD) | Mean RMSE (SD) | Mean bias | Mean coverage |
-|:--|:--|--:|--:|--:|--:|
-| Dissolved oxygen | mg/L | 0.443 (0.010) | 0.565 (0.010) | 0.009 | 100% |
-| Salinity | ppt | 2.364 (0.039) | 3.192 (0.030) | 0.197 | 100% |
-| Turbidity | NTU | 1.269 (0.027) | 1.684 (0.028) | −0.151 | 100% |
-| Water temperature | °C | 0.964 (0.019) | 1.162 (0.051) | −0.067 | 100% |
+```{r}
+#| label: tbl-draft-ipdw-validation
+#| tbl-cap: "Repeated spatial cross-validation at distance power 0.25 and range 10 km."
 
-: Repeated spatial cross-validation results for distance power 0.25 and maximum path distance 10 km. {#tbl-draft-ipdw-validation}
+sensitivity_files <- c(
+  "Dissolved oxygen" = "do", "Salinity" = "sal",
+  "Turbidity" = "turb", "Water temperature" = "water_temp"
+)
+purrr::imap_dfr(sensitivity_files, function(stem, parameter) {
+  readRDS(here::here("2-data", "models", paste0("sensitivity_test_", stem, ".rds")))$summary %>%
+    dplyr::filter(dist_power == 0.25, max_range == 10000) %>%
+    dplyr::transmute(
+      Parameter = parameter, Units = parameter_units[[parameter]],
+      `Mean MAE (SD)` = sprintf("%.3f (%.3f)", mean_MAE, sd_MAE),
+      `Mean RMSE (SD)` = sprintf("%.3f (%.3f)", mean_RMSE, sd_RMSE),
+      `Mean bias` = mean_Bias, `Mean coverage` = scales::percent(mean_coverage, accuracy = 0.1)
+    )
+}) %>%
+  knitr::kable(digits = 3)
+```
 
 ## Environmental Prediction Surface Rasters
 
-The resulting environmental prediction surfaces had a cell size of 100 x 100m. Predicted values were 5.11 to 7.99 mg/L for dissolved oxygen, 2.31 to 26.73 ppt for salinity, 0.03 to 9.62 NTU for turbidity, and 25.93 to 30.42 °C for water temperature. 
+The resulting environmental prediction surfaces had a cell size of 100 × 100 m. Predicted values were `r raster_ranges[["Dissolved oxygen"]]` for dissolved oxygen, `r raster_ranges[["Salinity"]]` for salinity, `r raster_ranges[["Turbidity"]]` for turbidity, and `r raster_ranges[["Water temperature"]]` for water temperature.
 
 Dissolved oxygen generally predicted lower to the east and north east, salinity predicted higher to the south west, turbidity was higher in the north west near the mouth of Escambias River, and water temp was lowest near Blackwater Bay and the mouth of Blackwater River. 
 
-![Final prediction rasters](4-tables-and-figures/prediction-rasters.png){#fig-ipdw-sensitivity}
+![Final prediction rasters](4-tables-and-figures/figs/prediction-rasters.png){#fig-environmental-prediction-rasters}

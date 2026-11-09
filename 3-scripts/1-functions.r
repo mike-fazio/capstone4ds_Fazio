@@ -98,7 +98,7 @@ get_wq_sites <- function(study_area) {
       sf::st_transform(sf::st_crs(study_area)) %>%
       sf::st_filter(
         study_area,
-        .predicate = st_within
+        .predicate = sf::st_within
       )
 
     # Save to file
@@ -170,7 +170,7 @@ get_sf_wq_data <- function(
       sf::st_transform(sf::st_crs(study_area)) %>%
       sf::st_filter(
         study_area,
-        .predicate = st_within
+        .predicate = sf::st_within
       )
 
     # Save dataset
@@ -524,7 +524,7 @@ get_oyster_reefs <- function() {
   file_path <- here::here(
     "2-data",
     "processed",
-    "oyster_pts_0903.rds"
+    "oys_proc.rds"
   )
 
   if (file.exists(file_path)) {
@@ -542,7 +542,7 @@ get_oyster_reefs <- function() {
       sf::st_centroid() %>%
       sf::st_filter(
         study_area,
-        .predicate = st_within
+        .predicate = sf::st_within
       )
 
     saveRDS(

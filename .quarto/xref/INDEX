@@ -14,5 +14,8 @@
   },
   "5-report/_2-methods.qmd": {
     "_2-methods.html": "ca9e3b6f"
+  },
+  "3-scripts/5-maxent-model.qmd": {
+    "5-maxent-model.html": "916b27cb"
   }
 }

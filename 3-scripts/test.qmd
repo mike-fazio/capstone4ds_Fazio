@@ -207,12 +207,6 @@ plot(chl_a$geometry)
 
 ```{r}
 
-
-
 chla_sf <- proc_sf_wq_data(chl_a, study_area, bin_size = 500)
-
-
-
-
 
 ```

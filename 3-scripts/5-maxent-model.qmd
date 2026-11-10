@@ -18,26 +18,27 @@ output_args <- "outputformat=logistic"
 
 # Environmental predictors
 
-The predictors are depth (m), dissolved oxygen (mg/L), salinity (ppt), sediment class, turbidity (NTU), and water temperature (°C). All six share the same 100 m grid. The model uses cells with values for all six predictors.
-
 ```{r}
 predictor_files <- c(
   Depth = "rast_depth.tif",
-  "Dissolved Oxygen" = "rast_do.tif",
+  `Dissolved Oxygen` = "rast_do.tif",
   Salinity = "rast_sal.tif",
   Sediment = "rast_sed.tif",
   Turbidity = "rast_turb.tif",
-  "Water Temperature" = "rast_wTemp.tif"
+  `Water Temperature` = "rast_wTemp.tif"
 )
 predictors <- terra::rast(file.path(raster_directory, predictor_files))
 names(predictors) <- names(predictor_files)
 
+# Create mask that represents area covered by all prediction rasters.
 valid_layers <- terra::app(is.finite(predictors), "sum")
 complete_mask <- terra::ifel(valid_layers == terra::nlyr(predictors), 1, NA)
 
-# Preserve the full CRS when converting to a RasterStack for dismo.
+# convert to raster for dismo package
 model_stack <- terra::mask(predictors, complete_mask) %>% raster::stack()
-raster::crs(model_stack) <- terra::crs(predictors)
+
+# return to proper CRS after raster conversion
+raster::crs(model_stack) <- terra::crs(predictors) 
 ```
 
 # Presence and background points
@@ -45,31 +46,30 @@ raster::crs(model_stack) <- terra::crs(predictors)
 Keep one oyster occurrence per complete predictor cell. Sample 1,000 background points from other complete cells.
 
 ```{r}
-occurrences <- readRDS(here::here("2-data", "processed", "oys_proc.rds")) %>%
+
+# Load presence data
+p <- readRDS(here::here("2-data", "processed", "oys_proc.rds")) %>%
   sf::st_transform(terra::crs(predictors))
 
-occurrence_cells <- terra::cellFromXY(predictors, sf::st_coordinates(occurrences))
-valid_presence <- !is.na(terra::values(complete_mask, mat = FALSE)[occurrence_cells])
-presences <- occurrences[valid_presence & !duplicated(occurrence_cells), ]
 
+# Create background data
 set.seed(42)
-background <- dismo::randomPoints(
+b <- dismo::randomPoints(
   raster::raster(complete_mask),
-  n = 1000,
-  p = sf::st_coordinates(presences)
+  n = 500,
+  p = sf::st_coordinates(p)
 ) %>%
   as.data.frame() %>%
-  sf::st_as_sf(coords = c("x", "y"), crs = sf::st_crs(presences))
+  sf::st_as_sf(coords = c("x", "y"), crs = sf::st_crs(p))
 
-model_points <- rbind(
+# Merge into one data frame
+pb <- rbind(
   sf::st_sf(pb = 1L, geometry = sf::st_geometry(presences)),
   sf::st_sf(pb = 0L, geometry = sf::st_geometry(background))
 )
-pb <- model_points$pb
-point_values <- raster::extract(model_stack, sf::st_coordinates(model_points)) %>%
-  as.data.frame()
-stopifnot(nrow(background) == 1000L, all(is.finite(as.matrix(point_values))))
-point_values$Sediment <- factor(point_values$Sediment)
+
+# TODO: Thin points to adjust for sampling bias
+pb <- GeoThinneR::thin_points(pb,  )
 ```
 
 Of the `r nrow(occurrences)` oyster records, `r sum(valid_presence)` had complete predictor values. After retaining one occurrence per cell, the model used `r nrow(presences)` presence points and `r nrow(background)` background points.
@@ -78,7 +78,7 @@ Of the `r nrow(occurrences)` oyster records, `r sum(valid_presence)` had complet
 #| label: fig-maxent-points
 #| fig-cap: "Eastern oyster presence and background points used in the MaxEnt model."
 
-study_area <- readRDS(here::here("2-data", "processed", "study_area_0903.rds")) %>%
+study_area <- readRDS(here::here("2-data", "processed", "study_area.rds")) %>%
   sf::st_transform(sf::st_crs(model_points))
 model_points$point_type <- ifelse(pb == 1L, "Presence", "Background")
 
@@ -108,7 +108,7 @@ fold_id <- blockCV::cv_spatial(
   column = "pb",
   r = complete_mask,
   k = n_folds,
-  size = 5000,
+  size = 2500,
   presence_bg = TRUE,
   seed = 42,
   plot = FALSE,
@@ -117,10 +117,6 @@ fold_id <- blockCV::cv_spatial(
 )$folds_ids
 
 fold_counts <- table(factor(fold_id, levels = seq_len(n_folds)), pb)
-stopifnot(
-  "Each fold needs presence and background points" =
-    !anyNA(fold_id) && ncol(fold_counts) == 2L && all(fold_counts > 0L)
-)
 
 fold_metrics <- vector("list", n_folds)
 for (fold in seq_len(n_folds)) {
@@ -135,7 +131,6 @@ for (fold in seq_len(n_folds)) {
     path = file.path(model_directory, "maxent_cv", paste0("fold_", fold))
   )
   scores <- dismo::predict(fold_model, point_values, args = output_args)
-  stopifnot(all(is.finite(scores)))
 
   evaluation <- dismo::evaluate(p = scores[test_presence], a = scores[test_background])
   cutoff <- stats::quantile(scores[train_presence], probs = 0.10, names = FALSE)

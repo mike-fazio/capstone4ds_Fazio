@@ -2,23 +2,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.8.26">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>results</title>
 <style>
-/* Default styles provided by pandoc.
-** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-*/
+code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: 1.5em;}
-div.column{flex: auto;}
-@media screen {
-div.columns{gap: min(4vw, 1.5em);}
-div.column{overflow-x: auto;}
-}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -32,14 +26,15 @@ ul.task-list li input[type="checkbox"] {
 <script src="_3-results_files/libs/clipboard/clipboard.min.js"></script>
 <script src="_3-results_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="_3-results_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="_3-results_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="_3-results_files/libs/quarto-html/popper.min.js"></script>
 <script src="_3-results_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="_3-results_files/libs/quarto-html/anchor.min.js"></script>
 <link href="_3-results_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="_3-results_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="_3-results_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="_3-results_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="_3-results_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="_3-results_files/libs/bootstrap/bootstrap-215b371544c282197b31c8aa00ce3677.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="_3-results_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -55,8 +50,9 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="results" class="level1">
 <h1>Results</h1>
-<p><em>Water Quality Observations</em></p>
-<p>Queried water quality observations for a twenty year period between 2005 and 2025 returned more than 25,000 observations from 174 unique sampling sites located within the PBS (<a href="#tbl-raw-data-summary" class="quarto-xref">Table&nbsp;1</a>).</p>
+<section id="water-quality-data-coverage" class="level2">
+<h2 class="anchored" data-anchor-id="water-quality-data-coverage">Water-Quality Data Coverage</h2>
+<p>The initial dataRetrieval call returned 25,665 total water quality observations from 174 unique sites (see <a href="#tbl-raw-data-summary" class="quarto-xref">Table&nbsp;1</a>). During processing, the data was filtered to only include warm-season observations, and then summarized into 500m spatial-bins to avoid introducing spatial bias due to over-represented sites. Total Observations were condensed to 291 after processing (<a href="#tbl-processed-data-summary" class="quarto-xref">Table&nbsp;2</a>).</p>
 <div class="cell">
 <div id="tbl-raw-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -65,65 +61,72 @@ Table&nbsp;1: Summary of raw water-quality data available for each environmental
 </figcaption>
 <div aria-describedby="tbl-raw-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<table class="cell caption-top table table-sm table-striped small">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 19%">
-<col style="width: 20%">
-<col style="width: 17%">
-<col style="width: 11%">
 <col style="width: 13%">
-<col style="width: 17%">
+<col style="width: 18%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 14%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Parameter</th>
-<th style="text-align: right;">Total Observations</th>
-<th style="text-align: right;">Unique Stations</th>
-<th style="text-align: right;">Begin Date</th>
-<th style="text-align: center;">End Date</th>
-<th style="text-align: center;">Reported Units</th>
+<th style="text-align: right;">Total observations</th>
+<th style="text-align: right;">Numeric results</th>
+<th style="text-align: right;">Unique stations</th>
+<th style="text-align: center;">Begin date</th>
+<th style="text-align: center;">End date</th>
+<th style="text-align: left;">Reported units</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Water temperature</td>
+<td style="text-align: left;">Temperature</td>
+<td style="text-align: right;">7,161</td>
 <td style="text-align: right;">7,161</td>
 <td style="text-align: right;">169</td>
-<td style="text-align: right;">01/04/2005</td>
+<td style="text-align: center;">01/04/2005</td>
 <td style="text-align: center;">12/18/2024</td>
-<td style="text-align: center;">deg C</td>
+<td style="text-align: left;">deg C</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Salinity</td>
 <td style="text-align: right;">6,994</td>
+<td style="text-align: right;">6,994</td>
 <td style="text-align: right;">159</td>
-<td style="text-align: right;">01/04/2005</td>
+<td style="text-align: center;">01/04/2005</td>
 <td style="text-align: center;">12/18/2024</td>
-<td style="text-align: center;">ppt, ppth, PSS</td>
+<td style="text-align: left;">ppt, ppth, PSS</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Dissolved oxygen</td>
+<td style="text-align: left;">DO</td>
+<td style="text-align: right;">6,261</td>
 <td style="text-align: right;">6,261</td>
 <td style="text-align: right;">169</td>
-<td style="text-align: right;">01/04/2005</td>
+<td style="text-align: center;">01/04/2005</td>
 <td style="text-align: center;">12/18/2024</td>
-<td style="text-align: center;">mg/L</td>
+<td style="text-align: left;">mg/L</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Turbidity</td>
 <td style="text-align: right;">3,402</td>
+<td style="text-align: right;">3,399</td>
 <td style="text-align: right;">146</td>
-<td style="text-align: right;">01/04/2005</td>
+<td style="text-align: center;">01/04/2005</td>
 <td style="text-align: center;">12/18/2024</td>
-<td style="text-align: center;">NTU</td>
+<td style="text-align: left;">NTU</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Chlorophyll-a</td>
 <td style="text-align: right;">1,847</td>
+<td style="text-align: right;">1,504</td>
 <td style="text-align: right;">54</td>
-<td style="text-align: right;">01/11/2005</td>
+<td style="text-align: center;">01/11/2005</td>
 <td style="text-align: center;">11/18/2024</td>
-<td style="text-align: center;">ug/L</td>
+<td style="text-align: left;">ug/L</td>
 </tr>
 </tbody>
 </table>
@@ -132,81 +135,80 @@ Table&nbsp;1: Summary of raw water-quality data available for each environmental
 </figure>
 </div>
 </div>
-<p>After processing and spatial aggregation, there were a total of 40 records each representing the mean value for that location (<a href="#tbl-processed-data-summary" class="quarto-xref">Table&nbsp;2</a>). Chlorophyll-a processing resulted in 754 observations summarized within 27 spatial bins using 48 stations. Dissolved oxygen had 3072 observations summarized into 68 bins across 145 stations. Salinity had 3,400 observations summarized into 67 bins with 135 stations, and turbidity retained 1563 observations within 61 spatial bins using 122 unique stations.</p>
 <div class="cell">
 <div id="tbl-processed-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-processed-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2: Summary of processed warm-season water-quality data used for spatial interpolation.
+Table&nbsp;2: Summary of processed warm-season water-quality data used to evaluate environmental coverage and generate interpolation inputs.
 </figcaption>
 <div aria-describedby="tbl-processed-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<table class="cell caption-top table table-sm table-striped small">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 18%">
+<col style="width: 14%">
 <col style="width: 13%">
 <col style="width: 16%">
-<col style="width: 20%">
+<col style="width: 22%">
+<col style="width: 12%">
 <col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 7%">
+<col style="width: 10%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Spatial bins</th>
-<th style="text-align: right;">Unique Stations</th>
-<th style="text-align: right;">Total Observations</th>
-<th style="text-align: right;">First year</th>
+<th style="text-align: right;">Spatial bins</th>
+<th style="text-align: right;">Unique stations</th>
+<th style="text-align: right;">Included observations</th>
+<th style="text-align: center;">First year</th>
 <th style="text-align: center;">Last year</th>
-<th style="text-align: center;">Units</th>
+<th style="text-align: left;">Units</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Chlorophyll-a</td>
-<td style="text-align: left;">27</td>
+<td style="text-align: right;">27</td>
 <td style="text-align: right;">48</td>
-<td style="text-align: right;">754</td>
-<td style="text-align: right;">2005</td>
+<td style="text-align: right;">666</td>
+<td style="text-align: center;">2005</td>
 <td style="text-align: center;">2024</td>
-<td style="text-align: center;">µg/L</td>
+<td style="text-align: left;">ug/L</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Dissolved oxygen</td>
-<td style="text-align: left;">68</td>
+<td style="text-align: left;">DO</td>
+<td style="text-align: right;">68</td>
 <td style="text-align: right;">145</td>
-<td style="text-align: right;">3,072</td>
-<td style="text-align: right;">2005</td>
+<td style="text-align: right;">3,010</td>
+<td style="text-align: center;">2005</td>
 <td style="text-align: center;">2024</td>
-<td style="text-align: center;">mg/L</td>
+<td style="text-align: left;">mg/L</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Salinity</td>
-<td style="text-align: left;">67</td>
+<td style="text-align: right;">67</td>
 <td style="text-align: right;">135</td>
 <td style="text-align: right;">3,400</td>
-<td style="text-align: right;">2005</td>
+<td style="text-align: center;">2005</td>
 <td style="text-align: center;">2024</td>
-<td style="text-align: center;">ppt</td>
+<td style="text-align: left;">ppt</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Turbidity</td>
-<td style="text-align: left;">61</td>
+<td style="text-align: right;">61</td>
 <td style="text-align: right;">122</td>
-<td style="text-align: right;">1,563</td>
-<td style="text-align: right;">2005</td>
+<td style="text-align: right;">1,429</td>
+<td style="text-align: center;">2005</td>
 <td style="text-align: center;">2024</td>
-<td style="text-align: center;">NTU</td>
+<td style="text-align: left;">NTU</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Water temperature</td>
-<td style="text-align: left;">68</td>
+<td style="text-align: left;">Temperature</td>
+<td style="text-align: right;">68</td>
 <td style="text-align: right;">145</td>
 <td style="text-align: right;">3,441</td>
-<td style="text-align: right;">2005</td>
+<td style="text-align: center;">2005</td>
 <td style="text-align: center;">2024</td>
-<td style="text-align: center;">°C</td>
+<td style="text-align: left;">degrees C</td>
 </tr>
 </tbody>
 </table>
@@ -215,8 +217,21 @@ Table&nbsp;2: Summary of processed warm-season water-quality data used for spati
 </figure>
 </div>
 </div>
-<p><em>Water Quality Mean Observation Data Distribution</em></p>
-<p>Mean Chlorophyll-a values ranged from 3.27 to 63.8ug/L with an average mean of 11.24ug/L. The distribution was heavily skewed to the right due to an extreme outlier of 60ug/L.</p>
+<p>For all parameters, the data was heavily skewed spatially, with the majority of samples located in Escambia and Pensacola Bays. Chlorophyll-a in particular had much fewer sites and almost no observations located in the eastern half of the study area. Due to such a lack of spatial distribution, chlorophyll-a was subsequently dropped from the analysis (<a href="#fig-monitoring-coverage" class="quarto-xref">Figure&nbsp;1</a>).</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-monitoring-coverage" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-monitoring-coverage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="_3-results_files/figure-html/fig-monitoring-coverage-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-monitoring-coverage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Spatial distribution of monitoring stations represented in each raw water-quality dataset.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-processed-mean-distributions" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -225,12 +240,381 @@ Table&nbsp;2: Summary of processed warm-season water-quality data used for spati
 <img src="_3-results_files/figure-html/fig-processed-mean-distributions-1.png" class="img-fluid figure-img" width="960">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-processed-mean-distributions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Distribution of processed warm-season spatial-bin means for each environmental parameter. Dashed lines identify the median of each distribution.
+Figure&nbsp;2: Distribution of processed warm-season spatial-bin means for each environmental parameter. Dashed lines identify the median of each distribution.
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
+</section>
+<section id="ipdw-parameter-sensitivity" class="level2">
+<h2 class="anchored" data-anchor-id="ipdw-parameter-sensitivity">IPDW Parameter Sensitivity</h2>
+<p>The Five-fold sensitivity analysis showed there was little effect on the Mean Absolute Error of modeled surfaces across a range of distance powers and maximum influence ranges (<a href="#fig-ipdw-sensitivity" class="quarto-xref">Figure&nbsp;3</a>), with many of the values differing by less than 10-100ths of unit values. DO ranged from 0.4258564</p>
+<!--
+Narrative to add:
+
+- Describe the overall response of MAE to distance power and maximum range.
+- Identify the final parameter combination used for each variable.
+- Note when several combinations produced nearly equivalent error.
+- Refer to Figure @fig-ipdw-sensitivity.
+-->
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-ipdw-sensitivity" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ipdw-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="_3-results_files/figure-html/fig-ipdw-sensitivity-1.png" class="img-fluid figure-img" width="1152">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ipdw-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Mean MAE across distance-power and maximum-range combinations evaluated using repeated five-fold spatial cross-validation. Red outlines identify the parameter combinations used for the final interpolation models.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="ipdw-spatial-cross-validation-performance" class="level2">
+<h2 class="anchored" data-anchor-id="ipdw-spatial-cross-validation-performance">IPDW Spatial Cross-Validation Performance</h2>
+<!--
+Narrative to add:
+
+- Report the selected distance power and maximum range for each parameter.
+- Compare repeated mean MAE, RMSE, bias, and coverage among parameters.
+- Interpret errors in the original units shown in the table.
+- Describe these values as internal spatial cross-validation results.
+- Refer to Table @tbl-ipdw-validation.
+-->
+<div class="cell">
+<div id="tbl-ipdw-validation" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ipdw-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3: Selected IPDW parameters and repeated spatial cross-validation performance. Values in parentheses are standard deviations across random spatial partitions.
+</figcaption>
+<div aria-describedby="tbl-ipdw-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 9%">
+<col style="width: 13%">
+<col style="width: 17%">
+<col style="width: 12%">
+<col style="width: 13%">
+<col style="width: 9%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Units</th>
+<th style="text-align: right;">Distance power</th>
+<th style="text-align: right;">Maximum range (km)</th>
+<th style="text-align: right;">Mean MAE (SD)</th>
+<th style="text-align: right;">Mean RMSE (SD)</th>
+<th style="text-align: right;">Mean bias</th>
+<th style="text-align: right;">Mean coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DO</td>
+<td style="text-align: left;">mg/L</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.431 (0.006)</td>
+<td style="text-align: right;">0.552 (0.004)</td>
+<td style="text-align: right;">0.013</td>
+<td style="text-align: right;">100.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Salinity</td>
+<td style="text-align: left;">ppt</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2.490 (0.036)</td>
+<td style="text-align: right;">3.444 (0.024)</td>
+<td style="text-align: right;">0.140</td>
+<td style="text-align: right;">100.0%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Turbidity</td>
+<td style="text-align: left;">NTU</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.745 (0.018)</td>
+<td style="text-align: right;">0.937 (0.026)</td>
+<td style="text-align: right;">-0.010</td>
+<td style="text-align: right;">95.1%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Temperature</td>
+<td style="text-align: left;">degrees C</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.988 (0.015)</td>
+<td style="text-align: right;">1.163 (0.014)</td>
+<td style="text-align: right;">-0.063</td>
+<td style="text-align: right;">100.0%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+<section id="environmental-predictor-surfaces" class="level2">
+<h2 class="anchored" data-anchor-id="environmental-predictor-surfaces">Environmental Predictor Surfaces</h2>
+<!--
+Narrative to add:
+
+- Report the prediction range for each environmental surface.
+- Describe the major spatial gradients visible in Figure @fig-environmental-rasters.
+- Identify areas with limited or missing prediction coverage.
+- Refer to Table @tbl-raster-summary for numerical ranges and cell counts.
+- Reserve ecological explanations for the Discussion section.
+-->
+<div class="cell">
+<div id="tbl-raster-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-raster-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4: Summary of final IPDW environmental predictor rasters.
+</figcaption>
+<div aria-describedby="tbl-raster-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 14%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 23%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Units</th>
+<th style="text-align: right;">Minimum</th>
+<th style="text-align: right;">Maximum</th>
+<th style="text-align: right;">Predicted cells</th>
+<th style="text-align: center;">Cell size</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DO</td>
+<td style="text-align: left;">mg/L</td>
+<td style="text-align: right;">5.28</td>
+<td style="text-align: right;">7.99</td>
+<td style="text-align: right;">33,792</td>
+<td style="text-align: center;">100 x 100 m</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Salinity</td>
+<td style="text-align: left;">ppt</td>
+<td style="text-align: right;">2.31</td>
+<td style="text-align: right;">26.73</td>
+<td style="text-align: right;">33,792</td>
+<td style="text-align: center;">100 x 100 m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Turbidity</td>
+<td style="text-align: left;">NTU</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">5.23</td>
+<td style="text-align: right;">33,790</td>
+<td style="text-align: center;">100 x 100 m</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Temperature</td>
+<td style="text-align: left;">degrees C</td>
+<td style="text-align: right;">25.93</td>
+<td style="text-align: right;">30.43</td>
+<td style="text-align: right;">33,792</td>
+<td style="text-align: center;">100 x 100 m</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-environmental-rasters" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-environmental-rasters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="_3-results_files/figure-html/fig-environmental-rasters-1.png" class="img-fluid figure-img" width="960">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-environmental-rasters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Final IPDW prediction surfaces used as environmental inputs for habitat-suitability modeling. Each panel uses its own measurement scale.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="oyster-occurrence-data" class="level2">
+<h2 class="anchored" data-anchor-id="oyster-occurrence-data">Oyster Occurrence Data</h2>
+<!--
+Narrative to add:
+
+- Report the number of oyster occurrence points available for modeling.
+- Describe their spatial distribution within the Pensacola Bay System.
+- Identify any visible clustering or geographic gaps.
+- Explain any later filtering or thinning after those steps are completed.
+- Refer to Figure @fig-oyster-occurrences.
+
+Useful inline value:
+
+- Oyster occurrence points: 443
+-->
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-oyster-occurrences" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oyster-occurrences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="_3-results_files/figure-html/fig-oyster-occurrences-1.png" class="img-fluid figure-img" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oyster-occurrences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Spatial distribution of Eastern oyster occurrence points within the Pensacola Bay System.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="maxent-model-tuning-and-selection" class="level2">
+<h2 class="anchored" data-anchor-id="maxent-model-tuning-and-selection">MaxEnt Model Tuning and Selection</h2>
+<!--
+The MaxEnt scripts and saved outputs do not exist yet. The following block is a template.
+
+Expected file:
+
+2-data/models/maxent_tuning_results.rds
+
+Expected columns:
+
+- feature_class
+- regularization_multiplier
+- mean_auc
+- mean_omission_rate
+- mean_boyce
+- delta_aicc
+- selected
+
+Narrative to add after modeling:
+
+- Report the number of candidate configurations evaluated.
+- Identify the selected feature class and regularization multiplier.
+- Compare the selected model with the strongest alternatives.
+- Refer to Table @tbl-maxent-selection.
+-->
+<div id="tbl-maxent-selection" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-maxent-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;5: Performance of the leading candidate MaxEnt configurations.
+</figcaption>
+<div aria-describedby="tbl-maxent-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+
+</div>
+</div>
+</figure>
+</div>
+</section>
+<section id="environmental-variable-influence" class="level2">
+<h2 class="anchored" data-anchor-id="environmental-variable-influence">Environmental-Variable Influence</h2>
+<!--
+Expected files:
+
+2-data/models/maxent_variable_importance.rds
+2-data/models/maxent_response_curves.rds
+
+Expected importance columns:
+
+- variable
+- contribution
+- permutation_importance
+
+Expected response-curve columns:
+
+- variable
+- value
+- suitability
+
+Narrative to add:
+
+- Identify the most influential predictors.
+- Compare contribution and permutation importance.
+- Describe the direction and shape of the strongest modeled relationships.
+- Refer to Figures @fig-variable-importance and @fig-response-curves.
+-->
+</section>
+<section id="predicted-oyster-habitat-suitability" class="level2">
+<h2 class="anchored" data-anchor-id="predicted-oyster-habitat-suitability">Predicted Oyster Habitat Suitability</h2>
+<!--
+Expected file:
+
+2-data/models/maxent_suitability.rds
+
+Expected object:
+
+- A RasterLayer with continuous suitability values from 0 to 1.
+
+Narrative to add:
+
+- Report the range and distribution of suitability predictions.
+- Describe the locations of high and low suitability.
+- Identify gaps or edge effects.
+- Refer to Figure @fig-maxent-suitability.
+-->
+</section>
+<section id="comparison-with-the-existing-hsi" class="level2">
+<h2 class="anchored" data-anchor-id="comparison-with-the-existing-hsi">Comparison with the Existing HSI</h2>
+<!--
+Expected files:
+
+2-data/models/maxent_suitability.rds
+2-data/models/hsi_suitability.rds
+
+Both rasters must use the same CRS, resolution, origin, extent, alignment, mask, and a 0 to 1 scale before this Results code is run.
+
+Narrative to add:
+
+- Report the cell-level correlation and difference metrics.
+- Describe the overall spatial agreement.
+- Identify where MaxEnt predicts greater or lower suitability than the HSI.
+- Refer to Table @tbl-hsi-comparison and Figures @fig-hsi-comparison and @fig-hsi-scatter.
+-->
+<div id="tbl-hsi-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-hsi-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;6: Cell-level comparison between MaxEnt and HSI habitat-suitability predictions.
+</figcaption>
+<div aria-describedby="tbl-hsi-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+
+</div>
+</div>
+</figure>
+</div>
+</section>
+<section id="summary-of-major-results" class="level2">
+<h2 class="anchored" data-anchor-id="summary-of-major-results">Summary of Major Results</h2>
+<!--
+Narrative to add:
+
+- Summarize the environmental data coverage and interpolation performance.
+- Identify the predictors with the greatest influence on MaxEnt.
+- Summarize the distribution of high-suitability habitat.
+- State the overall level of agreement between MaxEnt and the HSI.
+- Identify where the largest differences occurred.
+-->
+</section>
 </section>
 
 </main>

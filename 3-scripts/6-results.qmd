@@ -1,0 +1,130 @@
+```{r} 
+#| label: set-up
+library(tidyverse)
+library(sf)
+library(terra)
+library(ipdw)
+library(knitr)
+
+## Load packages and functions from setup script
+source(here::here("3-scripts", "1-functions.r"))
+
+trg_crs <- "EPSG:6440" # NAD 83 Florida State Plane North 
+
+data_dir <- here::here("2-data","processed")
+rast_dir <- here::here("2-data","rasters")
+table_dir <- here::here("4-tables-and-figures", "tables")
+
+
+study_area <- readRDS(file.path(data_dir, "study_area.rds")) %>%
+  st_transform(trg_crs)
+
+study_extent <- study_area %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_buffer(1000)
+
+
+# Load Processed Data
+chla_proc <- readRDS(file.path(data_dir,"chla_proc.rds")) %>% st_transform(trg_crs)
+sal_proc <- readRDS(file.path(data_dir, "sal_proc.rds")) %>% st_transform(trg_crs)
+water_temp_proc <- readRDS(file.path(data_dir, "water_temp_proc.rds")) %>% st_transform(trg_crs)
+do_proc <- readRDS(file.path(data_dir, "do_proc.rds")) %>% st_transform(trg_crs)
+turb_proc <- readRDS(file.path(data_dir,"turb_proc.rds")) %>% st_transform(trg_crs)
+
+# Load Prediction Rasters
+sal_rast <- rast(file.path(rast_dir,"rast_sal.tif"))
+water_temp_rast <- rast(file.path(rast_dir,"rast_wTemp.tif"))
+do_rast <- rast(file.path(rast_dir,"rast_do.tif"))
+turb_rast <- rast(file.path(rast_dir,"rast_turb.tif")) 
+
+```
+
+# 1. Create Table of Observed vs Predicted Parameters
+
+```{r}
+#| label: obs-vs-pred-param-vals
+
+# helper function to summarize observed and predicted values
+summarize_parameter <- function(
+  observed,
+  predicted,
+  parameter,
+  units
+) {
+
+  # observed values from processed monitoring data
+  obs_vals <- observed %>%
+    sf::st_drop_geometry() %>%
+    dplyr::pull(mean)
+
+  # predicted raster values
+  pred_stats <- terra::global(
+    predicted,
+    fun = c("min", "mean", "max"),
+    na.rm = TRUE
+  )
+
+  tibble::tibble(
+    Parameter = parameter,
+    Units = units,
+
+    `Observed Min` = min(obs_vals, na.rm = TRUE),
+    `Observed Mean` = mean(obs_vals, na.rm = TRUE),
+    `Observed Max` = max(obs_vals, na.rm = TRUE),
+
+    `Predicted Min` = pred_stats$min,
+    `Predicted Mean` = pred_stats$mean,
+    `Predicted Max` = pred_stats$max
+  )
+}
+
+comparison_tbl <- dplyr::bind_rows(
+
+  summarize_parameter(
+    sal_proc,
+    sal_rast,
+    "Salinity",
+    "ppt"
+  ),
+
+  summarize_parameter(
+    water_temp_proc,
+    water_temp_rast,
+    "Water Temperature",
+    "°C"
+  ),
+
+  summarize_parameter(
+    do_proc,
+    do_rast,
+    "Dissolved Oxygen",
+    "mg/L"
+  ),
+
+  summarize_parameter(
+    turb_proc,
+    turb_rast,
+    "Turbidity",
+    "FTU"
+  )
+)
+
+comparison_tbl <- comparison_tbl %>%
+  dplyr::mutate(
+    `Observed Min` = round(`Observed Min`, 2),
+    `Observed Mean` = round(`Observed Mean`, 2),
+    `Observed Max` = round(`Observed Max`, 2),
+    `Predicted Min` = round(`Predicted Min`, 2),
+    `Predicted Mean` = round(`Predicted Mean`, 2),
+    `Predicted Max` = round(`Predicted Max`, 2)
+    )
+  
+saveRDS(comparison_tbl, file.path(table_dir, "Obs-Pred-Comparison.rds"))  
+  
+comparison_tbl %>%
+  knitr::kable(
+    align = c("l", "l", rep("r", 6))
+  )
+
+

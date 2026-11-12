@@ -1,0 +1,326 @@
+```{r}
+#| label: load-dfs-for-results-report
+#| echo: false
+#| output: false
+
+library(dplyr)
+
+
+# Raw Data
+chla_raw <- readRDS(here::here("2-data", "raw", "chla_raw.rds"))
+
+do_raw <- readRDS(here::here("2-data", "raw", "do.rds"))
+
+sal_raw <- readRDS(here::here("2-data", "raw", "salinity_raw.rds"))
+
+turb_raw <- readRDS(here::here("2-data", "raw", "turb_raw.rds"))
+
+water_temp_raw <- readRDS(here::here("2-data", "raw", "water_temp_raw.rds"))
+
+raw_data <- list(
+  "Chlorophyll-a" = chla_raw,
+  "Dissolved oxygen" = do_raw,
+  "Salinity" = sal_raw,
+  "Turbidity" = turb_raw,
+  "Water temperature" = water_temp_raw
+)
+
+all_sites <- purrr::imap_dfr(
+  raw_data,
+  \(data, parameter_name) {
+    tibble::tibble(
+      parameter = parameter_name,
+      Location_Identifier = data$Location_Identifier
+    )
+  }
+)
+
+length(unique(all_sites$Location_Identifier))
+```
+
+```{r}
+#| label: load-processed-data-sets-for-results-report
+#| echo: false
+#| output: false
+
+# Processed Data
+
+chla <- readRDS(here::here("2-data", "processed", "chla_proc.rds"))
+
+do <- readRDS(here::here("2-data", "processed", "do_proc.rds")) 
+
+sal <- readRDS(here::here("2-data", "processed", "sal_proc.rds"))
+
+turb <- readRDS(here::here("2-data", "processed", "turb_proc.rds"))
+
+water_temp <- readRDS(here::here("2-data", "processed", "water_temp_proc.rds"))
+
+raster_summary <- readr::read_csv(
+  here::here("4-tables-and-figures", "tables", "prediction_summary_stats.csv"),
+  show_col_types = FALSE
+)
+raster_ranges <- setNames(
+  sprintf("%.2f to %.2f %s", raster_summary$minimum, raster_summary$maximum, raster_summary$units),
+  raster_summary$parameter
+)
+
+```
+
+# Results
+
+*Water Quality Observations*
+
+Queried water quality observations for a twenty year period between 2005 and 2025 returned `r scales::comma(sum(vapply(raw_data, nrow, integer(1))))` observations from `r dplyr::n_distinct(all_sites$Location_Identifier, na.rm = TRUE)` unique sampling sites located within the PBS (@tbl-raw-data-summary). Water temperature returned the largest number of records (`r scales::comma(nrow(water_temp_raw))`), followed by salinity (`r scales::comma(nrow(sal_raw))`), dissolved oxygen (`r scales::comma(nrow(do_raw))`), turbidity (`r scales::comma(nrow(turb_raw))`), and chlorophyll-a (`r scales::comma(nrow(chla_raw))`). Chlorophyll-a only had measurements at `r dplyr::n_distinct(chla_raw$Location_Identifier, na.rm = TRUE)` stations.
+
+```{r}
+#| label: tbl-raw-data-summary
+#| tbl-cap: "Summary of raw water-quality data available for each environmental parameter."
+#| echo: false
+#| warning: false
+
+raw_summary <- purrr::imap_dfr(
+  raw_data,
+  \(data, parameter) {
+    result_values <- suppressWarnings(
+      as.numeric(as.character(data$Result_Measure))
+    )
+    sample_dates <- as.Date(data$Activity_StartDate)
+    reported_units <- unique(
+      trimws(as.character(data$Result_MeasureUnit))
+    )
+    reported_units <- reported_units[
+      !is.na(reported_units) & reported_units != ""
+    ]
+
+    tibble::tibble(
+      Parameter = parameter,
+      `Total Observations` = nrow(data),
+      `Unique Stations` = dplyr::n_distinct(
+        data$Location_Identifier,
+        na.rm = TRUE
+      ),
+      #`Numeric results` = sum(!is.na(result_values)),
+      #`Begin Date` = min(sample_dates, na.rm = TRUE),
+      #`End Date` = max(sample_dates, na.rm = TRUE),
+      `Reported Units` = paste(reported_units, collapse = ", ")
+    )
+  }
+) %>%
+  dplyr::arrange(dplyr::desc(`Total Observations`)) %>%
+  dplyr::mutate(
+    `Total Observations` = scales::comma(`Total Observations`),
+    `Unique Stations` = scales::comma(`Unique Stations`),
+    #`Numeric results` = scales::comma(`Numeric results`),
+    #`Begin Date` = format(`Begin Date`, "%m/%d/%Y"),
+    #`End Date` = format(`End Date`, "%m/%d/%Y")
+  )
+
+knitr::kable(
+  raw_summary,
+  booktabs = TRUE,
+  align = c("l", "r", "r", "l")
+)
+```
+
+After processing and spatial aggregation, there were `r sum(nrow(chla), nrow(do), nrow(sal), nrow(turb), nrow(water_temp))` parameter-specific spatial bins (@tbl-processed-data-summary). Chlorophyll-a was excluded from the final prediction rasters due to poor spatial distribution and limited data availability.
+
+```{r}
+#| label: tbl-processed-data-summary
+#| tbl-cap: "Summary of processed warm-season water-quality data used for spatial interpolation."
+#| echo: false
+#| warning: false
+
+processed_data <- list(
+  "Chlorophyll-a" = chla,
+  "Dissolved oxygen" = do,
+  "Salinity" = sal,
+  "Turbidity" = turb,
+  "Water temperature" = water_temp
+)
+
+parameter_units <- c(
+  "Chlorophyll-a" = "ug/L",
+  "Dissolved oxygen" = "mg/L",
+  "Salinity" = "ppt",
+  "Turbidity" = "NTU",
+  "Water temperature" = "degrees C"
+)
+
+processed_summary <- purrr::imap_dfr(
+  processed_data,
+  \(data, parameter) {
+    tibble::tibble(
+      Parameter = parameter,
+      `Spatial bins` = nrow(data),
+      `Station-bin pairs` = sum(
+        data$n_stations,
+        na.rm = TRUE
+      ),
+      `Total Observations` = sum(
+        data$total_n,
+        na.rm = TRUE
+      ),
+      `First year` = min(
+        data$first_year,
+        na.rm = TRUE
+      ),
+      `Last year` = max(
+        data$last_year,
+        na.rm = TRUE
+      ),
+      Units = parameter_units[[parameter]],
+    )
+  }
+) %>%
+  dplyr::mutate(
+    `Spatial bins` = scales::comma(`Spatial bins`),
+    `Station-bin pairs` = scales::comma(`Station-bin pairs`),
+    `Total Observations` = scales::comma(
+      `Total Observations`
+    )
+  )
+
+knitr::kable(
+  processed_summary,
+  booktabs = TRUE,
+  align = c("l", "l", "r", "r", "r", "c", "c")
+)
+```
+
+*Water Quality Mean Observation Data Distribution*
+
+Chlorophyll-a bin means ranged from `r round(min(chla$mean, na.rm = TRUE), 2)` to `r round(max(chla$mean, na.rm = TRUE), 2)` µg/L, with an overall mean of `r round(mean(chla$mean, na.rm = TRUE), 2)` µg/L. Dissolved oxygen bin means ranged from `r round(min(do$mean, na.rm = TRUE), 2)` to `r round(max(do$mean, na.rm = TRUE), 2)` mg/L, with an overall mean of `r round(mean(do$mean, na.rm = TRUE), 2)` mg/L. Salinity bin means ranged from `r round(min(sal$mean, na.rm = TRUE), 2)` to `r round(max(sal$mean, na.rm = TRUE), 2)` ppt, with an overall mean of `r round(mean(sal$mean, na.rm = TRUE), 2)` ppt. Turbidity bin means ranged from `r round(min(turb$mean, na.rm = TRUE), 2)` to `r round(max(turb$mean, na.rm = TRUE), 2)` NTU, with an overall mean of `r round(mean(turb$mean, na.rm = TRUE), 2)` NTU. Water temperature bin means ranged from `r round(min(water_temp$mean, na.rm = TRUE), 2)` to `r round(max(water_temp$mean, na.rm = TRUE), 2)` °C, with an overall mean of `r round(mean(water_temp$mean, na.rm = TRUE), 2)` °C.
+
+```{r}
+#| label: fig-processed-mean-distributions
+#| fig-cap: "Distribution of processed warm-season spatial-bin means for each environmental parameter. Dashed lines identify the median of each distribution."
+#| fig-width: 10
+#| fig-height: 8
+#| echo: false
+#| warning: false
+
+parameter_order <- names(processed_data)
+
+parameter_labels <- paste0(
+  parameter_order,
+  " (",
+  parameter_units[parameter_order],
+  ")"
+)
+
+processed_mean_data <- purrr::imap_dfr(
+  processed_data,
+  \(data, parameter) {
+    data %>%
+      sf::st_drop_geometry() %>%
+      dplyr::transmute(
+        parameter = parameter,
+        value = .data$mean
+      )
+  }
+) %>%
+  dplyr::mutate(
+    parameter = factor(
+      parameter,
+      levels = parameter_order
+    ),
+    parameter_label = factor(
+      paste0(
+        parameter,
+        " (",
+        parameter_units[as.character(parameter)],
+        ")"
+      ),
+      levels = parameter_labels
+    )
+  )
+
+processed_medians <- processed_mean_data %>%
+  dplyr::group_by(parameter_label) %>%
+  dplyr::summarise(
+    median_value = median(
+      value,
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  )
+
+ggplot2::ggplot(
+  processed_mean_data,
+  ggplot2::aes(x = value)
+) +
+  ggplot2::geom_histogram(
+    bins = 12,
+    fill = "#2C7FB8",
+    color = "white",
+    linewidth = 0.3
+  ) +
+  ggplot2::geom_vline(
+    data = processed_medians,
+    ggplot2::aes(
+      xintercept = median_value
+    ),
+    color = "#B2182B",
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  ggplot2::facet_wrap(
+    ~parameter_label,
+    scales = "free_x",
+    ncol = 2
+  ) +
+  ggplot2::labs(
+    x = "Processed spatial mean",
+    y = "Number of spatial bins"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(
+    panel.grid.minor = ggplot2::element_blank(),
+    strip.text = ggplot2::element_text(
+      face = "bold"
+    )
+  )
+
+```
+
+## IPDW Interpolation Sensitivity and Prediction
+
+Model sensitivity was evaluated for each parameter evaluating 36 combinations of max range and distance power values using five repetitions of five-fold spatial cross-validation [@fig-ipdw-sensitivity]. Following evaluation of model sensitivity, a distance power of 0.25 and range of 10 km was selected for all parameters.
+
+The final settings did not uniformly minimize MAE across the four parameters. A common setting was retained to favor smoother surfaces and consider coverage alongside MAE.
+
+![Sensitivity analysis for predictor variables.](4-tables-and-figures/figs/ipdw-sensitivity.png){#fig-ipdw-sensitivity}
+
+
+```{r}
+#| label: tbl-draft-ipdw-validation
+#| tbl-cap: "Repeated spatial cross-validation at distance power 0.25 and range 10 km."
+
+sensitivity_files <- c(
+  "Dissolved oxygen" = "do", "Salinity" = "sal",
+  "Turbidity" = "turb", "Water temperature" = "water_temp"
+)
+purrr::imap_dfr(sensitivity_files, function(stem, parameter) {
+  readRDS(here::here("2-data", "models", paste0("sensitivity_test_", stem, ".rds")))$summary %>%
+    dplyr::filter(dist_power == 0.25, max_range == 10000) %>%
+    dplyr::transmute(
+      Parameter = parameter, Units = parameter_units[[parameter]],
+      `Mean MAE (SD)` = sprintf("%.3f (%.3f)", mean_MAE, sd_MAE),
+      `Mean RMSE (SD)` = sprintf("%.3f (%.3f)", mean_RMSE, sd_RMSE),
+      `Mean bias` = mean_Bias, `Mean coverage` = scales::percent(mean_coverage, accuracy = 0.1)
+    )
+}) %>%
+  knitr::kable(digits = 3)
+```
+
+## Environmental Prediction Surface Rasters
+
+The resulting environmental prediction surfaces had a cell size of 100 × 100 m. Predicted values were `r raster_ranges[["Dissolved oxygen"]]` for dissolved oxygen, `r raster_ranges[["Salinity"]]` for salinity, `r raster_ranges[["Turbidity"]]` for turbidity, and `r raster_ranges[["Water temperature"]]` for water temperature.
+
+Dissolved oxygen generally predicted lower to the east and north east, salinity predicted higher to the south west, turbidity was higher in the north west near the mouth of Escambias River, and water temp was lowest near Blackwater Bay and the mouth of Blackwater River. 
+
+![Final prediction rasters](4-tables-and-figures/figs/prediction-rasters.png){#fig-environmental-prediction-rasters}
+
+## Observed vs Predicted Values
+
+Overall, the predicted values represented the oberved values really well.  

@@ -1,0 +1,1164 @@
+---
+title: "Suggested Revisions to Water Quality Processing"
+subtitle: "Proposed comparisons for the Pensacola Bay oyster habitat analysis"
+author: "Michael Fazio"
+date: "2026-11-16"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: false
+    embed-resources: true
+execute:
+  eval: false
+  echo: true
+  cache: false
+  freeze: false
+---
+
+## Purpose and scope
+
+This document describes changes worth testing before revising the current water quality processing workflow. It includes the associated R code, the reasoning behind each choice, and the limits of what the revised predictors would represent.
+
+**This is a recommendation document. It does not implement changes in the existing notebooks.** All R examples are ordinary fenced code blocks, rather than executable Quarto cells. Document execution is also disabled in the YAML. Rendering this file displays the proposed code without reading data, fitting models, or writing analysis outputs.
+
+The proposed code uses new object names and a separate temporary output directory. It does not replace the existing processed RDS files, environmental rasters, model files, figures, or CSV summaries. The current results remain the reference analysis.
+
+The code examples form a sequence. The data preparation examples can be tested first. The interpolation and MaxEnt examples are later, optional stages. They depend on objects identified in their explanations and should not be copied individually into a session without those prerequisites.
+
+## Recommendation
+
+The first comparison I would run is a station-based analysis with two descriptions of water quality:
+
+1. A temporally balanced summary of typical conditions.
+2. A separate indicator of observed low-oxygen conditions, if monitoring coverage supports it.
+
+I would retain observations that are scientifically plausible, even if they fall outside an IQR boundary. Confirmed recording errors and observations that cannot be interpreted consistently would still be excluded or held for review.
+
+GeoThinneR is worth testing as an alternative to spatial binning, but I would not assume that thinning improves interpolation. It reduces clustering by removing stations. Binning combines stations and moves their information to a representative location. Keeping station summaries at their original locations provides a useful reference for both.
+
+The initial comparison should be small:
+
+| Question | Reference | Proposed comparison |
+|:--|:--|:--|
+| Does spatial aggregation help? | Original station locations | Thinned stations and water-connected hexagon summaries |
+| How should typical conditions be described? | Balanced monthly means | Balanced monthly medians |
+| Do stressful observations add information? | Current environmental predictors | Current predictors plus one low-DO observation indicator |
+
+These questions should be evaluated separately. Changing outlier handling, temporal weighting, spatial representation, and MaxEnt predictors simultaneously would make it difficult to explain why the results changed.
+
+The observation-summary checks completed while preparing this document also show that the proposed DO stress indicator has weak support under the example rules: only 11 stations qualify, and only three have nonzero proportions. I would therefore treat the stress-indicator and MaxEnt sections as a conditional pilot. I would not add this layer to the current final model without resolving the depth definition, historic coverage, and limited spatial information first.
+
+## What the current files show
+
+The review used the current copies of:
+
+- [Water quality processing notebook](3-scripts/2-environmental-data.qmd).
+- [Processing and IPDW functions](3-scripts/1-functions.r).
+- [Environmental raster notebook](3-scripts/3-environmental-rasters.qmd).
+- [MaxEnt notebook](3-scripts/5-maxent-model.qmd).
+- The saved raw and processed water quality RDS files.
+
+The processing notebook sets the hexagon size to 2,000 meters. The processing function calculates station-year warm-season means, averages those annual means within station, and then averages station means within bins. The IQR screen is calculated before the May through October filter and excludes flagged observations from annual means.
+
+That averaging order has a useful purpose: years and stations with more observations do not automatically dominate the next averaging step. The unresolved issue is that the observations within a station-year can still differ substantially in sampled months, days, depths, and times of day.
+
+The following are observations from the saved local data, rather than published ecological thresholds:
+
+| Item checked | Finding on November 16, 2026 | Why it matters |
+|:--|:--|:--|
+| Raw observation dates | January 2005 through December 2024 for the four retained parameters | A query ending in 2025 does not establish that 2025 observations were returned |
+| Existing DO IQR lower boundary | Approximately 1.685 mg/L | The screen excludes 61 warm-season readings below that boundary |
+| Existing turbidity IQR upper boundary | Approximately 5.7 NTU | The screen excludes 134 warm-season readings above that boundary |
+| DO sampling depth units | Both feet and meters, with some missing metadata | Depth values must be converted before any depth-based selection |
+| Salinity result units | ppt, ppth, and PSS | Practical salinity should not silently be treated as an exact mass-concentration conversion |
+| Turbidity detection metadata | Three records marked Not Detected | A nondetect needs an explicit treatment rather than automatic conversion to zero |
+
+The saved processed summaries also show uneven support:
+
+| Parameter | Saved bins | Bins with one usable observation | Bins with fewer than five usable observations | Nonfinite bin means |
+|:--|--:|--:|--:|--:|
+| Salinity | 67 | 9 | 15 | 0 |
+| Dissolved oxygen | 68 | 8 | 16 | 0 |
+| Water temperature | 68 | 8 | 16 | 0 |
+| Turbidity | 61 | 10 | 20 | 3 |
+
+These findings identify decisions to revisit. They do not establish that every excluded observation was valid, that every sparse station should be removed, or that a particular alternative has better predictive performance.
+
+The code below reproduces these basic checks without modifying any saved data.
+
+~~~r
+rev_raw_files <- c(
+  Salinity = "salinity_raw.rds",
+  DO = "do.rds",
+  Temperature = "water_temp_raw.rds",
+  Turbidity = "turb_raw.rds"
+)
+
+rev_raw <- lapply(
+  rev_raw_files,
+  function(file) readRDS(here::here("2-data", "raw", file))
+)
+
+rev_current_screen_audit <- purrr::imap_dfr(
+  rev_raw,
+  function(data, parameter) {
+    value <- suppressWarnings(as.numeric(data$Result_Measure))
+    date <- as.Date(data$Activity_StartDate)
+
+    # Reproduce the notebook's temperature filter for this audit only.
+    if (parameter == "Temperature") {
+      keep <- is.finite(value) & value < 100
+      value <- value[keep]
+      date <- date[keep]
+    }
+
+    quartiles <- stats::quantile(value, c(0.25, 0.75), na.rm = TRUE)
+    lower <- unname(quartiles[1] - 1.5 * diff(quartiles))
+    upper <- unname(quartiles[2] + 1.5 * diff(quartiles))
+    warm <- lubridate::month(date) %in% 5:10
+
+    data.frame(
+      parameter = parameter,
+      first_date = min(date, na.rm = TRUE),
+      last_date = max(date, na.rm = TRUE),
+      lower_iqr = lower,
+      upper_iqr = upper,
+      warm_below = sum(warm & value < lower, na.rm = TRUE),
+      warm_above = sum(warm & value > upper, na.rm = TRUE)
+    )
+  }
+)
+
+rev_processed_files <- c(
+  Salinity = "sal_proc.rds",
+  DO = "do_proc.rds",
+  Temperature = "water_temp_proc.rds",
+  Turbidity = "turb_proc.rds"
+)
+
+rev_current_support <- purrr::imap_dfr(
+  rev_processed_files,
+  function(file, parameter) {
+    data <- readRDS(here::here("2-data", "processed", file))
+    data.frame(
+      parameter = parameter,
+      bins = nrow(data),
+      one_observation = sum(data$total_n == 1),
+      fewer_than_five = sum(data$total_n < 5),
+      nonfinite_means = sum(!is.finite(data$mean))
+    )
+  }
+)
+
+rev_current_screen_audit
+rev_current_support
+~~~
+
+## Set up a separate trial
+
+The proposed processing should be tested alongside the existing analysis. In particular, calling the existing processing function would continue to apply the existing IQR exclusion and write to the existing processed-data paths. The examples below therefore define separate functions.
+
+The temporary output directory is intentional. It allows a trial to be inspected before deciding whether any results belong in the permanent project directories. Temporary files may be deleted by the operating system, so a successful trial would need an explicitly chosen permanent location later.
+
+The month and coverage settings below are starting values for a sensitivity analysis. They are not established ecological standards:
+
+- At least three represented warm-season months and three sampled days per station-year.
+- At least three qualifying years for a station-level typical-condition summary.
+- At least 20 sampled days across qualifying years for an exploratory DO stress summary.
+
+The coverage settings should be inspected before accepting them. A station with 20 sampled days is not necessarily well represented if all samples were taken at one time of day or during unusual conditions.
+
+~~~r
+library(dplyr)
+library(sf)
+
+rev_root <- tempfile("capstone-suggested-revisions-")
+rev_crs <- "EPSG:6440"
+rev_study_area <- readRDS(
+  here::here("2-data", "processed", "study_area.rds")
+) %>%
+  sf::st_transform(rev_crs)
+
+rev_min_months <- 3L
+rev_min_days_per_year <- 3L
+rev_min_years <- 3L
+rev_min_stress_days <- 20L
+
+# NULL retains all sampled depths for the initial descriptive comparison.
+# A numeric interval can be supplied only after reviewing depth metadata.
+rev_depth_band_m <- NULL
+
+rev_units <- list(
+  Salinity = c("ppt", "ppth"),
+  DO = "mg/l",
+  Temperature = "deg c",
+  Turbidity = "ntu"
+)
+
+# These are broad review limits, not oyster suitability thresholds.
+# A result outside these limits is held for review, not declared erroneous.
+rev_review_bounds <- list(
+  Salinity = c(0, Inf),
+  DO = c(0, Inf),
+  Temperature = c(-5, 50),
+  Turbidity = c(0, Inf)
+)
+~~~
+
+Practical salinity values reported as PSS are held out of this initial example until their analytical comparability is reviewed. This is a conservative workflow decision, not a claim that the 95 PSS records are invalid. If their use is justified, add the normalized label "pss" to the approved salinity units and describe the resulting predictor accurately. Inspect analytical methods as well as unit labels. Turbidity methods can differ even when results share an NTU label.
+
+The temperature review limits are deliberately broad, provisional values for this estuary. They would need approval as part of the data review. The original rule excluding temperatures at or above 100 degrees Celsius does not by itself identify all implausible observations.
+
+## Replace automatic IQR deletion with an observation audit
+
+An IQR flag identifies values far from the middle of the observed distribution. It does not distinguish a recording error from a real low-oxygen episode or a high-turbidity observation.
+
+The proposed preparation function keeps IQR flags for inspection but does not use them as an exclusion criterion. Other problems are recorded separately: missing measurements, unapproved units, quality or detection flags, values outside the provisional review bounds, and observations outside the selected season or study area.
+
+Records with quality qualifiers or detection-condition metadata are held for review in this example. Some qualifiers may eventually be acceptable. The provider's definitions should determine that decision. Nondetects should not automatically be replaced with zero or with a detection limit. [EPA data considerations](https://www.epa.gov/n-steps-online/data-considerations)
+
+Depths are converted to meters using the result-specific depth when available and the activity depth otherwise. This conversion does not establish that an activity depth is measured below the water surface. That interpretation still requires checking the provider's metadata.
+
+A fixed depth band is also not equivalent to bottom water. Selecting the deepest observation in a profile does not prove that the observation was near the seabed. If bottom-relevant observations cannot be identified consistently, the initial summaries should be described as summaries across the sampled depths.
+
+~~~r
+rev_blank_to_na <- function(x) {
+  x <- trimws(as.character(x))
+  x[x == ""] <- NA_character_
+  x
+}
+
+rev_depth_to_m <- function(value, unit) {
+  value <- suppressWarnings(as.numeric(value))
+  unit <- tolower(rev_blank_to_na(unit))
+  dplyr::case_when(
+    unit %in% c("m", "meter", "meters") ~ value,
+    unit %in% c("ft", "foot", "feet") ~ value * 0.3048,
+    TRUE ~ NA_real_
+  )
+}
+
+rev_prepare_wq <- function(
+  data, parameter, approved_units, review_bounds,
+  study_area, depth_band_m = NULL
+) {
+  stopifnot(all(sf::st_geometry_type(data) == "POINT"))
+  data <- sf::st_transform(data, sf::st_crs(study_area))
+
+  # Remove exact repeated records while retaining distinct result identifiers.
+  exact_duplicate <- duplicated(sf::st_drop_geometry(data))
+  data <- data[!exact_duplicate, ]
+  data$rev_row <- seq_len(nrow(data))
+  data$station_id <- as.character(data$Location_Identifier)
+  data$date <- as.Date(data$Activity_StartDate)
+  data$value <- suppressWarnings(as.numeric(data$Result_Measure))
+  data$result_unit <- tolower(rev_blank_to_na(data$Result_MeasureUnit))
+  data$qualifier <- rev_blank_to_na(data$Result_MeasureQualifierCode)
+  data$detection <- rev_blank_to_na(data$Result_ResultDetectionCondition)
+
+  result_depth <- suppressWarnings(
+    as.numeric(data$ResultDepthHeight_Measure)
+  )
+  use_result_depth <- is.finite(result_depth)
+  depth_value <- ifelse(
+    use_result_depth, result_depth,
+    suppressWarnings(as.numeric(data$Activity_DepthHeightMeasure))
+  )
+  depth_unit <- ifelse(
+    use_result_depth, as.character(data$ResultDepthHeight_MeasureUnit),
+    as.character(data$Activity_DepthHeightMeasureUnit)
+  )
+  data$depth_m <- rev_depth_to_m(depth_value, depth_unit)
+
+  data$warm_season <- lubridate::month(data$date) %in% 5:10
+  data$unit_ok <- data$result_unit %in% approved_units
+  data$quality_review <- !is.na(data$qualifier) | !is.na(data$detection)
+  data$plausible <- is.finite(data$value) &
+    data$value >= review_bounds[1] & data$value <= review_bounds[2]
+  data$in_study_area <- lengths(sf::st_intersects(data, study_area)) > 0
+  data$depth_ok <- TRUE
+
+  if (!is.null(depth_band_m)) {
+    data$depth_ok <- is.finite(data$depth_m) &
+      data$depth_m >= depth_band_m[1] &
+      data$depth_m <= depth_band_m[2]
+  }
+
+  data$include <- !is.na(data$station_id) &
+    nzchar(data$station_id) & !is.na(data$date) &
+    data$warm_season & data$unit_ok & !data$quality_review &
+    data$plausible & data$in_study_area & data$depth_ok
+
+  # Flag unusual values among candidate warm-season observations.
+  # This flag is not included in the inclusion rule.
+  candidate <- data$value[data$include]
+  stopifnot(length(candidate) > 0)
+  quartiles <- stats::quantile(candidate, c(0.25, 0.75))
+  lower <- unname(quartiles[1] - 1.5 * diff(quartiles))
+  upper <- unname(quartiles[2] + 1.5 * diff(quartiles))
+  data$iqr_flag <- is.finite(data$value) &
+    (data$value < lower | data$value > upper)
+
+  audit <- data.frame(
+    parameter = parameter,
+    original_records = nrow(data) + sum(exact_duplicate),
+    exact_duplicates_removed = sum(exact_duplicate),
+    records_after_deduplication = nrow(data),
+    missing_or_nonfinite_value = sum(!is.finite(data$value)),
+    unapproved_unit = sum(!data$unit_ok),
+    quality_or_detection_review = sum(data$quality_review),
+    outside_review_bounds = sum(!data$plausible),
+    missing_depth_m = sum(!is.finite(data$depth_m)),
+    included_records = sum(data$include),
+    included_iqr_flags = sum(data$include & data$iqr_flag)
+  )
+
+  list(records = data, audit = audit, iqr_limits = c(lower, upper))
+}
+
+rev_prepared <- purrr::imap(
+  rev_raw,
+  function(data, parameter) {
+    rev_prepare_wq(
+      data = data,
+      parameter = parameter,
+      approved_units = rev_units[[parameter]],
+      review_bounds = rev_review_bounds[[parameter]],
+      study_area = rev_study_area,
+      depth_band_m = rev_depth_band_m
+    )
+  }
+)
+
+rev_qc_audit <- purrr::map_dfr(rev_prepared, "audit")
+rev_qc_audit
+
+# Inspect these records before deciding whether they should be excluded.
+rev_do_review <- rev_prepared$DO$records %>%
+  filter(quality_review | !plausible | (include & iqr_flag))
+~~~
+
+The audit categories can overlap, so their counts should not be added together as though they were mutually exclusive reasons for exclusion. All original raw files remain available. The review table should be retained when interpreting differences from the current results.
+
+## Define what a mean and a median would represent
+
+Medians are useful when the goal is to describe typical conditions without allowing a few large values to dominate the summary. Means retain information about the magnitude of those extremes. Skewness alone does not make a mean incorrect; the choice depends on the quantity the analysis is intended to represent. [Water quality analysis guidance](https://www.waterquality.gov.au/anz-guidelines/monitoring/data-analysis/data-preparation)
+
+The proposed code compares two precisely named summaries:
+
+| Proposed field | Calculation | Interpretation |
+|:--|:--|:--|
+| balanced_mean | Average of monthly means of daily summaries, first within year and then across qualifying years | Average daily conditions with equal weighting of represented months and qualifying years |
+| balanced_typical | Average of monthly medians of the same daily summaries, first within year and then across qualifying years | Typical monthly conditions with the same month and year weighting |
+
+Both start from the same daily median. This prevents several records from one sampled date from automatically receiving more weight than a date with one record. It also holds the daily input constant when comparing the two monthly summaries.
+
+This daily median is a defined observation summary. It is not necessarily a time-weighted daily value, a depth-integrated water-column value, or a bottom-water value. Separate legitimate observations are not declared erroneous merely because they occur on the same date.
+
+The balanced_typical field is **not** the median of all observations, the median of station-year medians, or the exact long-term median at that station. It is an average of monthly medians with explicit temporal weighting. If the exact long-term median is the desired target, a different estimator and a clear sampling-weight scheme would be needed.
+
+The code retains incomplete years in the annual table with an eligibility flag. Station summaries use only qualifying years. Missing months and years are not filled with zero, and no claim is made that the remaining observations represent unsampled periods.
+
+~~~r
+rev_summarise_wq <- function(
+  prepared, parameter, min_months, min_days_per_year,
+  min_years, min_stress_days
+) {
+  data <- prepared$records %>% filter(include)
+  coords <- sf::st_coordinates(data)
+
+  location_check <- data %>%
+    sf::st_drop_geometry() %>%
+    mutate(x = coords[, 1], y = coords[, 2]) %>%
+    group_by(station_id) %>%
+    summarise(n_locations = n_distinct(x, y), .groups = "drop")
+  if (any(location_check$n_locations != 1L)) {
+    stop("Review station identifiers with multiple coordinates before summarizing.")
+  }
+
+  locations <- data %>%
+    select(station_id) %>%
+    distinct(station_id, .keep_all = TRUE)
+
+  daily <- data %>%
+    sf::st_drop_geometry() %>%
+    group_by(station_id, date) %>%
+    summarise(
+      daily_value = stats::median(value),
+      n_results = n(),
+      depth_min_m = if (all(is.na(depth_m))) NA_real_ else min(depth_m, na.rm = TRUE),
+      depth_max_m = if (all(is.na(depth_m))) NA_real_ else max(depth_m, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      year = lubridate::year(date),
+      month = lubridate::month(date),
+      low_do_day = if (parameter == "DO") daily_value < 2 else NA
+    )
+
+  monthly <- daily %>%
+    group_by(station_id, year, month) %>%
+    summarise(
+      monthly_mean = mean(daily_value),
+      monthly_median = stats::median(daily_value),
+      low_do_fraction = if (parameter == "DO") mean(low_do_day) else NA_real_,
+      n_days = n(),
+      n_results = sum(n_results),
+      .groups = "drop"
+    )
+
+  annual <- monthly %>%
+    group_by(station_id, year) %>%
+    summarise(
+      annual_mean = mean(monthly_mean),
+      annual_typical = mean(monthly_median),
+      low_do_fraction = if (parameter == "DO") mean(low_do_fraction) else NA_real_,
+      n_months = n(),
+      n_days = sum(n_days),
+      n_results = sum(n_results),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      eligible_year = n_months >= min_months & n_days >= min_days_per_year
+    )
+
+  station_values <- annual %>%
+    filter(eligible_year) %>%
+    group_by(station_id) %>%
+    summarise(
+      balanced_mean = mean(annual_mean),
+      balanced_typical = mean(annual_typical),
+      do_low_fraction = if (parameter == "DO") mean(low_do_fraction) else NA_real_,
+      n_years = n(),
+      n_days = sum(n_days),
+      n_results = sum(n_results),
+      min_months_in_year = if (n() > 0L) min(n_months) else NA_integer_,
+      first_year = if (n() > 0L) min(year) else NA_integer_,
+      last_year = if (n() > 0L) max(year) else NA_integer_,
+      annual_mean_sd = stats::sd(annual_mean),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      eligible_typical = n_years >= min_years,
+      eligible_stress = parameter == "DO" &
+        n_years >= min_years & n_days >= min_stress_days
+    )
+
+  stations <- locations %>%
+    inner_join(station_values, by = "station_id")
+
+  list(daily = daily, monthly = monthly, annual = annual, stations = stations)
+}
+
+rev_summaries <- purrr::imap(
+  rev_prepared,
+  function(prepared, parameter) {
+    rev_summarise_wq(
+      prepared, parameter,
+      min_months = rev_min_months,
+      min_days_per_year = rev_min_days_per_year,
+      min_years = rev_min_years,
+      min_stress_days = rev_min_stress_days
+    )
+  }
+)
+
+rev_support <- purrr::imap_dfr(
+  rev_summaries,
+  function(summary, parameter) {
+    stations <- sf::st_drop_geometry(summary$stations)
+    data.frame(
+      parameter = parameter,
+      stations_with_qualifying_year = nrow(stations),
+      stations_eligible_typical = sum(stations$eligible_typical),
+      stations_eligible_stress = sum(stations$eligible_stress),
+      station_years_evaluated = nrow(summary$annual),
+      station_years_qualifying = sum(summary$annual$eligible_year)
+    )
+  }
+)
+
+rev_support
+rev_summaries$DO$annual
+
+# Compare coverage rules using the annual audit, without recomputing observations.
+rev_coverage_sensitivity <- purrr::imap_dfr(
+  rev_summaries,
+  function(summary, parameter) {
+    purrr::pmap_dfr(
+      expand.grid(min_months = c(2L, 3L), min_days = c(3L, 6L)),
+      function(min_months, min_days) {
+        coverage <- summary$annual %>%
+          filter(n_months >= min_months, n_days >= min_days) %>%
+          group_by(station_id) %>%
+          summarise(n_years = n(), n_days = sum(n_days), .groups = "drop")
+
+        data.frame(
+          parameter = parameter,
+          min_months = min_months,
+          min_days = min_days,
+          stations_eligible_typical = sum(coverage$n_years >= rev_min_years),
+          stations_eligible_stress = if (parameter == "DO") {
+            sum(coverage$n_years >= rev_min_years &
+                  coverage$n_days >= rev_min_stress_days)
+          } else NA_integer_
+        )
+      }
+    )
+  }
+)
+
+rev_coverage_sensitivity
+~~~
+
+The first and last year columns describe the qualifying observations used in each summary. They do not imply uninterrupted coverage between those years. The annual standard deviation describes variation among the qualifying annual means. It is not a standard error for the station estimate and does not account for all sampling dependence.
+
+If these rules remove most stations, the next step is to review the coverage table and the analysis target. The rules should not be relaxed merely to improve a validation score. Likewise, strict rules should not be adopted without considering whether they eliminate important parts of the bay.
+
+The local coverage check illustrates this tradeoff. With three represented months, three sampled days, and three qualifying years, 24 DO stations qualify for the typical-condition comparison and 11 also meet the 20-day stress requirement. Increasing the annual minimum to six sampled days leaves only four DO stations meeting the three-year requirement. That stricter subset cannot support the proposed five-fold comparison.
+
+The three-day example is therefore a feasible starting comparison, not a claim of strong seasonal coverage. Three observations distributed across a six-month season still leave substantial uncertainty. The stress surface should be deferred if its 11 stations do not provide adequate geographic coverage or useful variation after the depth and metadata review.
+
+## Use stressful observations as a separate predictor
+
+The proposed DO indicator is the balanced proportion of sampled days whose daily median DO is below 2 mg/L. The 2 mg/L boundary is a useful hypoxia screening threshold discussed in oyster monitoring guidance. It is not a universal mortality threshold. Duration, temperature, life stage, and exposure conditions also matter. [Oyster habitat monitoring handbook, section 4.3](https://chnep.wateratlas.usf.edu/upload/documents/Oyster-Habitat-Restoration-Monitoring-And-Assessment-Handbook.pdf)
+
+The calculation deliberately separates typical conditions from low-oxygen observations:
+
+1. Retain valid low DO readings during quality review.
+2. Calculate the daily summary for the selected depth policy.
+3. Flag whether that daily summary is below 2 mg/L.
+4. Calculate the fraction of flagged sampled days within each represented month.
+5. Average those fractions within qualifying years and then across qualifying years.
+
+This is a temporally balanced observation proportion. It will differ from the pooled count of low readings divided by all readings. The denominator is the sampled days within each month before the month and year averaging steps, rather than the number of raw measurements across the entire record.
+
+For example, two low days out of ten sampled days and twenty low days out of one hundred sampled days both give 20% within a comparable sampling period. Their precision is different. One low day out of one sampled day would give 100%, but would provide very weak evidence about a long-term pattern.
+
+Several low observations can belong to one episode, and episodes between visits can go unrecorded. For that reason, this field should not be named number_of_events, duration_of_hypoxia, percent_time_hypoxic, or probability_of_oyster_mortality. The monitoring handbook recommends frequent measurements and attention to time of day when evaluating DO. The irregular observations in this project cannot establish event duration.
+
+The daily median also means this indicator does not flag every day on which at least one low reading occurred. A daily minimum or an any-low-reading rule would answer a different question and would be more sensitive to the number of measurements and sampled depths that day. That alternative should only be tested with a consistent sampling design.
+
+~~~r
+rev_do_stress_stations <- rev_summaries$DO$stations %>%
+  filter(eligible_stress, is.finite(do_low_fraction))
+
+rev_do_stress_coverage <- rev_do_stress_stations %>%
+  sf::st_drop_geometry() %>%
+  select(
+    station_id, do_low_fraction, n_years, n_days,
+    min_months_in_year, first_year, last_year
+  )
+
+stopifnot(
+  all(rev_do_stress_stations$do_low_fraction >= 0),
+  all(rev_do_stress_stations$do_low_fraction <= 1)
+)
+
+rev_do_stress_coverage
+~~~
+
+An interpolated surface of this field would estimate the spatial pattern of the defined sampled-day proportion. It would not recover unsampled episodes. Sparse data, uneven sampling hours, depth differences, and storm-focused sampling could still affect the pattern. The station counts and coverage metadata should remain available when interpreting the map.
+
+For the example rules and the current local files, the 11 eligible DO stations have proportions ranging from 0 to 0.025. Eight are zero and three are nonzero. Their qualifying years extend no later than 2019, even though the raw DO dataset contains observations through 2024. The nonzero values are approximately 0.0042, 0.0114, and 0.025. These are diagnostic summaries of the proposed definition, not new habitat-model results.
+
+This finding limits what the pilot can establish. A daily median across mixed sampled depths can hide individual low readings, and the coverage screen can remove recent observations. Changing to an any-low-reading rule just to create more nonzero values would introduce a different sampling-effort problem. A consistent depth and sampling-unit definition should be reviewed before deciding whether this dataset can support a useful stress surface at all.
+
+The first trial should add only this one stress indicator. Salinity extremes, high temperature, and turbidity extremes could be considered later if there is a clear ecological definition and adequate monitoring support. The IQR boundaries should not be used as ecological thresholds simply because the current code already calculates them.
+
+## Test GeoThinneR on station summaries
+
+Thinning should occur after the temporal summaries and coverage checks. Applying distance thinning to the raw observations could discard repeated observations at one station that are needed to describe conditions over time.
+
+The helper below retains original station geometries. It passes a geometry-free table with geographic coordinates to GeoThinneR, then uses the retained row identifiers to select the original station rows. The proposed distance is supplied in kilometers.
+
+The 1 km example is a candidate spacing for comparison, not a distance established as optimal for water quality. It should not be accepted solely because the oyster occurrence thinning currently uses that distance.
+
+~~~r
+rev_thin_stations <- function(stations, thin_dist_km = 1, seed = 42) {
+  if (nrow(stations) < 2L) return(stations)
+
+  geographic <- sf::st_transform(stations, 4326)
+  coords <- sf::st_coordinates(geographic)
+  thinning_data <- data.frame(
+    rev_row = seq_len(nrow(stations)),
+    lon = coords[, 1],
+    lat = coords[, 2]
+  )
+
+  thinned <- GeoThinneR::thin_points(
+    data = thinning_data,
+    lon_col = "lon",
+    lat_col = "lat",
+    method = "distance",
+    thin_dist = thin_dist_km,
+    seed = seed
+  )
+
+  retained <- GeoThinneR::largest(thinned)
+  stations[sort(retained$rev_row), ]
+}
+
+rev_do_stations <- rev_summaries$DO$stations %>%
+  filter(eligible_typical)
+
+rev_do_thinned <- rev_thin_stations(
+  rev_do_stations, thin_dist_km = 1, seed = 42
+)
+
+data.frame(
+  original_stations = nrow(rev_do_stations),
+  retained_stations = nrow(rev_do_thinned)
+)
+~~~
+
+GeoThinneR's default geographic distance is Haversine distance. It does not follow water pathways. A pair of stations across land can therefore compete for retention. [GeoThinneR documentation](https://jmestret.github.io/GeoThinneR/reference/thin_points.html)
+
+If thinning removes stations from different connected water bodies or very different sampling-depth regimes, that is a reason to revise the selection rule. A region-based selection could be added after assigning reviewed sub-basin identifiers. The code above does not invent those regions or claim to solve preferential sampling. Different thinning seeds can also retain different stations, so a result that depends strongly on one retained subset would need further investigation.
+
+## If binning is retained, separate disconnected water fragments
+
+The current 2 km hexagon averages can reduce the influence of dense station clusters. Their main cost is a change in spatial support: a collection of station values becomes one areal summary represented by a point.
+
+A large hexagon can intersect water on both sides of land. Clipping the hexagon to the study area does not necessarily split a multipart polygon into separate summaries. The proposed helper explicitly separates polygon fragments before assigning stations. This reduces that particular risk, although it does not establish that every connected fragment is internally well mixed.
+
+The hexagon cell size is the distance between opposite edges, rather than an interpolation radius. [sf grid documentation](https://r-spatial.github.io/sf/reference/st_make_grid.html)
+
+~~~r
+rev_bin_stations <- function(stations, study_area, value_col, bin_size = 2000) {
+  area <- sf::st_transform(study_area, sf::st_crs(stations))
+  grid <- sf::st_make_grid(
+    area, cellsize = bin_size, square = FALSE, flat_topped = TRUE
+  ) %>%
+    sf::st_as_sf() %>%
+    sf::st_intersection(sf::st_union(area))
+
+  grid <- grid[sf::st_dimension(grid) == 2, ]
+  # Normalize the mixed geometry types before splitting every fragment.
+  grid <- sf::st_cast(grid, "MULTIPOLYGON")
+  grid <- sf::st_cast(grid, "POLYGON", warn = FALSE)
+  grid$bin_id <- seq_len(nrow(grid))
+
+  matches <- sf::st_intersects(stations, grid)
+  bin_id <- vapply(
+    matches,
+    function(ids) if (length(ids)) ids[1L] else NA_integer_,
+    integer(1)
+  )
+  if (anyNA(bin_id)) stop("Some stations are outside the proposed bin geometry.")
+
+  values <- sf::st_drop_geometry(stations)
+  values$bin_id <- bin_id
+  values$rev_value <- stations[[value_col]]
+
+  bin_values <- values %>%
+    group_by(bin_id) %>%
+    summarise(
+      rev_value = mean(rev_value),
+      n_stations = n(),
+      n_days = sum(n_days),
+      .groups = "drop"
+    )
+
+  bin_points <- grid %>% inner_join(bin_values, by = "bin_id")
+  sf::st_geometry(bin_points) <- sf::st_point_on_surface(
+    sf::st_geometry(bin_points)
+  )
+  bin_points
+}
+
+rev_do_bins <- rev_bin_stations(
+  rev_do_stations,
+  study_area = rev_study_area,
+  value_col = "balanced_mean",
+  bin_size = 2000
+)
+~~~
+
+Stations exactly on a shared bin boundary are assigned once, using the first matching fragment identifier. This avoids duplicating a station in two bin summaries. The helper averages station summaries with equal station weights. It does not weight stations by their number of raw measurements or treat the summed sampled days as independent binomial trials.
+
+Even with these changes, a bin representative is not an observed station. Validation needs to retain the original station locations as test targets.
+
+## Compare spatial representations against the same withheld stations
+
+For a fair comparison, assign spatial folds to the eligible station summaries first. Within each fold, create the unthinned, thinned, or binned training representation using training stations only. Evaluate all three against the same withheld station summaries.
+
+Thinning the full dataset before assigning folds would change the test population. Comparing errors against bin means for one method and station means for another would also change the target. Smoother bin averages can be easier to predict without demonstrating better prediction of station conditions.
+
+The proposed code uses the existing IPDW implementation without editing its source. The distance power of 1 and range of 15 km are held fixed for this initial comparison because both are already in the project's candidate grid. They are example comparison settings, not newly selected best parameters.
+
+If the preferred representation changes across plausible powers, ranges, or thinning seeds, the result should be reported as sensitive to those choices. If parameters are tuned and evaluated on the same folds, the resulting scores describe internal model selection. A separate outer validation would be needed for an independent estimate of performance after tuning.
+
+~~~r
+# Read existing function definitions into a separate environment.
+rev_ipdw_functions <- new.env(parent = globalenv())
+sys.source(
+  here::here("3-scripts", "1-functions.r"),
+  envir = rev_ipdw_functions
+)
+
+rev_ipdw_comparison <- function(
+  stations, value_col, study_area, cost_raster,
+  block_size = 5000, k = 5, seed = 42,
+  dist_power = 1, max_range = 15000, thin_dist_km = 1
+) {
+  stations <- stations[is.finite(stations[[value_col]]), ]
+  stations <- sf::st_transform(stations, raster::crs(cost_raster))
+  if (nrow(stations) <= k) {
+    stop("There are not enough eligible stations for the requested folds.")
+  }
+
+  folds <- blockCV::cv_spatial(
+    x = stations,
+    k = k,
+    size = block_size,
+    selection = "random",
+    seed = seed,
+    plot = FALSE,
+    report = FALSE,
+    progress = FALSE
+  )$folds_ids
+  stopifnot(length(folds) == nrow(stations), !anyNA(folds))
+
+  purrr::map_dfr(seq_len(k), function(fold) {
+    train <- stations[folds != fold, ]
+    test <- stations[folds == fold, ]
+    if (nrow(train) < 2L || nrow(test) == 0L) {
+      stop("A spatial fold has too few training or testing stations.")
+    }
+
+    purrr::map_dfr(c("stations", "thinned", "binned"), function(method) {
+      train_points <- train
+      train_points$rev_value <- train_points[[value_col]]
+
+      if (method == "thinned") {
+        train_points <- rev_thin_stations(
+          train_points, thin_dist_km, seed = seed + fold
+        )
+      }
+      if (method == "binned") {
+        train_points <- rev_bin_stations(
+          train, study_area, value_col, bin_size = 2000
+        )
+      }
+      if (nrow(train_points) < 2L) {
+        stop("A training representation retained fewer than two points.")
+      }
+
+      surface <- rev_ipdw_functions$ipdw_manual(
+        sf_ob = train_points,
+        cost_ras = cost_raster,
+        range = max_range,
+        par_list = "rev_value",
+        dist_power = dist_power
+      )
+      predicted <- terra::extract(
+        terra::rast(surface), terra::vect(test), ID = FALSE
+      )[[1]]
+
+      data.frame(
+        fold = fold,
+        station_id = test$station_id,
+        representation = method,
+        observed = test[[value_col]],
+        predicted = predicted,
+        n_training_points = nrow(train_points)
+      )
+    })
+  })
+}
+
+# Requires the existing cost_raster from 3-environmental-rasters.qmd.
+# This can take time because it fits 15 small interpolation models.
+rev_do_predictions <- rev_ipdw_comparison(
+  stations = rev_do_stations,
+  value_col = "balanced_mean",
+  study_area = rev_study_area,
+  cost_raster = cost_raster
+)
+
+rev_do_coverage <- rev_do_predictions %>%
+  group_by(representation) %>%
+  summarise(
+    n_test = n(),
+    n_predicted = sum(is.finite(predicted)),
+    coverage = n_predicted / n_test,
+    .groups = "drop"
+  )
+
+# Compare prediction errors only where all three methods predicted.
+# Report the full coverage table alongside these paired errors.
+rev_do_common <- rev_do_predictions %>%
+  group_by(fold, station_id) %>%
+  filter(
+    n_distinct(representation) == 3L,
+    all(is.finite(predicted))
+  ) %>%
+  ungroup()
+
+rev_do_errors <- rev_do_common %>%
+  group_by(representation) %>%
+  summarise(
+    n_common = n(),
+    MAE = mean(abs(predicted - observed)),
+    RMSE = sqrt(mean((predicted - observed)^2)),
+    Bias = mean(predicted - observed),
+    .groups = "drop"
+  )
+
+rev_do_coverage
+rev_do_errors
+~~~
+
+Prediction coverage matters. A method that predicts only the easiest test stations can have an attractive error score while leaving important areas unsupported. If there are no common predicted test stations, the paired-error table will be empty and no error-based ranking should be made.
+
+This example tests DO balanced means only. The same representation comparison can be repeated for another chosen target. Errors for balanced_mean and balanced_typical should not be treated as directly competing scores when each is evaluated against its own different observed summary. The scientific target should be chosen first.
+
+Extraction in this validation step obtains predicted IPDW values at withheld stations. It is different from creating a predictor-value table for MaxEnt fitting. MaxEnt can continue to use its raster interface.
+
+## Interpolate the DO observation proportion as a separate trial surface
+
+The existing IPDW workflow can interpolate the DO proportion, but the field has different meaning and uncertainty from a concentration mean. Ordinary IPDW does not use the sampling denominators as a binomial model would. The coverage screen reduces the weakest support without making all station estimates equally precise.
+
+The first pilot can use the existing cost raster, a fixed range, and a fixed power. A final surface would need its own validation, including coverage and a check that the indicator has meaningful spatial variation. If every eligible station has the same value, the predictor cannot provide spatial discrimination.
+
+~~~r
+rev_do_stress_points <- rev_do_stress_stations %>%
+  sf::st_transform(raster::crs(cost_raster))
+
+if (nrow(rev_do_stress_points) < 5L ||
+    dplyr::n_distinct(rev_do_stress_points$do_low_fraction) < 2L) {
+  stop("The DO stress indicator has insufficient support or variation.")
+}
+
+# Optional validation of the observation proportion before making a final map.
+rev_do_stress_predictions <- rev_ipdw_comparison(
+  stations = rev_do_stress_points,
+  value_col = "do_low_fraction",
+  study_area = rev_study_area,
+  cost_raster = cost_raster
+)
+
+# Example full-data surface using the unthinned station representation.
+# Replace these example settings only after reviewing validation.
+rev_do_fraction_surface <- rev_ipdw_functions$ipdw_manual(
+  sf_ob = rev_do_stress_points,
+  cost_ras = cost_raster,
+  range = 15000,
+  par_list = "do_low_fraction",
+  dist_power = 1
+)
+
+rev_do_fraction_raster <- terra::rast(rev_do_fraction_surface) %>%
+  terra::project(terra::rast(model_stack)[[1]], method = "bilinear") %>%
+  terra::mask(terra::vect(rev_study_area))
+
+names(rev_do_fraction_raster) <- "DO_Low_Fraction"
+rev_fraction_range <- terra::global(
+  rev_do_fraction_raster, c("min", "max"), na.rm = TRUE
+)
+stopifnot(
+  is.finite(rev_fraction_range$min),
+  is.finite(rev_fraction_range$max),
+  rev_fraction_range$min >= -1e-8,
+  rev_fraction_range$max <= 1 + 1e-8
+)
+~~~
+
+The example aligns the new surface to the existing model stack. It does not rebuild or overwrite that stack. The fraction remains on a 0 to 1 scale. For a map legend, 0.20 can be displayed as 20%, provided the title makes clear that it describes sampled-day summaries.
+
+A failure of the range check should be investigated. It should not be hidden by silently clipping an incorrectly generated raster.
+
+## Test one additional predictor in MaxEnt
+
+The saved MaxEnt notebook already creates model_stack, masks it to complete predictor coverage, and restores its CRS after conversion to a RasterStack. That object should be reused. A separate point_values object is not required for fitting.
+
+The proposed first model comparison adds only the DO observation proportion to the existing predictors. It does not simultaneously replace all current means with median-based rasters. A later comparison of typical-condition surfaces would require regenerating and validating those environmental surfaces first.
+
+Both MaxEnt candidates should use the same complete-data area, the same presence and background points, the same folds, and the same settings. Otherwise, an AUC difference could result from changing the evaluation area or records rather than from the additional predictor.
+
+The reference candidate is refitted on that shared area. Its scores should not be substituted into the original results table or compared directly with an older score calculated over a different mask or set of points.
+
+The code below first creates the augmented stack in memory. It then applies the augmented stack's complete-data mask to both candidates. The original model_stack and pb objects are not reassigned.
+
+Filtering uses the single common mask to identify supported coordinates. It does not build an extracted environmental predictor table. Model fitting and evaluation use the raster stacks directly.
+
+~~~r
+# Requires model_stack and pb from the current MaxEnt notebook,
+# and rev_do_fraction_raster from the optional interpolation stage.
+rev_fraction_layer <- raster::raster(rev_do_fraction_raster)
+raster::crs(rev_fraction_layer) <- raster::crs(model_stack)
+names(rev_fraction_layer) <- "DO_Low_Fraction"
+
+rev_augmented_stack <- raster::addLayer(model_stack, rev_fraction_layer)
+rev_augmented_terra <- terra::rast(rev_augmented_stack)
+rev_finite_layers <- terra::app(is.finite(rev_augmented_terra), "sum")
+rev_common_mask <- terra::ifel(
+  rev_finite_layers == terra::nlyr(rev_augmented_terra), 1, NA
+)
+rev_common_mask_r <- raster::raster(rev_common_mask)
+raster::crs(rev_common_mask_r) <- raster::crs(model_stack)
+
+rev_candidate_stacks <- list(
+  current_predictors = raster::mask(model_stack, rev_common_mask_r),
+  current_plus_do_stress = raster::mask(
+    rev_augmented_stack, rev_common_mask_r
+  )
+)
+
+rev_pb <- sf::st_transform(pb, sf::st_crs(raster::crs(model_stack)))
+rev_coordinates <- sf::st_coordinates(rev_pb)[, 1:2, drop = FALSE]
+rev_mask_values <- raster::extract(rev_common_mask_r, rev_coordinates)
+rev_supported <- !is.na(rev_mask_values) & rev_mask_values == 1
+
+rev_mask_audit <- table(
+  point_type = ifelse(rev_pb$pb == 1L, "Presence", "Background"),
+  supported = rev_supported
+)
+rev_pb <- rev_pb[rev_supported, ]
+rev_coordinates <- rev_coordinates[rev_supported, , drop = FALSE]
+rev_response <- rev_pb$pb
+rev_mask_audit
+
+rev_maxent_folds <- blockCV::cv_spatial(
+  x = rev_pb,
+  column = "pb",
+  r = rev_common_mask,
+  k = 5L,
+  size = 2500,
+  presence_bg = TRUE,
+  seed = 42,
+  plot = FALSE,
+  report = FALSE,
+  progress = FALSE
+)$folds_ids
+
+rev_fold_counts <- table(
+  factor(rev_maxent_folds, levels = 1:5),
+  factor(rev_response, levels = c(0L, 1L))
+)
+stopifnot(!anyNA(rev_maxent_folds), all(rev_fold_counts > 0))
+
+rev_output_args <- "outputformat=logistic"
+
+# Files from this comparison go only to the separate trial directory.
+rev_maxent_metrics <- purrr::imap_dfr(
+  rev_candidate_stacks,
+  function(candidate_stack, candidate_name) {
+    purrr::map_dfr(1:5, function(fold) {
+      test <- rev_maxent_folds == fold
+      train_presence <- !test & rev_response == 1L
+      train_background <- !test & rev_response == 0L
+      test_presence <- test & rev_response == 1L
+      test_background <- test & rev_response == 0L
+
+      fitted <- dismo::maxent(
+        x = candidate_stack,
+        p = rev_coordinates[train_presence, , drop = FALSE],
+        a = rev_coordinates[train_background, , drop = FALSE],
+        factors = "Sediment",
+        removeDuplicates = FALSE,
+        path = file.path(
+          rev_root, "maxent", candidate_name, paste0("fold_", fold)
+        )
+      )
+      evaluation <- dismo::evaluate(
+        p = rev_coordinates[test_presence, , drop = FALSE],
+        a = rev_coordinates[test_background, , drop = FALSE],
+        model = fitted,
+        x = candidate_stack,
+        args = rev_output_args
+      )
+      training_scores <- dismo::predict(
+        fitted, fitted@presence, args = rev_output_args
+      )
+      cutoff <- stats::quantile(
+        training_scores, probs = 0.10, names = FALSE
+      )
+
+      data.frame(
+        candidate = candidate_name,
+        fold = fold,
+        training_presences = nrow(fitted@presence),
+        testing_presences = evaluation@np,
+        training_background = nrow(fitted@absence),
+        testing_background = evaluation@na,
+        test_auc = evaluation@auc,
+        threshold_10pct = cutoff,
+        test_omission_10pct = mean(evaluation@presence < cutoff)
+      )
+    })
+  }
+)
+
+rev_maxent_summary <- rev_maxent_metrics %>%
+  group_by(candidate) %>%
+  summarise(
+    mean_test_auc = mean(test_auc),
+    sd_test_auc = stats::sd(test_auc),
+    mean_test_omission_10pct = mean(test_omission_10pct),
+    .groups = "drop"
+  )
+
+rev_maxent_summary
+~~~
+
+With the raster interface, p and a contain two-column coordinate matrices for presences and background. Explicitly supplying the training background prevents MaxEnt from generating a new background sample outside the fold design. Sediment is identified by its layer name. The logistic prediction setting is stated explicitly so the omission threshold and predictions use the same output scale. [dismo MaxEnt documentation and source](https://rspatial.r-universe.dev/dismo/doc/manual.html#maxent)
+
+The fold size above is 2.5 km to match the current code. The current notebook's text describing 5 km blocks should be reconciled with that setting if this analysis is later adopted. The IPDW examples use 5 km blocks because that is the existing interpolation-validation setting. The two validation stages answer different questions and do not need identical block sizes.
+
+AUC here measures how the model ranks held-out presences relative to background. Background points are not verified absences. Logistic output should not automatically be interpreted as a calibrated occurrence probability.
+
+The current oyster records represent reef polygons converted to points and have their own sampling and temporal limitations. Thinning those occurrence points is a separate decision from thinning the water quality stations. Neither step alone makes the data spatially unbiased.
+
+Before accepting the extra predictor, inspect its correlation with the existing DO surface and whether the apparent improvement is consistent across folds. A small improvement after trying many alternatives should remain exploratory. A predictor that is mostly zero, strongly redundant, poorly supported, or useful only in one fold may not justify the additional complexity.
+
+This comparison validates the habitat model conditional on the supplied environmental surfaces. It does not propagate all uncertainty from water quality sampling and interpolation through to the MaxEnt prediction. That limitation should be stated rather than treating the final map as equally certain everywhere.
+
+## Map the proposed DO indicator using the existing design
+
+The example below uses the same gray basemap, imola palette, bottom legend, frame, title placement, and compass as the suitability map. It deliberately does not use the title Relative Suitability because the raster represents a sampled-day observation proportion.
+
+The percentage labels are a display conversion only. The stored raster values remain proportions. Plot-mode basemaps require maptiles and internet access. [tmap basemap documentation](https://r-tmap.github.io/tmap/articles/basics_basemaps.html)
+
+~~~r
+tmap::tmap_mode("plot")
+
+rev_do_fraction_map <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(
+    rev_do_fraction_raster,
+    bbox = sf::st_bbox(rev_study_area)
+  ) +
+  tmap::tm_raster(
+    col_alpha = 0.85,
+    col.scale = tmap::tm_scale_continuous(
+      values = "scico.imola",
+      limits = c(0, 1),
+      ticks = seq(0, 1, 0.25),
+      labels = paste0(seq(0, 100, 25), "%"),
+      value.na = "transparent"
+    ),
+    col.legend = tmap::tm_legend(
+      title = "Sampled days with daily median DO below 2 mg/L",
+      title.fontface = 2,
+      position = tmap::tm_pos_out(
+        "center", "bottom", pos.h = "CENTER"
+      ),
+      orientation = "landscape",
+      na.show = FALSE
+    )
+  ) +
+  tmap::tm_shape(rev_do_stress_points) +
+  tmap::tm_dots(fill = "black", col = "black", size = 0.05) +
+  tmap::tm_layout(
+    frame = TRUE,
+    inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  ) +
+  tmap::tm_title(
+    "Observed Low-Oxygen Conditions",
+    fontface = 2,
+    position = tmap::tm_pos_out(
+      "center", "top", pos.h = "left", pos.v = "BOTTOM"
+    )
+  ) +
+  tmap::tm_compass(type = "8star", size = 3)
+
+rev_do_fraction_map
+~~~
+
+The long legend title may need line breaks or a larger figure width when rendered. It should retain the daily-median qualification. Shortening it to Hypoxia Frequency would imply more temporal information than the observations provide.
+
+## Save only the separate trial outputs
+
+The following code is optional. It writes only to rev_root, which is a new temporary path generated in the setup example. Existing data and results paths are not used. Repeatedly exporting within the same trial can replace that trial's tables or map, so generate a new rev_root for a new trial that needs to be preserved separately.
+
+The settings file is important because the output names alone do not record the depth policy, coverage rules, or definition of the stress indicator.
+
+~~~r
+dir.create(rev_root, recursive = TRUE, showWarnings = FALSE)
+
+saveRDS(
+  list(
+    units = rev_units,
+    review_bounds = rev_review_bounds,
+    depth_band_m = rev_depth_band_m,
+    min_months = rev_min_months,
+    min_days_per_year = rev_min_days_per_year,
+    min_years = rev_min_years,
+    min_stress_days = rev_min_stress_days,
+    stress_definition = "daily median DO < 2 mg/L",
+    source_commit = system("git rev-parse HEAD", intern = TRUE)
+  ),
+  file.path(rev_root, "settings.rds")
+)
+
+saveRDS(rev_summaries, file.path(rev_root, "station_summaries.rds"))
+readr::write_csv(rev_qc_audit, file.path(rev_root, "qc_audit.csv"))
+readr::write_csv(rev_support, file.path(rev_root, "coverage_summary.csv"))
+
+# Run these exports only if the optional modeling stages were completed.
+readr::write_csv(
+  rev_do_predictions,
+  file.path(rev_root, "do_representation_predictions.csv")
+)
+readr::write_csv(
+  rev_maxent_metrics,
+  file.path(rev_root, "maxent_comparison_metrics.csv")
+)
+terra::writeRaster(
+  rev_do_fraction_raster,
+  file.path(rev_root, "do_low_fraction.tif")
+)
+tmap::tmap_save(
+  rev_do_fraction_map,
+  filename = file.path(rev_root, "do_low_fraction_map.png"),
+  width = 10, height = 8, units = "in", dpi = 300
+)
+
+rev_root
+~~~
+
+## Proposed order of implementation
+
+The first stage is the observation audit. Review the retained low DO and high turbidity observations, salinity unit and method comparability, nondetect handling, and the meaning of depth metadata. Keep a record of each decision.
+
+The second stage is the temporal summary comparison. Inspect how many station-years and stations remain under the illustrative coverage rules. Compare balanced means and balanced monthly-median summaries, especially for turbidity. Select the scientific interpretation before choosing a statistic based on interpolation error.
+
+The third stage is the spatial representation comparison. Start with one parameter, fixed interpolation settings, and identical withheld station targets. Retain station locations unless thinning or binning provides a clear, explainable benefit with acceptable coverage.
+
+The fourth stage is the DO observation-proportion pilot. Inspect its support, variation, and interpolation behavior before treating it as an additional environmental predictor.
+
+The fifth stage is the paired MaxEnt comparison. Reuse the existing stack, add only the reviewed trial layer, and hold the evaluation area, points, folds, and output scale constant. Any adopted changes would require a separate, explicit update to the existing notebooks and report text.
+
+## Validation of this recommendation document
+
+The validation record below concerns the proposed code and this document. It is not a claim that the revisions improve the scientific results.
+
+- The document contains no executable Quarto cells or inline R expressions.
+- Existing notebooks, raw data, processed data, rasters, model artifacts, and result tables are outside the change.
+- All 12 R examples parsed successfully.
+- The observation audit, data preparation, temporal summaries, station thinning, and binning examples ran against copies of the saved local datasets in a separate R process. They did not write to the project data or result directories.
+- An independent small-data check verified the month and year weighting, daily-median definition, low-DO proportion, feet-to-meters conversion, exact-duplicate handling, review flags, and exclusion of years without sufficient coverage.
+- A disconnected-water example verified that stations in separate water fragments were not averaged into one bin value.
+- A small synthetic IPDW comparison fitted all three representations across three folds. Every representation was evaluated against the same withheld station identifiers. A separate missing-prediction check verified that common-target error calculations remove the affected target for every representation.
+- A synthetic raster-based MaxEnt check fitted both candidates across five shared folds. Both candidates used identical training and testing counts, unsupported points were filtered through the common mask, and the original in-memory stack and point objects remained unchanged.
+- The synthetic MaxEnt run emitted warnings for some summary-field conversions and zero-variance correlations. The requested AUC, omission, and count checks passed. The synthetic scores are not evidence that the additional predictor improves the real analysis.
+- The document rendered to standalone HTML in a separate review directory with no R execution.
+- Full interpolation tuning, final revised environmental surfaces, a full revised MaxEnt analysis of the project observations, and the proposed tiled map were not run. Their examples remain proposals.
+
+The checks used R 4.4.1 with dplyr 1.1.4, sf 1.0.19, terra 1.9.1, raster 3.6.30, GeoThinneR 2.1.3, blockCV 4.0.1, ipdw 2.0.0, dismo 1.3.16, and tmap 4.2. Package-version and locale warnings from the existing installation were also present.
+
+## Sources and interpretation
+
+The external sources support the general statistical and software behavior described here. The proposed sampling rules, candidate distances, and comparison settings are project-specific choices to evaluate. They are not requirements supplied by the cited sources.
+
+- [EPA: Data Considerations](https://www.epa.gov/n-steps-online/data-considerations). Review of secondary monitoring data, metadata, and data-quality decisions.
+- [Australian and New Zealand Guidelines: Monitoring Data Preparation and Exploratory Analysis](https://www.waterquality.gov.au/anz-guidelines/monitoring/data-analysis/data-preparation). Treatment of unusual observations and interpretation of summary statistics.
+- [Oyster Habitat Restoration Monitoring and Assessment Handbook](https://chnep.wateratlas.usf.edu/upload/documents/Oyster-Habitat-Restoration-Monitoring-And-Assessment-Handbook.pdf). Environmental monitoring guidance, especially the salinity and DO sections.
+- [GeoThinneR: thin_points](https://jmestret.github.io/GeoThinneR/reference/thin_points.html). Thinning inputs, distance units, retained subsets, and distance behavior.
+- [sf: st_make_grid](https://r-spatial.github.io/sf/reference/st_make_grid.html). Hexagon geometry and cell-size definition.
+- [dismo: MaxEnt](https://rspatial.r-universe.dev/dismo/doc/manual.html#maxent). Raster and coordinate interfaces, background points, and categorical predictors.
+- [tmap: Basemaps](https://r-tmap.github.io/tmap/articles/basics_basemaps.html). Basemap behavior in plot mode.

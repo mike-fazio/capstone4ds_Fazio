@@ -52,163 +52,75 @@ ul.task-list li input[type="checkbox"] {
 <h1>Results</h1>
 <section id="water-quality-data-coverage" class="level2">
 <h2 class="anchored" data-anchor-id="water-quality-data-coverage">Water-Quality Data Coverage</h2>
-<p>The initial dataRetrieval call returned 25,665 total water quality observations from 174 unique sites (see <a href="#tbl-raw-data-summary" class="quarto-xref">Table&nbsp;1</a>). During processing, the data was filtered to only include warm-season observations, and then summarized into 500m spatial-bins to avoid introducing spatial bias due to over-represented sites. Total Observations were condensed to 291 after processing (<a href="#tbl-processed-data-summary" class="quarto-xref">Table&nbsp;2</a>).</p>
+<p>There were 25,665 raw observations from across all five parameter datasets, representing 174 unique site locations. Chlorophyll-a had 1,845 records from 54 sites. Processing resulted in 27 binned values using 666. Dissolved Oxygen had 6,261 observations from 169 sites. Processing reduced the data to 68 binned values using 3,010 observations. Salinity returned 6,994 observation values from 159 sites. The data was processed into 67 binned values using 3,400 observations. Turbidity had 3,402 observed values from 146 sites. After processing there were 61 binned values using 1,429 observations. Water temperature had 7,161 raw observations from 169 sites. Data processing returned 68 binned values using 3,441 observations. Overall, data processing returned 291 parameterized data values using 11,946 fo the 25,665 original values, representing 46.5% of the original dataset (<a href="#tbl-data-summary" class="quarto-xref">Table&nbsp;1</a>).</p>
+<p>For all parameters, the data was heavily skewed spatially, with the majority of samples located in Escambia and Pensacola Bays. Chlorophyll-a in particular had much fewer sites and almost no observations located in the eastern half of the study area. Due to such a lack of spatial distribution, chlorophyll-a was subsequently dropped from the analysis (<a href="#fig-monitoring-coverage" class="quarto-xref">Figure&nbsp;1</a>).</p>
 <div class="cell">
-<div id="tbl-raw-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<div id="tbl-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
-<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-raw-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;1: Summary of raw water-quality data available for each environmental parameter.
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Summary of raw and processed warm-season water-quality data by environmental parameter.
 </figcaption>
-<div aria-describedby="tbl-raw-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div aria-describedby="tbl-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 13%">
-<col style="width: 18%">
-<col style="width: 15%">
-<col style="width: 15%">
-<col style="width: 11%">
-<col style="width: 11%">
 <col style="width: 14%">
+<col style="width: 17%">
+<col style="width: 13%">
+<col style="width: 22%">
+<col style="width: 18%">
+<col style="width: 13%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Parameter</th>
-<th style="text-align: right;">Total observations</th>
-<th style="text-align: right;">Numeric results</th>
-<th style="text-align: right;">Unique stations</th>
-<th style="text-align: center;">Begin date</th>
-<th style="text-align: center;">End date</th>
-<th style="text-align: left;">Reported units</th>
+<th style="text-align: right;">Raw observations</th>
+<th style="text-align: right;">Raw stations</th>
+<th style="text-align: right;">Retained observations</th>
+<th style="text-align: right;">Retained stations</th>
+<th style="text-align: right;">Spatial bins</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Temperature</td>
-<td style="text-align: right;">7,161</td>
-<td style="text-align: right;">7,161</td>
-<td style="text-align: right;">169</td>
-<td style="text-align: center;">01/04/2005</td>
-<td style="text-align: center;">12/18/2024</td>
-<td style="text-align: left;">deg C</td>
+<td style="text-align: left;">Chlorophyll-a</td>
+<td style="text-align: right;">1,847</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">666</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">27</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Salinity</td>
-<td style="text-align: right;">6,994</td>
-<td style="text-align: right;">6,994</td>
-<td style="text-align: right;">159</td>
-<td style="text-align: center;">01/04/2005</td>
-<td style="text-align: center;">12/18/2024</td>
-<td style="text-align: left;">ppt, ppth, PSS</td>
-</tr>
-<tr class="odd">
 <td style="text-align: left;">DO</td>
 <td style="text-align: right;">6,261</td>
-<td style="text-align: right;">6,261</td>
 <td style="text-align: right;">169</td>
-<td style="text-align: center;">01/04/2005</td>
-<td style="text-align: center;">12/18/2024</td>
-<td style="text-align: left;">mg/L</td>
+<td style="text-align: right;">3,010</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">68</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Salinity</td>
+<td style="text-align: right;">6,994</td>
+<td style="text-align: right;">159</td>
+<td style="text-align: right;">3,400</td>
+<td style="text-align: right;">135</td>
+<td style="text-align: right;">67</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Turbidity</td>
 <td style="text-align: right;">3,402</td>
-<td style="text-align: right;">3,399</td>
 <td style="text-align: right;">146</td>
-<td style="text-align: center;">01/04/2005</td>
-<td style="text-align: center;">12/18/2024</td>
-<td style="text-align: left;">NTU</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Chlorophyll-a</td>
-<td style="text-align: right;">1,847</td>
-<td style="text-align: right;">1,504</td>
-<td style="text-align: right;">54</td>
-<td style="text-align: center;">01/11/2005</td>
-<td style="text-align: center;">11/18/2024</td>
-<td style="text-align: left;">ug/L</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</figure>
-</div>
-</div>
-<div class="cell">
-<div id="tbl-processed-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-tbl figure">
-<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-processed-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2: Summary of processed warm-season water-quality data used to evaluate environmental coverage and generate interpolation inputs.
-</figcaption>
-<div aria-describedby="tbl-processed-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output-display">
-<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
-<colgroup>
-<col style="width: 14%">
-<col style="width: 13%">
-<col style="width: 16%">
-<col style="width: 22%">
-<col style="width: 12%">
-<col style="width: 11%">
-<col style="width: 10%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: right;">Spatial bins</th>
-<th style="text-align: right;">Unique stations</th>
-<th style="text-align: right;">Included observations</th>
-<th style="text-align: center;">First year</th>
-<th style="text-align: center;">Last year</th>
-<th style="text-align: left;">Units</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Chlorophyll-a</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">48</td>
-<td style="text-align: right;">666</td>
-<td style="text-align: center;">2005</td>
-<td style="text-align: center;">2024</td>
-<td style="text-align: left;">ug/L</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">DO</td>
-<td style="text-align: right;">68</td>
-<td style="text-align: right;">145</td>
-<td style="text-align: right;">3,010</td>
-<td style="text-align: center;">2005</td>
-<td style="text-align: center;">2024</td>
-<td style="text-align: left;">mg/L</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Salinity</td>
-<td style="text-align: right;">67</td>
-<td style="text-align: right;">135</td>
-<td style="text-align: right;">3,400</td>
-<td style="text-align: center;">2005</td>
-<td style="text-align: center;">2024</td>
-<td style="text-align: left;">ppt</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Turbidity</td>
-<td style="text-align: right;">61</td>
-<td style="text-align: right;">122</td>
 <td style="text-align: right;">1,429</td>
-<td style="text-align: center;">2005</td>
-<td style="text-align: center;">2024</td>
-<td style="text-align: left;">NTU</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">61</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Temperature</td>
-<td style="text-align: right;">68</td>
-<td style="text-align: right;">145</td>
+<td style="text-align: right;">7,161</td>
+<td style="text-align: right;">169</td>
 <td style="text-align: right;">3,441</td>
-<td style="text-align: center;">2005</td>
-<td style="text-align: center;">2024</td>
-<td style="text-align: left;">degrees C</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">68</td>
 </tr>
 </tbody>
 </table>
@@ -217,7 +129,6 @@ Table&nbsp;2: Summary of processed warm-season water-quality data used to evalua
 </figure>
 </div>
 </div>
-<p>For all parameters, the data was heavily skewed spatially, with the majority of samples located in Escambia and Pensacola Bays. Chlorophyll-a in particular had much fewer sites and almost no observations located in the eastern half of the study area. Due to such a lack of spatial distribution, chlorophyll-a was subsequently dropped from the analysis (<a href="#fig-monitoring-coverage" class="quarto-xref">Figure&nbsp;1</a>).</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-monitoring-coverage" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -232,32 +143,11 @@ Figure&nbsp;1: Spatial distribution of monitoring stations represented in each r
 </div>
 </div>
 </div>
-<div class="cell">
-<div class="cell-output-display">
-<div id="fig-processed-mean-distributions" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-processed-mean-distributions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="_3-results_files/figure-html/fig-processed-mean-distributions-1.png" class="img-fluid figure-img" width="960">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-processed-mean-distributions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Distribution of processed warm-season spatial-bin means for each environmental parameter. Dashed lines identify the median of each distribution.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
 </section>
-<section id="ipdw-parameter-sensitivity" class="level2">
-<h2 class="anchored" data-anchor-id="ipdw-parameter-sensitivity">IPDW Parameter Sensitivity</h2>
-<p>The Five-fold sensitivity analysis showed there was little effect on the Mean Absolute Error of modeled surfaces across a range of distance powers and maximum influence ranges (<a href="#fig-ipdw-sensitivity" class="quarto-xref">Figure&nbsp;3</a>), with many of the values differing by less than 10-100ths of unit values. DO ranged from 0.4258564</p>
-<!--
-Narrative to add:
-
-- Describe the overall response of MAE to distance power and maximum range.
-- Identify the final parameter combination used for each variable.
-- Note when several combinations produced nearly equivalent error.
-- Refer to Figure @fig-ipdw-sensitivity.
--->
+<section id="environmental-predictor-results" class="level2">
+<h2 class="anchored" data-anchor-id="environmental-predictor-results">Environmental Predictor Results</h2>
+<p>Each parameter (save for chlorophyll-a) was interpolated into predicted surface rasters using an inverse-path distance weighting algorithm. To ensure the highest accuracy was achieved, a sensitivy analysis was conducted on each parameter model using 36 distance-power/range combinations, which were in turn evaluated across five random five-fold spatial partitions. Powers ranged from 0.25 to 3.00, and maximum range values evaluated were 5, 10, 15, and 20 km (<a href="#fig-ipdw-sensitivity" class="quarto-xref">Figure&nbsp;2</a>).</p>
+<p>While the results of every sensitivity analysis will be reported here, it should be noted that after running all parameters it was decided that a distance power of 0.25 and a max range of 10km was to be used. This decision was made as there was little variation in results of the sensitivity analysis and a smoother prediction surface was preferred to better represent the smoother gradients found in the real world.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-ipdw-sensitivity" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -266,29 +156,36 @@ Narrative to add:
 <img src="_3-results_files/figure-html/fig-ipdw-sensitivity-1.png" class="img-fluid figure-img" width="1152">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ipdw-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Mean MAE across distance-power and maximum-range combinations evaluated using repeated five-fold spatial cross-validation. Red outlines identify the parameter combinations used for the final interpolation models.
+Figure&nbsp;2: Mean MAE across distance-power and maximum-range combinations evaluated using repeated five-fold spatial cross-validation. Red outlines identify the parameter combinations used for the final interpolation models.
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
+<section id="dissolved-oxygen" class="level3">
+<h3 class="anchored" data-anchor-id="dissolved-oxygen">Dissolved Oxygen</h3>
+<p>Dissolved oxygen sensitivity had a mean MAE ranging from 0.426 to 0.507 mg/L. The lowest mean MAE with 100% prediction was 0.425mg/L using a distance power of 0.75 and max range of 10km <a href="#tbl-ipdw-validation" class="quarto-xref">Table&nbsp;2</a>. The predicted rater surface values ranged from 5.28mg/L to 7.99mg/L (n = 33,792; µ = 6.52; σ = 0.26; <a href="#tbl-raster-summary" class="quarto-xref">Table&nbsp;3</a>). The final prediction model achieved 100% coverage with a MAE of 0.431 mg/L (σ = 0.006) with RMSE = 0.552 mg/L (σ = 0.004). The model tended to over predict by +0.013 mg/L. Spatially, dissolved oxygen generally decreased in the western portions of the study area. With the lowest values appearing in East Bay and northern Blackwater Bay <a href="#fig-environmental-rasters" class="quarto-xref">Figure&nbsp;3</a>.</p>
 </section>
-<section id="ipdw-spatial-cross-validation-performance" class="level2">
-<h2 class="anchored" data-anchor-id="ipdw-spatial-cross-validation-performance">IPDW Spatial Cross-Validation Performance</h2>
-<!--
-Narrative to add:
-
-- Report the selected distance power and maximum range for each parameter.
-- Compare repeated mean MAE, RMSE, bias, and coverage among parameters.
-- Interpret errors in the original units shown in the table.
-- Describe these values as internal spatial cross-validation results.
-- Refer to Table @tbl-ipdw-validation.
--->
+<section id="salinity" class="level3">
+<h3 class="anchored" data-anchor-id="salinity">Salinity</h3>
+<p>The salinity sensitivity analysis had a mean MAE ranging from 2.397 ppt to 3.125 ppt. The lowest reported MAE with 100% model coverage was 2.49 ppt using distance power 0.50 and max range of 10km. The absolute lowest mean MAE was 2.397 ppt was achieved using distance power of 3.00 and a max range of 5km , but model coverage fell to 96.1%. The difference in mean MAE between the lowest achieved DP-MR combination and the actual DP-MR combination used was 0.000119 ppt <a href="#tbl-ipdw-validation" class="quarto-xref">Table&nbsp;2</a>. Spatial cross-validation of the final model fit had a MAE of 2.49 ppt (σ = 0.036) and RMSE 3.444 ppt (σ = 0.024). The model slightly over predicted salinity values (+0.140 ppt) and achieved 100% coverage. The predicted values ranged from 2.31 to 26.73 ppt (n = 33,792; µ = 16.36 ppt; σ = 3.14; <a href="#tbl-raster-summary" class="quarto-xref">Table&nbsp;3</a>). Spatially, salinity generally decreased from west to east with the lowest values being in the northern Blackwater Bay and the highest values located in the southwestern region of Pensacola Bay <a href="#fig-environmental-rasters" class="quarto-xref">Figure&nbsp;3</a>.</p>
+</section>
+<section id="turbidity" class="level3">
+<h3 class="anchored" data-anchor-id="turbidity">Turbidity</h3>
+<p>The sensitivity analysis for turbidity reported a mean MAE range from 0.696 to 0.847 NTU. The lowest mean MAE was 0.696 NTU (DP = 1.00, MR = 15km) with 95.1% model coverage <a href="#tbl-ipdw-validation" class="quarto-xref">Table&nbsp;2</a>. The final model fit produced a MAE = 0.745 NTU (σ = 0.018) with RMSE = 0.937 NTU (σ = 0.026). Overall the model slightly under predicted by -0.010 NTU and achieved 95.1% coverage. The final predicted surface values ranged from 0.03 NTU to 5.23 NTU (n = 33,790; µ = 2.23 NTU; σ = 0.47; <a href="#tbl-raster-summary" class="quarto-xref">Table&nbsp;3</a>). Spatially, turbidity generally decreased from north to south, with the highest values occuring near the mouth of Escambia River and the lowest values occuring in the southwestern portion of Pensacola Bay <a href="#fig-environmental-rasters" class="quarto-xref">Figure&nbsp;3</a>.</p>
+</section>
+<section id="water-temperature" class="level3">
+<h3 class="anchored" data-anchor-id="water-temperature">Water Temperature</h3>
+<p>Mean MAE for the water temperature sensitivity analysis ranged from 0.978 to 1.135 degrees C. The lowest mean MAE was 0.978 degrees C with 100% model coverage (DP = 0.75, MR = 10km; <a href="#tbl-ipdw-validation" class="quarto-xref">Table&nbsp;2</a>). The final model had a MAE of 0.988 degrees C (σ = 0.015) and RMSE was 1.163 degrees C (σ = 0.014). The model generally under predicted water temperature by -0.063 degrees C with 100% model coverage. The resulting prediction surface ranged from 25.93 to 30.43 degrees C (n = 33,792; µ = 27.66°C; σ = 0.41°C; <a href="#tbl-raster-summary" class="quarto-xref">Table&nbsp;3</a>). Water temperature was generally lower in the eastern portions of the study area, with the coolest values trending toward Blackwater Bay <a href="#fig-environmental-rasters" class="quarto-xref">Figure&nbsp;3</a>.</p>
+<ul>
+<li>Keep Figure <a href="#fig-ipdw-sensitivity" class="quarto-xref">Figure&nbsp;2</a>, Table <a href="#tbl-ipdw-validation" class="quarto-xref">Table&nbsp;2</a>, Table <a href="#tbl-raster-summary" class="quarto-xref">Table&nbsp;3</a>, and Figure <a href="#fig-environmental-rasters" class="quarto-xref">Figure&nbsp;3</a> together as shared outputs, referring to the relevant parameter from each subsection. Figure <strong>?@fig-processed-mean-distributions</strong> supports the processed-data summaries.</li>
+<li>The MaxEnt prediction covers a smaller area because it requires complete values for all six predictors.</li>
+</ul>
 <div class="cell">
 <div id="tbl-ipdw-validation" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ipdw-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;3: Selected IPDW parameters and repeated spatial cross-validation performance. Values in parentheses are standard deviations across random spatial partitions.
+Table&nbsp;2: Selected IPDW parameters and repeated spatial cross-validation performance. Values in parentheses are standard deviations across random spatial partitions.
 </figcaption>
 <div aria-describedby="tbl-ipdw-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -363,23 +260,11 @@ Table&nbsp;3: Selected IPDW parameters and repeated spatial cross-validation per
 </figure>
 </div>
 </div>
-</section>
-<section id="environmental-predictor-surfaces" class="level2">
-<h2 class="anchored" data-anchor-id="environmental-predictor-surfaces">Environmental Predictor Surfaces</h2>
-<!--
-Narrative to add:
-
-- Report the prediction range for each environmental surface.
-- Describe the major spatial gradients visible in Figure @fig-environmental-rasters.
-- Identify areas with limited or missing prediction coverage.
-- Refer to Table @tbl-raster-summary for numerical ranges and cell counts.
-- Reserve ecological explanations for the Discussion section.
--->
 <div class="cell">
 <div id="tbl-raster-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-raster-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4: Summary of final IPDW environmental predictor rasters.
+Table&nbsp;3: Summary of final IPDW environmental predictor rasters.
 </figcaption>
 <div aria-describedby="tbl-raster-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -450,27 +335,31 @@ Table&nbsp;4: Summary of final IPDW environmental predictor rasters.
 <img src="_3-results_files/figure-html/fig-environmental-rasters-1.png" class="img-fluid figure-img" width="960">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-environmental-rasters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Final IPDW prediction surfaces used as environmental inputs for habitat-suitability modeling. Each panel uses its own measurement scale.
+Figure&nbsp;3: Final IPDW prediction surfaces used as environmental inputs for habitat-suitability modeling. Each panel uses its own measurement scale.
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
 </section>
+</section>
 <section id="oyster-occurrence-data" class="level2">
 <h2 class="anchored" data-anchor-id="oyster-occurrence-data">Oyster Occurrence Data</h2>
 <!--
-Narrative to add:
+3. Oyster Occurrence Data
 
-- Report the number of oyster occurrence points available for modeling.
-- Describe their spatial distribution within the Pensacola Bay System.
-- Identify any visible clustering or geographic gaps.
-- Explain any later filtering or thinning after those steps are completed.
-- Refer to Figure @fig-oyster-occurrences.
+Follow the environmental predictor results with the occurrence filtering and model input counts.
 
-Useful inline value:
+Numerical values for the narrative:
 
-- Oyster occurrence points: 443
+- The processed occurrence dataset contains 443 oyster records.
+- The completed model notebook reports 442 records with complete values for all six predictors, leaving 1 record excluded for incomplete predictors.
+- Retaining one presence per 100 m predictor cell reduced those 442 records to 254 modeled presences, removing 188 additional within-cell records.
+- The saved final model contains 254 presence rows and 1,000 sampled background rows, with six predictors. Background points are not verified absences.
+- These counts describe the saved model and the rendered 3-scripts/5-maxent-model.html. The current QMD has later, unfinished thinning edits and a background request of 500; do not use those edits to describe the saved run.
+- Describe clustering and geographic gaps using Figure @fig-oyster-occurrences. The figure shows all 443 processed records, not just the 254 modeled presences.
+
+Available inline value: r scales::comma(total_oyster_points) returns the processed occurrence count.
 -->
 <div class="cell">
 <div class="cell-output-display">
@@ -480,7 +369,7 @@ Useful inline value:
 <img src="_3-results_files/figure-html/fig-oyster-occurrences-1.png" class="img-fluid figure-img" width="768">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oyster-occurrences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Spatial distribution of Eastern oyster occurrence points within the Pensacola Bay System.
+Figure&nbsp;4: Spatial distribution of Eastern oyster occurrence points within the Pensacola Bay System.
 </figcaption>
 </figure>
 </div>
@@ -490,33 +379,41 @@ Figure&nbsp;5: Spatial distribution of Eastern oyster occurrence points within t
 <section id="maxent-model-tuning-and-selection" class="level2">
 <h2 class="anchored" data-anchor-id="maxent-model-tuning-and-selection">MaxEnt Model Tuning and Selection</h2>
 <!--
-The MaxEnt scripts and saved outputs do not exist yet. The following block is a template.
+4. MaxEnt Model Results
+4.1 Model Performance
 
-Expected file:
+Use a performance narrative for the completed model. Keep predictor importance and predicted suitability as subsections of this same MaxEnt results section. The current visible tuning heading is retained, but no tuning comparison is available.
 
-2-data/models/maxent_tuning_results.rds
+The model has been run. Available results are in:
 
-Expected columns:
+- 4-tables-and-figures/tables/maxent_cross_validation_summary.csv
+- 4-tables-and-figures/tables/maxent_cross_validation_metrics.csv
+- 2-data/models/maxent_final_model.rds
 
-- feature_class
-- regularization_multiplier
-- mean_auc
-- mean_omission_rate
-- mean_boyce
-- delta_aicc
-- selected
+Numerical values for a model-performance narrative:
 
-Narrative to add after modeling:
+- Five spatial folds were evaluated. Saved mean test AUC = 0.885 (SD 0.066); fold values range from 0.811 to 0.990.
+- Saved mean test omission at the training-presence 10th-percentile cutoff = 30.2% (SD 20.8 percentage points); fold omission ranges from 2.2% to 56.6%.
+- Fold 1: 37 held-out presences, 168 held-out background points; AUC 0.864; omission 43.2%.
+- Fold 2: 42 held-out presences, 203 held-out background points; AUC 0.892; omission 21.4%.
+- Fold 3: 93 held-out presences, 218 held-out background points; AUC 0.990; omission 2.2%.
+- Fold 4: 29 held-out presences, 208 held-out background points; AUC 0.868; omission 27.6%.
+- Fold 5: 53 held-out presences, 203 held-out background points; AUC 0.811; omission 56.6%.
+- These means give equal weight to each fold. They are not pooled metrics across all held-out points.
+- The saved final model has training AUC 0.8574. Keep this separate from held-out test AUC.
+- Report the AUC together with omission and fold variation. The saved omission exceeds 10% in four of five folds; a 10th-percentile training cutoff does not imply 10% test omission.
 
-- Report the number of candidate configurations evaluated.
-- Identify the selected feature class and regularization multiplier.
-- Compare the selected model with the strongest alternatives.
-- Refer to Table @tbl-maxent-selection.
+Reporting limits:
+
+- No candidate feature-class/regularization tuning table, AICc comparison, or Boyce index was found. Five CV fits are not five candidate configurations. Do not claim an optimal feature class or regularization multiplier.
+- The rendered completed notebook uses 5 km spatial blocks; the newer QMD currently specifies 2.5 km. Confirm the settings behind the Nov. 10 CSVs before stating their block size.
+- All five saved threshold_10pct values are identical (0.3554247081). Confirm these fold-specific cutoffs before treating the saved omission results as final.
+- The disabled table below still expects maxent_tuning_results.rds, which does not exist. This comments-only update does not connect the report chunks to the actual saved outputs.
 -->
 <div id="tbl-maxent-selection" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-maxent-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;5: Performance of the leading candidate MaxEnt configurations.
+Table&nbsp;4: Performance of the leading candidate MaxEnt configurations.
 </figcaption>
 <div aria-describedby="tbl-maxent-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div>
@@ -529,71 +426,69 @@ Table&nbsp;5: Performance of the leading candidate MaxEnt configurations.
 <section id="environmental-variable-influence" class="level2">
 <h2 class="anchored" data-anchor-id="environmental-variable-influence">Environmental-Variable Influence</h2>
 <!--
-Expected files:
+4.2 Environmental-Variable Influence
 
-2-data/models/maxent_variable_importance.rds
-2-data/models/maxent_response_curves.rds
+Discuss all six predictors together here, after model performance. Keep their MaxEnt importance separate from their earlier interpolation results.
 
-Expected importance columns:
+Numerical values from the results slot of 2-data/models/maxent_final_model.rds:
 
-- variable
-- contribution
-- permutation_importance
+Predictor: percent contribution; permutation importance.
 
-Expected response-curve columns:
+- Salinity: 43.77%; 28.50%.
+- DO: 38.06%; 36.07%.
+- Temperature: 8.15%; 3.23%.
+- Depth: 5.50%; 18.86%.
+- Sediment: 3.19%; 3.49%.
+- Turbidity: 1.34%; 9.87%.
 
-- variable
-- value
-- suitability
+Salinity and DO together account for 81.83% of contribution and 64.56% of permutation importance. Salinity ranks first in contribution, while DO ranks first in permutation importance. Depth ranks third in permutation importance despite contributing only 5.50% during fitting.
 
-Narrative to add:
+These values describe the saved final model. Importance percentages do not establish the direction or shape of a predictor's response, and they are not percentages of explained variance. No saved maxent_response_curves.rds was found, so numerical optima or response directions cannot be reported from the available response-curve output.
 
-- Identify the most influential predictors.
-- Compare contribution and permutation importance.
-- Describe the direction and shape of the strongest modeled relationships.
-- Refer to Figures @fig-variable-importance and @fig-response-curves.
+The disabled chunks below still expect maxent_variable_importance.rds and maxent_response_curves.rds. Importance is available inside the final model RDS, but the report chunks have not been changed to read it. Refer to Figures @fig-variable-importance and @fig-response-curves only after their actual outputs are connected.
 -->
 </section>
 <section id="predicted-oyster-habitat-suitability" class="level2">
 <h2 class="anchored" data-anchor-id="predicted-oyster-habitat-suitability">Predicted Oyster Habitat Suitability</h2>
 <!--
-Expected file:
+4.3 Predicted Oyster Habitat Suitability
 
-2-data/models/maxent_suitability.rds
+Follow predictor importance with the overall distribution and spatial pattern of the model predictions.
 
-Expected object:
+Numerical values calculated from 2-data/rasters/maxent_suitability.tif:
 
-- A RasterLayer with continuous suitability values from 0 to 1.
+- Relative suitability ranges from 1.7887e-17 (effectively 0) to 0.8654 on the 0 to 1 output scale.
+- Mean = 0.1318; SD = 0.1660; median = 0.0452.
+- First quartile = 0.000124; third quartile = 0.2430; 90th percentile = 0.3953.
+- There are 32,592 predicted 100 x 100 m cells, covering 325.92 square km.
+- 24,633 cells (75.58%) have suitability <= 0.25.
+- 6,796 cells (20.85%) have suitability > 0.25 and <= 0.50.
+- 1,161 cells (3.56%) have suitability > 0.50 and <= 0.75.
+- 2 cells (0.006%) have suitability > 0.75.
+- In total, 1,163 cells (3.57%, or 11.63 square km) exceed 0.50.
 
-Narrative to add:
+These intervals describe the distribution only; they are not validated low/moderate/high habitat classes. The completed notebook requests logistic output, which should be described as relative suitability rather than a calibrated probability of oyster occurrence. Summarize only the predicted area; masked cells are not zero-suitability habitat.
 
-- Report the range and distribution of suitability predictions.
-- Describe the locations of high and low suitability.
-- Identify gaps or edge effects.
-- Refer to Figure @fig-maxent-suitability.
+Describe geographic concentrations and gaps from the completed model map in 3-scripts/5-maxent-model.html. The disabled chunk below still expects 2-data/models/maxent_suitability.rds; the actual prediction is a TIFF in 2-data/rasters. Figure @fig-maxent-suitability requires that connection before it can be cited in this report.
 -->
 </section>
 <section id="comparison-with-the-existing-hsi" class="level2">
 <h2 class="anchored" data-anchor-id="comparison-with-the-existing-hsi">Comparison with the Existing HSI</h2>
 <!--
-Expected files:
+5. Comparison with the Existing HSI
 
-2-data/models/maxent_suitability.rds
-2-data/models/hsi_suitability.rds
+Keep the model comparison separate from the individual environmental parameters and MaxEnt results.
 
-Both rasters must use the same CRS, resolution, origin, extent, alignment, mask, and a 0 to 1 scale before this Results code is run.
+No saved HSI prediction raster or completed MaxEnt/HSI comparison output was found in 2-data. Correlations, difference metrics, overlap percentages, and locations of agreement cannot yet be reported.
 
-Narrative to add:
+The available MaxEnt prediction is 2-data/rasters/maxent_suitability.tif, with 32,592 predicted cells at 100 m resolution. A comparable HSI raster must use the same CRS, resolution, origin, extent, and mask. Calculate comparisons only over cells with both predictions, and report that paired-cell count. Confirm the interpretation of the two output scales before treating numerical differences as agreement.
 
-- Report the cell-level correlation and difference metrics.
-- Describe the overall spatial agreement.
-- Identify where MaxEnt predicts greater or lower suitability than the HSI.
-- Refer to Table @tbl-hsi-comparison and Figures @fig-hsi-comparison and @fig-hsi-scatter.
+The disabled chunks below still expect maxent_suitability.rds and hsi_suitability.rds. Table @tbl-hsi-comparison and Figures @fig-hsi-comparison and @fig-hsi-scatter remain placeholders until actual comparison outputs are available.
 -->
 <div id="tbl-hsi-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-hsi-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;6: Cell-level comparison between MaxEnt and HSI habitat-suitability predictions.
+Table&nbsp;5: Cell-level comparison between MaxEnt and HSI habitat-suitability predictions.
 </figcaption>
 <div aria-describedby="tbl-hsi-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div>
@@ -606,13 +501,22 @@ Table&nbsp;6: Cell-level comparison between MaxEnt and HSI habitat-suitability p
 <section id="summary-of-major-results" class="level2">
 <h2 class="anchored" data-anchor-id="summary-of-major-results">Summary of Major Results</h2>
 <!--
-Narrative to add:
+6. Summary of Major Results
 
-- Summarize the environmental data coverage and interpolation performance.
-- Identify the predictors with the greatest influence on MaxEnt.
-- Summarize the distribution of high-suitability habitat.
-- State the overall level of agreement between MaxEnt and the HSI.
-- Identify where the largest differences occurred.
+Summarize the environmental findings, then MaxEnt performance and suitability, and finally HSI agreement when available.
+
+Numerical points available for the summary:
+
+- Raw water-quality coverage: 25,665 parameter-specific observations from 174 unique sites across the five datasets.
+- Processed coverage: 291 parameter-specific 500 m bin records, of which 286 have finite means. Chlorophyll-a has only 27 bin records, with 25 finite means, and was excluded from the predictor set.
+- Repeated internal IPDW MAE at the final settings: DO 0.431 mg/L, salinity 2.490 ppt, turbidity 0.745 NTU, and temperature 0.988 degrees C.
+- Saved final MaxEnt model: 254 presences, 1,000 sampled background points, and six predictors.
+- Saved five-fold mean test AUC: 0.885 (SD 0.066). Saved mean test omission: 30.2% (SD 20.8 percentage points), subject to the cutoff verification noted above.
+- Salinity and DO account for 81.83% of final-model contribution and 64.56% of permutation importance.
+- Relative suitability: mean 0.132, median 0.045, maximum 0.865 across 325.92 square km. Predictions exceed 0.50 in 3.57% of the predicted area; this is a descriptive cutoff, not a validated habitat classification.
+- HSI agreement and geographic locations of the largest differences cannot yet be summarized because comparison outputs are not available.
+
+Values reflect the files available on November 16, 2026. Update these comments if the model or input data are rerun.
 -->
 </section>
 </section>

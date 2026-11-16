@@ -1,7 +1,7 @@
 Predictor variable,Categorical,Sample average
-Depth,false,-1.9157426999279517
-Dissolved.Oxygen,false,6.185114471473504
-Salinity,false,14.39627047676352
+Depth,false,-2.3378907894266057
+Dissolved.Oxygen,false,6.310536318811877
+Salinity,false,14.961272831620839
 Sediment,true,2.0
-Turbidity,false,2.1857507033134573
-Water.Temperature,false,27.913932155020795
+Turbidity,false,2.195347095357961
+Water.Temperature,false,27.542761638246734

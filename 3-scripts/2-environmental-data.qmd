@@ -109,7 +109,7 @@ view(find_outliers(salinity_raw))
 sal_proc <- proc_sf_wq_data(
   wq_data = salinity_raw, 
   study_area = study_area, 
-  output_name = "sal_proc",
+  output_name = "proc_sal",
   bin_size = bin)
 
 # Plot Data Distribution
@@ -143,7 +143,7 @@ water_temp_raw <- water_temp_raw %>% filter(Result_Measure < 100)
 water_temp_proc <- proc_sf_wq_data(
   wq_data = water_temp_raw,
   study_area = study_area,
-  output_name = "water_temp_proc", 
+  output_name = "proc_water_temp", 
   bin_size = bin
   ) 
 
@@ -180,7 +180,7 @@ view(find_outliers(do_raw))
 do_proc <- proc_sf_wq_data(
   wq_data = do_raw,
   study_area = study_area,
-  output_name = "do_proc", 
+  output_name = "proc_do", 
   bin_size = bin)
 
 # Plot Data Distribution
@@ -213,7 +213,7 @@ view(find_outliers(turbidity_raw))
 turbidity_proc <- proc_sf_wq_data(
   turbidity_raw,
   study_area = study_area,
-  output_name = "turb_proc",
+  output_name = "proc_turb",
   bin_size = bin)
 
 # Plot Data Distribution
@@ -240,13 +240,15 @@ wq_summary <- bind_rows(
 saveRDS(wq_summary, here::here("4-tables-and-figures", "tables", "processed_wq_data_summary.rds"))
 ```
 
+# Oyster Data
+
 ## Oyster Reefs
 
 https://gis.myfwc.com/hosting/rest/services/Open_Data/Oyster_Beds_Statewide/MapServer/17/query?outFields=*&where=1%3D1&f=geojson
 
 ```{r}
 
-oyster_reefs <- readRDS(here::here("2-data", "processed", "oys_proc.rds"))
+oyster_reefs <- readRDS(here::here("2-data", "processed", "proc_oys_reefs.rds"))
 
 tm_basemap("Esri.WorldGrayCanvas") +
     tm_shape(oyster_reefs, bbox = study_area) +

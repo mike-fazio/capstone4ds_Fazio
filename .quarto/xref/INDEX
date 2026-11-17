@@ -17,5 +17,8 @@
   },
   "3-scripts/5-maxent-model.qmd": {
     "5-maxent-model.html": "916b27cb"
+  },
+  "suggested-revisions.qmd": {
+    "suggested-revisions.html": "50545bd8"
   }
 }

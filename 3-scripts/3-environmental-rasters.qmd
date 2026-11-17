@@ -61,7 +61,7 @@ chla_proc <- readRDS(
   here::here(
   "2-data",
   "processed",
-  "chla_proc.rds"
+  "proc_chla.rds"
   )
 )
 
@@ -69,7 +69,7 @@ sal_proc <- readRDS(
   here::here(
   "2-data",
   "processed",
-  "sal_proc.rds"
+  "proc_sal.rds"
   )
 ) %>% st_transform(trg_crs)
 
@@ -77,7 +77,7 @@ water_temp_proc <- readRDS(
   here::here(
   "2-data",
   "processed",
-  "water_temp_proc.rds"
+  "proc_water_temp.rds"
   )
 ) %>% st_transform(trg_crs)
 
@@ -85,7 +85,7 @@ do_proc <- readRDS(
   here::here(
   "2-data",
   "processed",
-  "do_proc.rds"
+  "proc_do.rds"
   )
 ) %>% st_transform(trg_crs)
 
@@ -93,7 +93,15 @@ turb_proc <- readRDS(
   here::here(
   "2-data",
   "processed",
-  "turb_proc.rds"
+  "proc_turb.rds"
+  )
+) %>% st_transform(trg_crs)
+
+oys_rec_proc <- readRDS(
+  here::here(
+  "2-data",
+  "processed",
+  "proc_oys_rec.rds"
   )
 ) %>% st_transform(trg_crs)
 
@@ -554,8 +562,6 @@ saveRDS(
 )
 
 ```
-
-
 
 ## Summarize sensivity and prediction results
 

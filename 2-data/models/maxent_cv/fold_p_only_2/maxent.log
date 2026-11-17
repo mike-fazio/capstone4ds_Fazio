@@ -1,0 +1,36 @@
+Tue Nov 17 08:31:12 CST 2026
+MaxEnt version 3.4.3
+Reading file absence
+readGrid: max memory 8480882688, total allocated 708837376, free 348240392, used 360596984, increment -49158576
+Reading samples from presence
+Read samples: max memory 8480882688, total allocated 708837376, free 287422984, used 421414392, increment 60817408
+Adding samples to background in feature space
+Command line used:  autorun -e C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2/absence -o C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2 -s C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2/presence -z
+Command line to repeat: java density.MaxEnt nowarnings noprefixes outputdirectory=C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2 samplesfile=C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2/presence environmentallayers=C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2/absence autorun novisible noprefixes -t Sediment
+Species: species
+Layers: Depth Dissolved.Oxygen Salinity Sediment Turbidity Water.Temperature
+Layertypes: Continuous Continuous Continuous Categorical Continuous Continuous
+outputdirectory: C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2
+samplesfile: C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2/presence
+environmentallayers: C:/courses/capstone4ds_Fazio/2-data/models/maxent_cv/fold_p_only_2/absence
+autorun: true
+visible: false
+prefixes: false
+
+getSamples: max memory 8480882688, total allocated 708837376, free 287422984, used 421414392, increment 0
+Making features
+makeFeatures: max memory 8480882688, total allocated 708837376, free 286540432, used 422296944, increment 882552
+species: 
+Regularization values: linear/quadratic/product: 0.308, categorical: 0.250, threshold: 1.730, hinge: 0.500
+27 samples
+Density: max memory 8480882688, total allocated 708837376, free 276937224, used 431900152, increment 9603208
+linearPredictor: max memory 8480882688, total allocated 708837376, free 276937224, used 431900152, increment 0
+FeaturedSpace: max memory 8480882688, total allocated 708837376, free 276937224, used 431900152, increment 0
+Sequential: max memory 8480882688, total allocated 708837376, free 276937224, used 431900152, increment 0
+Initial loss: 9.213036733523925
+Time since start: 2.249
+480: time = 2.167000 loss = 8.476438
+Resulting gain: 0.7365987169995467
+Projecting...
+Writing file C:\courses\capstone4ds_Fazio\2-data\models\maxent_cv\fold_p_only_2\species.csv
+Ending

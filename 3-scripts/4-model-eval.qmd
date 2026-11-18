@@ -1,0 +1,686 @@
+# Setup
+
+Fit and tune Eastern oyster MaxEnt models with ENMeval and maxnet. Use ENMeval's native spatial block partitions, then map the selected model on the cloglog scale. The final section saves the model, tables, raster, and suitability maps when this workflow is run.
+
+```{r}
+#| label: model-setup
+
+library(ENMeval)
+library(terra)
+library(sf)
+library(maxnet)
+library(dplyr)
+library(ggplot2)
+library(tmap)
+
+#here::i_am("3-scripts/5-model-eval.qmd")
+set.seed(42)
+
+raster_directory <- here::here("2-data", "rasters")
+model_directory <- here::here("2-data", "models")
+table_directory <- here::here("4-tables-and-figures", "tables")
+map_directory <- here::here("4-tables-and-figures", "maps")
+
+tune_settings <- list(
+  fc = c("L", "LQ", "LQH", "LQHP"),
+  rm = c(0.5, 1, 1.5, 2, 3, 4)
+)
+
+n_background <- 5000L
+block_orientation <- "lat_lon"
+k_folds <- 4L
+prediction_type <- "cloglog"
+```
+
+# Environmental predictors
+
+Keep cells with finite values for every predictor. Sediment is converted to a categorical predictor after the numeric coverage checks.
+
+```{r}
+#| label: environmental-predictors
+
+predictor_files <- c(
+  Depth = "rast_depth.tif",
+  Dissolved.Oxygen = "rast_do.tif",
+  Salinity = "rast_sal.tif",
+  Sediment = "rast_sed.tif",
+  Turbidity = "rast_turb.tif",
+  Water.Temperature = "rast_wTemp.tif",
+  Oyster.Recruitment = "rast_oys_rec.tif"
+)
+
+predictors <- terra::rast(
+  file.path(raster_directory, predictor_files)
+)
+names(predictors) <- names(predictor_files)
+
+valid_layers <- terra::app(is.finite(predictors), "sum")
+complete_mask <- terra::ifel(
+  valid_layers == terra::nlyr(predictors),
+  1,
+  NA
+)
+
+predictors <- terra::mask(predictors, complete_mask)
+```
+
+# Presence and background points
+
+Thin oyster occurrences to 1 km, remove points without complete predictor values, and retain one occurrence per raster cell. Sample 5,000 background points from other complete cells.
+
+```{r}
+#| label: prepare-model-points
+
+occ_sf <- readRDS(
+  here::here("2-data", "processed", "proc_oys_reefs.rds")
+) %>%
+  sf::st_transform(crs = 4326) %>%
+  mutate(
+    lon = sf::st_coordinates(geometry)[, 1],
+    lat = sf::st_coordinates(geometry)[, 2]
+  ) %>%
+  sf::st_drop_geometry() %>%
+  GeoThinneR::thin_points(
+    lon_col = "lon",
+    lat_col = "lat",
+    method = "distance",
+    thin_dist = 1,
+    seed = 42
+  ) %>%
+  GeoThinneR::largest() %>%
+  sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
+
+occ_sf <- sf::st_transform(
+  occ_sf,
+  terra::crs(predictors)
+)
+
+occ_xy <- as.data.frame(
+  sf::st_coordinates(occ_sf)[, 1:2]
+)
+
+names(occ_xy) <- c("x", "y")
+
+# Remove points with missing predictors
+occ_values <- terra::extract(
+  predictors,
+  as.matrix(occ_xy)
+)
+
+valid_occ <- rowSums(
+  is.finite(as.matrix(occ_values))
+) == terra::nlyr(predictors)
+
+occ_xy <- occ_xy[valid_occ, , drop = FALSE]
+
+# Remove raster-cell duplicates
+occ_cells <- terra::cellFromXY(
+  predictors[[1]],
+  as.matrix(occ_xy)
+)
+
+occ_xy <- occ_xy[
+  !duplicated(occ_cells),
+  ,
+  drop = FALSE
+]
+
+rownames(occ_xy) <- NULL
+
+cat("Valid occurrences:", nrow(occ_xy), "\n")
+
+bg_candidates <- terra::spatSample(
+  complete_mask,
+  size = n_background + nrow(occ_xy),
+  method = "random",
+  na.rm = TRUE,
+  values = FALSE,
+  xy = TRUE,
+  as.df = TRUE
+)
+
+bg_xy <- as.data.frame(bg_candidates[, 1:2])
+names(bg_xy) <- c("x", "y")
+
+bg_cells <- terra::cellFromXY(
+  complete_mask,
+  as.matrix(bg_xy)
+)
+
+presence_cells <- terra::cellFromXY(
+  complete_mask,
+  as.matrix(occ_xy)
+)
+
+bg_xy <- bg_xy[
+  !bg_cells %in% presence_cells,
+  ,
+  drop = FALSE
+]
+
+bg_xy <- head(bg_xy, n_background)
+rownames(bg_xy) <- NULL
+
+cat("Background points:", nrow(bg_xy), "\n")
+
+n_occ <- nrow(occ_xy)
+n_bg <- nrow(bg_xy)
+
+if (n_occ < 2L * k_folds || n_bg < n_background) {
+  stop("Too few valid occurrences or complete background cells. Review the inputs.")
+}
+
+pb_data <- bind_rows(
+  mutate(occ_xy, pb = 1L),
+  mutate(bg_xy, pb = 0L)
+)
+
+pb <- sf::st_as_sf(
+  pb_data,
+  coords = c("x", "y"),
+  crs = terra::crs(predictors)
+) %>%
+  mutate(point_type = ifelse(pb == 1L, "Presence", "Background"))
+
+study_area <- readRDS(
+  here::here("2-data", "processed", "study_area.rds")
+) %>%
+  sf::st_transform(crs = sf::st_crs(pb))
+```
+
+# Model points
+
+```{r}
+#| label: fig-maxent-points
+#| fig-cap: "Eastern oyster presence and background points used in the MaxEnt model."
+
+tmap::tmap_mode("plot")
+
+point_map <- tm_shape(complete_mask) +
+  tm_raster(
+    col.scale = tm_scale(values = "grey90"),
+    col.legend = tm_legend_hide()
+  ) +
+  tm_shape(study_area) +
+  tm_borders(col = "grey40") +
+  tm_shape(pb) +
+  tm_dots(
+    fill = "point_type",
+    fill.scale = tm_scale_categorical(
+      values = c(Background = "grey35", Presence = "red3")
+    ),
+    fill.legend = tm_legend(title = "Model points"),
+    size = 0.05
+  ) +
+  tm_layout(frame = FALSE)
+
+point_map
+```
+
+# Spatial cross-validation
+
+ENMeval's block method divides occurrences into four geographic groups using northing, then easting, with background points assigned to the same regions. These are four geographic partitions rather than five folds assembled from fixed 5 km blocks.
+
+```{r}
+#| label: spatial-partitions
+
+# Inspect the same native partitions that ENMevaluate will create.
+partition_groups <- ENMeval::get.block(
+  occs = occ_xy,
+  bg = bg_xy,
+  orientation = block_orientation
+)
+
+fold_ids <- c(partition_groups$occs.grp, partition_groups$bg.grp)
+
+fold_summary <- pb_data %>%
+  mutate(fold = fold_ids) %>%
+  group_by(fold) %>%
+  summarise(
+    presence = sum(pb == 1L),
+    background = sum(pb == 0L),
+    .groups = "drop"
+  )
+print(fold_summary)
+
+fold_plot <- ggplot(
+  pb_data %>% mutate(fold = factor(fold_ids)),
+  aes(x = x, y = y)
+) +
+  geom_point(
+    aes(color = fold, shape = factor(pb)),
+    alpha = 0.7,
+    size = 1.2
+  ) +
+  coord_equal() +
+  theme_minimal() +
+  labs(
+    title = "Spatial CV partitions",
+    color = "Fold",
+    shape = "Presence"
+  )
+
+print(fold_plot)
+```
+
+# Tune and evaluate MaxEnt models
+
+Compare all feature-class and regularization settings using the four spatial partitions. Validation AUC compares held-out presences with background points in the held-out region. Omission uses the 10th percentile of training presence scores.
+
+```{r}
+#| label: tune-maxent
+
+# Sediment codes represent categories, not a continuous measurement.
+predictors[["Sediment"]] <- as.factor(predictors[["Sediment"]])
+
+enm_eval <- ENMeval::ENMevaluate(
+  occs = occ_xy,
+  envs = predictors,
+  bg = bg_xy,
+  algorithm = "maxnet",
+  categoricals = "Sediment",
+  partitions = "block",
+  partition.settings = list(orientation = block_orientation),
+  tune.args = tune_settings,
+  other.settings = list(
+    validation.bg = "partition",
+    pred.type = prediction_type
+  ),
+  raster.preds = FALSE,
+  parallel = FALSE,
+  # Populate metadata without loading an external template.
+  rmm = list(),
+  quiet = FALSE
+)
+
+results <- tibble::as_tibble(ENMeval::eval.results(enm_eval))
+partition_results <- tibble::as_tibble(
+  ENMeval::eval.results.partitions(enm_eval)
+)
+
+# Confirm that the preview matches the partitions used by ENMeval.
+stopifnot(
+  identical(
+    as.integer(ENMeval::eval.occs.grp(enm_eval)),
+    as.integer(partition_groups$occs.grp)
+  ),
+  identical(
+    as.integer(ENMeval::eval.bg.grp(enm_eval)),
+    as.integer(partition_groups$bg.grp)
+  )
+)
+
+ranked_models <- results %>%
+  arrange(delta.AICc)
+
+print(
+  ranked_models %>%
+    select(
+      any_of(c(
+        "fc", "rm", "tune.args", "auc.val.avg", "auc.val.sd",
+        "auc.diff.avg", "cbi.val.avg", "or.10p.avg",
+        "AICc", "delta.AICc", "ncoef"
+      ))
+    ),
+  n = Inf
+)
+```
+
+# Select the final model
+
+Retain models within two AICc units of the minimum when available, then rank by validation omission, AUC, and model complexity. These are tuning results from the same folds used to choose the model.
+
+```{r}
+#| label: select-final-model
+
+candidate_models <- results %>%
+  filter(
+    is.finite(auc.val.avg),
+    is.finite(or.10p.avg)
+  )
+
+if (nrow(candidate_models) == 0L) {
+  stop("No candidate model has finite validation AUC and omission.")
+}
+
+competitive <- candidate_models %>%
+  filter(
+    is.finite(delta.AICc),
+    delta.AICc <= 2
+  )
+
+if (nrow(competitive) == 0L) {
+  competitive <- candidate_models
+}
+
+best_model <- competitive %>%
+  arrange(or.10p.avg, desc(auc.val.avg), ncoef) %>%
+  slice(1)
+
+model_id <- as.character(best_model$tune.args[[1]])
+models <- ENMeval::eval.models(enm_eval)
+selected_model <- models[[model_id]]
+
+# ENMeval has already fitted this model to all prepared points.
+final_model <- selected_model
+
+print(best_model)
+cat("\nSelected model:", model_id, "\n")
+```
+
+# Evaluation summary
+
+Summarize the selected model's held-out folds using the existing cross-validation table names.
+
+```{r}
+#| label: evaluation-summary
+
+fold_metrics <- partition_results %>%
+  filter(as.character(tune.args) == model_id) %>%
+  mutate(fold = as.integer(fold)) %>%
+  left_join(fold_summary, by = "fold") %>%
+  transmute(
+    fold,
+    training_presences = n_occ - presence,
+    testing_presences = presence,
+    training_background = n_bg - background,
+    testing_background = background,
+    test_auc = auc.val,
+    test_omission_10pct = or.10p
+  ) %>%
+  arrange(fold)
+
+stopifnot(
+  nrow(fold_metrics) == k_folds,
+  all(is.finite(fold_metrics$test_auc)),
+  all(is.finite(fold_metrics$test_omission_10pct))
+)
+
+metric_summary <- fold_metrics %>%
+  summarise(
+    folds = n(),
+    mean_test_auc = mean(test_auc),
+    sd_test_auc = stats::sd(test_auc),
+    mean_test_omission_10pct = mean(test_omission_10pct),
+    sd_test_omission_10pct = stats::sd(test_omission_10pct)
+  )
+
+knitr::kable(
+  metric_summary,
+  digits = 3,
+  col.names = c(
+    "Folds", "Mean AUC", "SD of AUC", "Mean omission", "SD of omission"
+  ),
+  caption = "Selected MaxEnt model spatial cross-validation results."
+)
+```
+
+# Tuning diagnostics
+
+```{r}
+#| label: tuning-diagnostics
+
+plot_auc <- ggplot(
+  results,
+  aes(
+    x = rm,
+    y = auc.val.avg,
+    color = fc,
+    group = fc
+  )
+) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(
+    title = "Validation AUC",
+    x = "Regularization multiplier",
+    y = "Mean validation AUC",
+    color = "Feature class"
+  )
+
+plot_omission <- ggplot(
+  results,
+  aes(
+    x = rm,
+    y = or.10p.avg,
+    color = fc,
+    group = fc
+  )
+) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(
+    title = "Validation Omission at the 10% Training Threshold",
+    x = "Regularization multiplier",
+    y = "Mean validation omission",
+    color = "Feature class"
+  )
+
+plot_aicc <- ggplot(
+  results,
+  aes(
+    x = rm,
+    y = delta.AICc,
+    color = fc,
+    group = fc
+  )
+) +
+  geom_line() +
+  geom_point() +
+  geom_hline(
+    yintercept = 2,
+    linetype = "dashed"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Model Complexity",
+    x = "Regularization multiplier",
+    y = "Delta AICc",
+    color = "Feature class"
+  )
+
+print(plot_auc)
+print(plot_omission)
+print(plot_aicc)
+```
+
+# Predict habitat suitability
+
+Predict the selected model on the same cloglog scale used during evaluation. Restrict predictions to cells with complete predictor coverage.
+
+```{r}
+#| label: predict-suitability
+
+maxent_suitability <- terra::predict(
+  predictors,
+  final_model,
+  fun = function(model, data, type) {
+    data <- as.data.frame(data)
+    data$Sediment <- factor(
+      data$Sediment,
+      levels = model$levels$Sediment
+    )
+    as.numeric(
+      stats::predict(model, data, type = type, clamp = TRUE)
+    )
+  },
+  type = prediction_type,
+  na.rm = TRUE
+)
+
+names(maxent_suitability) <- "oyster_suitability"
+```
+
+# Suitability map
+
+```{r}
+#| label: fig-maxent-suitability
+#| fig-cap: "Relative Eastern oyster habitat suitability in the Pensacola Bay System on the cloglog scale."
+
+tmap::tmap_mode("plot")
+my_bbox <- sf::st_bbox(study_area)
+
+p_map <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(maxent_suitability, bbox = my_bbox) +
+  tmap::tm_raster(
+    col_alpha = 0.85,
+    col.scale = tm_scale_continuous(
+      values = "scico.imola",
+      limits = c(0, 1),
+      value.na = "transparent"
+    ),
+    col.legend = tm_legend(
+      title = "Relative Suitability",
+      title.fontface = 2,
+      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
+      orientation = "landscape",
+      na.show = FALSE,
+      show = TRUE
+    )
+  ) +
+  tmap::tm_shape(pb[pb$pb == 1L, ]) +
+  tmap::tm_dots(
+    fill = "black",
+    col = "black",
+    size = 0.05
+  ) +
+  tmap::tm_layout(
+    frame = TRUE,
+    inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  ) +
+  tmap::tm_title(
+    "Eastern Oyster Habitat Suitability (Presence-Background Model)",
+    fontface = 2,
+    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
+  ) +
+  tmap::tm_compass(type = "8star", size = 3)
+
+p_map
+```
+
+# Classified suitability map
+
+Display six equal intervals across the 0 to 1 cloglog scale. These are display classes rather than biological suitability thresholds.
+
+```{r}
+#| label: fig-maxent-classified-suitability
+#| fig-cap: "Relative Eastern oyster habitat suitability displayed in six intervals."
+
+tmap::tmap_mode("plot")
+my_bbox <- sf::st_bbox(study_area)
+
+p_map_classified <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(maxent_suitability, bbox = my_bbox) +
+  tmap::tm_raster(
+    col_alpha = 0.85,
+    col.scale = tm_scale_intervals(
+      breaks = seq(0, 1, length.out = 7),
+      values = "scico.imola",
+      value.na = "transparent"
+    ),
+    col.legend = tm_legend(
+      title = "Relative Suitability",
+      title.fontface = 2,
+      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
+      orientation = "landscape",
+      na.show = FALSE,
+      show = TRUE
+    )
+  ) +
+  tmap::tm_shape(pb[pb$pb == 1L, ]) +
+  tmap::tm_dots(
+    fill = "black",
+    col = "black",
+    size = 0.05
+  ) +
+  tmap::tm_layout(
+    frame = TRUE,
+    inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  ) +
+  tmap::tm_title(
+    "Eastern Oyster Habitat Classified Suitability (Presence-Background Model)",
+    fontface = 2,
+    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
+  ) +
+  tmap::tm_compass(type = "8star", size = 3)
+
+p_map_classified
+```
+
+# Save outputs
+
+ saves the final model, raster, selected-model cross-validation tables, and both suitability maps. It also saves the full tuning results and selected settings in the tables directory. The saved model is a maxnet object.
+
+```{r}
+#| label: save-model-outputs
+
+for (directory in c(
+  model_directory, raster_directory, table_directory, map_directory
+)) {
+  dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+}
+
+saveRDS(
+  final_model,
+  file.path(model_directory, "maxent_final_model.rds")
+)
+
+terra::writeRaster(
+  maxent_suitability,
+  file.path(raster_directory, "maxent_suitability.tif"),
+  overwrite = TRUE
+)
+
+readr::write_csv(
+  fold_metrics,
+  file.path(table_directory, "maxent_cross_validation_metrics.csv")
+)
+readr::write_csv(
+  metric_summary,
+  file.path(table_directory, "maxent_cross_validation_summary.csv")
+)
+readr::write_csv(
+  ranked_models,
+  file.path(table_directory, "maxent_tuning_results.csv")
+)
+readr::write_csv(
+  partition_results,
+  file.path(table_directory, "maxent_tuning_partition_metrics.csv")
+)
+readr::write_csv(
+  best_model,
+  file.path(table_directory, "maxent_selected_settings.csv")
+)
+
+tmap::tmap_save(
+  p_map,
+  file.path(map_directory, "Suitability_Map.png")
+)
+tmap::tmap_save(
+  p_map_classified,
+  file.path(map_directory, "Suitability_Map_Classified.png")
+)
+```
+
+# Workflow summary
+
+```{r}
+#| label: model-workflow-summary
+
+cat("\n==============================\n")
+cat("ENMeval completed\n")
+cat("==============================\n")
+cat("Occurrences:", n_occ, "\n")
+cat("Background:", n_bg, "\n")
+cat("Spatial partitions: ENMeval block,", k_folds, "folds\n")
+cat("Block orientation:", block_orientation, "\n")
+cat("Candidate models:", nrow(results), "\n")
+cat("Selected model:", model_id, "\n")
+cat("Prediction scale:", prediction_type, "\n")
+cat("==============================\n")
+```
+

@@ -1,0 +1,306 @@
+```{r} 
+#| label: set-up
+library(tidyverse)
+library(sf)
+library(terra)
+library(ipdw)
+library(knitr)
+
+## Load packages and functions from setup script
+source(here::here("3-scripts", "1-functions.r"))
+
+trg_crs <- "EPSG:6440" # NAD 83 Florida State Plane North 
+
+data_dir <- here::here("2-data","processed")
+rast_dir <- here::here("2-data","rasters")
+table_dir <- here::here("4-tables-and-figures", "tables")
+hsm_dir <- here::here("2-data", "hsm")
+map_dir <- here::here("4-tables-and-figures", "maps")
+
+study_area <- readRDS(file.path(data_dir, "study_area.rds")) %>%
+  st_transform(trg_crs)
+
+study_extent <- study_area %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_buffer(1000)
+
+mask <- rast(file.path(rast_dir, "complete_mask.tif")) 
+
+# Load Suitability 
+
+sdm <- rast(file.path(rast_dir, "maxent_suitability.tif")) 
+hsi <- rast(file.path(hsm_dir, "normalized_suitability.tif"))
+
+sdm <- project(sdm, mask)
+hsi <- project(hsi, mask)
+
+# 2. Align extent, resolution, and row/column counts to shared_mask
+sdm_aligned <- resample(sdm, mask, method = "bilinear")
+hsi_aligned <- resample(hsi, mask, method = "bilinear")
+
+# 3. Mask using the aligned rasters
+hsi_compare <- mask(hsi_aligned, mask)
+maxent_compare <- mask(sdm_aligned, mask)
+```
+
+# 1. Classify rasters into 5 comparable classes
+
+```{r}
+# Align the continuous HSI raster to the MaxEnt grid.
+
+# Fixed equal-interval boundaries.
+class_breaks <- c(0, 0.20, 0.40, 0.60, 0.80, 1)
+
+# Columns: lower boundary, upper boundary, class number.
+rcl <- cbind(
+  head(class_breaks, -1),
+  tail(class_breaks, -1),
+  1:5
+)
+
+hsi_class <- terra::classify(
+  hsi_compare,
+  rcl,
+  right = FALSE,
+  include.lowest = TRUE,
+  others = NA
+)
+
+maxent_class <- terra::classify(
+  maxent_compare,
+  rcl,
+  right = FALSE,
+  include.lowest = TRUE,
+  others = NA
+)
+
+# Cross-tabulation: rows are HSI classes, columns are MaxEnt classes.
+class_pair <- c(hsi_class, maxent_class)
+names(class_pair) <- c("HSI", "MaxEnt")
+
+agreement_table <- crosstab(class_pair)
+agreement_table
+
+# Calculate agreement percentages and continuous rank correlation.
+comparison <- data.frame(
+  exact_agreement_pct = 100 * global(
+    hsi_class == maxent_class, "mean", na.rm = TRUE
+  )[1, 1],
+
+  within_one_class_pct = 100 * global(
+    abs(hsi_class - maxent_class) <= 1, "mean", na.rm = TRUE
+  )[1, 1],
+
+  spearman_rho = cor(
+    values(hsi_compare, mat = FALSE),
+    values(maxent_compare, mat = FALSE),
+    method = "spearman",
+    use = "complete.obs"
+  )
+)
+
+comparison
+
+subtract <- hsi_class - maxent_class
+
+# Add descriptive class labels.
+class_key <- data.frame(
+  ID = 1:5,
+  suitability = c(
+    "Low", "Intermediate-low", "Intermediate",
+    "Intermediate-high", "High"
+  )
+)
+
+levels(hsi_class) <- class_key
+levels(maxent_class) <- class_key
+
+# Check the number of cells assigned to each class.
+freq(hsi_class)
+freq(maxent_class)
+
+
+
+```
+
+```{r}
+#| label: plot-maxent-map
+
+my_bbox <- sf::st_bbox(
+  c(
+    xmin = terra::xmin(mask),
+    ymin = terra::ymin(mask),
+    xmax = terra::xmax(mask),
+    ymax = terra::ymax(mask)
+  ),
+  crs = sf::st_crs(terra::crs(mask))
+)
+
+maxent_class <- as.factor(maxent_class)
+
+levels(maxent_class) <- data.frame(
+  ID = 1:5,
+  suitability = c(
+    "Low", "Intermediate-low", "Intermediate",
+    "Intermediate-high", "High"
+  )
+)
+
+me_map <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(maxent_class, bbox = my_bbox) +
+  tmap::tm_raster(
+    col_alpha = 0.85,
+    col.scale = tm_scale_categorical(
+        values = "brewer.rd_yl_gn",
+        value.na = "transparent",
+        levels.drop = FALSE
+      ),
+    col.legend = tm_legend(
+      title = "Modeled Suitability",
+      title.fontface = 2,
+      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
+      orientation = "landscape",
+      na.show = FALSE,
+      show = TRUE
+    )
+  ) +
+  # tmap::tm_shape(pb[pb$pb == 1L, ]) +
+  # tmap::tm_dots(
+  #   fill = "black",
+  #   col = "black",
+  #   size = 0.05
+  # ) +
+  # tmap::tm_layout(
+  #   frame = TRUE,
+  #   inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  # ) +
+  tmap::tm_title(
+    "C. virginica Habitat Suitability (MaxEnt)",
+    fontface = 2,
+    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
+  ) +
+  tmap::tm_compass(type = "8star", size = 3)
+
+me_map
+
+tmap_save(me_map, file.path(map_dir, "maxent_suitability.png"))
+```
+
+```{r}
+#| label: plot-maxent-map
+
+my_bbox <- sf::st_bbox(
+  c(
+    xmin = terra::xmin(mask),
+    ymin = terra::ymin(mask),
+    xmax = terra::xmax(mask),
+    ymax = terra::ymax(mask)
+  ),
+  crs = sf::st_crs(terra::crs(mask))
+)
+
+hsi_class <- as.factor(hsi_class)
+
+levels(hsi_class) <- data.frame(
+  ID = 1:5,
+  suitability = c(
+    "Low", "Intermediate-low", "Intermediate",
+    "Intermediate-high", "High"
+  )
+)
+
+hsi_map <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(hsi_class, bbox = my_bbox) +
+  tmap::tm_raster(
+    col_alpha = 0.85,
+    col.scale = tm_scale_categorical(
+        values = "brewer.rd_yl_gn",
+        value.na = "transparent",
+        levels.drop = FALSE
+      ),
+    col.legend = tm_legend(
+      title = "Classified",
+      title.fontface = 2,
+      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
+      orientation = "landscape",
+      na.show = FALSE,
+      show = TRUE
+    )
+  ) +
+  # tmap::tm_shape(pb[pb$pb == 1L, ]) +
+  # tmap::tm_dots(
+  #   fill = "black",
+  #   col = "black",
+  #   size = 0.05
+  # ) +
+  # tmap::tm_layout(
+  #   frame = TRUE,
+  #   inner.margins = c(0.2, 0.2, 0.2, 0.2)
+  # ) +
+  tmap::tm_title(
+    "C. virginica Habitat Suitability (HSI)",
+    fontface = 2,
+    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
+  ) +
+  tmap::tm_compass(type = "8star", size = 3)
+
+hsi_map
+
+tmap_save(hsi_map, file.path(map_dir, "hsi_suitability.png"), overwrite = TRUE)
+```
+
+
+```{r}
+#| label: map-comparison
+
+my_bbox <- sf::st_bbox(
+  c(
+    xmin = terra::xmin(mask),
+    ymin = terra::ymin(mask),
+    xmax = terra::xmax(mask),
+    ymax = terra::ymax(mask)
+  ),
+  crs = sf::st_crs(terra::crs(mask))
+)
+
+sub_cont <- hsi - sdm
+
+favor_map <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(subtract, bbox = my_bbox) +
+  tmap::tm_raster(
+    col_alpha = 0.85,
+    col.scale = tm_scale_continuous(
+      values = "brewer.spectral",
+      limits = c(-4, 4),
+      midpoint = 0,
+      ticks = c(-4, 0, 4),
+      labels = c("MaxEnt", "Agree", "HSI"),
+      value.na = "transparent"
+    ),
+    col.legend = tm_legend(
+      title = "Favorability",
+      title.fontface = 2,
+      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
+      orientation = "landscape",
+      na.show = FALSE,
+      show = TRUE,
+      item.width = 10
+    )
+  ) +
+  tmap::tm_title(
+    "C. virginica Habitat Favorability (Comparison)",
+    fontface = 2,
+    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
+  ) +
+  tmap::tm_compass(type = "8star", size = 3)
+
+favor_map
+
+tmap_save(favor_map, file.path(map_dir, "model_favorability.png"), overwrite = TRUE)
+
+
+```

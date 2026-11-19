@@ -62,6 +62,10 @@ complete_mask <- terra::ifel(
   NA
 )
 
+# save mask for later use
+
+
+
 predictors <- terra::mask(predictors, complete_mask)
 ```
 
@@ -538,8 +542,30 @@ terra::crs(maxent_suitability) <- terra::crs(predictors)
 
 names(maxent_suitability) <- "oyster_suitability"
 
+```
+
+```{r}
+#| label: final-model-equation
+
+b <- mod.seq$betas
+intercept <- mod.seq$alpha + mod.seq$entropy
+
+equation <- paste0(
+  "eta = ", signif(intercept, 6), " ",
+  paste(
+    sprintf("%+.6g * [%s]", b, names(b)),
+    collapse = " "
+  )
+)
+
+cat(
+  equation,
+  "\nSuitability = 1 / (1 + exp(-eta))\n"
+)
+
 
 ```
+
 
 # Suitability map
 
@@ -660,6 +686,11 @@ saveRDS(
 terra::writeRaster(
   maxent_suitability,
   file.path(raster_directory, "maxent_suitability.tif"),
+  overwrite = TRUE
+)
+terra::writeRaster(
+  complete_mask,
+  file.path(raster_directory, "complete_mask.tif"),
   overwrite = TRUE
 )
 

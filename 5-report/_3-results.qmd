@@ -39,12 +39,12 @@ raw_data <- list(
 )
 
 # Processed water-quality data
-chla_proc <- readRDS(here("2-data", "processed", "chla_proc.rds"))
-do_proc <- readRDS(here("2-data", "processed", "do_proc.rds"))
-sal_proc <- readRDS(here("2-data", "processed", "sal_proc.rds"))
-turb_proc <- readRDS(here("2-data", "processed", "turb_proc.rds"))
+chla_proc <- readRDS(here("2-data", "processed", "proc_chla.rds"))
+do_proc <- readRDS(here("2-data", "processed", "proc_do.rds"))
+sal_proc <- readRDS(here("2-data", "processed", "proc_sal.rds"))
+turb_proc <- readRDS(here("2-data", "processed", "proc_turb.rds"))
 water_temp_proc <- readRDS(
-  here("2-data", "processed", "water_temp_proc.rds")
+  here("2-data", "processed", "proc_water_temp.rds")
 )
 
 processed_data <- list(
@@ -116,7 +116,7 @@ study_area <- readRDS(
 )
 
 oyster_points <- readRDS(
-  here("2-data", "processed", "oys_proc.rds")
+  here("2-data", "processed", "oys_reef_proc.rds")
 )
 ```
 
@@ -402,47 +402,7 @@ kable(
 ```
 
 ```{r}
-#| label: tbl-raster-summary
-#| tbl-cap: "Summary of final IPDW environmental predictor rasters."
-#| echo: false
-#| warning: false
-
-raster_summary <- imap_dfr(
-  raster_results,
-  \(raster_layer, parameter) {
-    raster_values <- getValues(raster_layer)
-    raster_resolution <- res(raster_layer)
-
-    tibble(
-      Parameter = parameter,
-      Units = parameter_units[[parameter]],
-      Minimum = min(raster_values, na.rm = TRUE),
-      Maximum = max(raster_values, na.rm = TRUE),
-      `Predicted cells` = sum(!is.na(raster_values)),
-      `Cell size` = paste0(
-        raster_resolution[[1]],
-        " x ",
-        raster_resolution[[2]],
-        " m"
-      )
-    )
-  }
-) %>%
-  mutate(
-    Minimum = sprintf("%.2f", Minimum),
-    Maximum = sprintf("%.2f", Maximum),
-    `Predicted cells` = scales::comma(`Predicted cells`)
-  )
-
-kable(
-  raster_summary,
-  booktabs = TRUE,
-  align = c("l", "l", "r", "r", "r", "c")
-)
-```
-
-```{r}
-#| label: fig-environmental-rasters
+#| label: fig-environmental-rasters-1
 #| fig-cap: "Final IPDW prediction surfaces used as environmental inputs for habitat-suitability modeling. Each panel uses its own measurement scale."
 #| fig-width: 10
 #| fig-height: 8

@@ -26,9 +26,10 @@ tune_settings <- list(
   rm = c(0.5, 1, 1.5, 2, 3, 4)
 )
 
-n_background <- 5000L
-block_orientation <- "lat_lon"
+n_background <- 10000L
+
 k_folds <- 4L
+block_orientation <- "lat_lon"
 prediction_type <- "cloglog"
 ```
 
@@ -40,7 +41,7 @@ Keep cells with finite values for every predictor. Sediment is converted to a ca
 #| label: environmental-predictors
 
 predictor_files <- c(
-  Depth = "rast_depth.tif",
+  #Depth = "rast_depth.tif",
   Dissolved.Oxygen = "rast_do.tif",
   Salinity = "rast_sal.tif",
   Sediment = "rast_sed.tif",
@@ -224,14 +225,35 @@ ENMeval's block method divides occurrences into four geographic groups using nor
 ```{r}
 #| label: spatial-partitions
 
-# Inspect the same native partitions that ENMevaluate will create.
+# partition_groups <- blockCV::cv_spatial(
+#         x = pb,
+#         column = "pb",
+#         r = complete_mask,
+#         k = 5,
+#         size = 5000,
+#         selection = "random",
+#         presence_bg = TRUE,
+#         seed = 42,
+#         plot = FALSE
+# )
+
+# fold_ids <- partition_groups$folds_ids
+
+# user_groups <- list(
+#   occs.grp = partition_groups$folds_ids[pb$pb == 1L],
+#   bg.grp = partition_groups$folds_ids[pb$pb == 0L]
+# )
+
 partition_groups <- ENMeval::get.block(
   occs = occ_xy,
   bg = bg_xy,
   orientation = block_orientation
 )
 
-fold_ids <- c(partition_groups$occs.grp, partition_groups$bg.grp)
+fold_ids <- c(
+  partition_groups$occs.grp,
+  partition_groups$bg.grp
+)
 
 fold_summary <- pb_data %>%
   mutate(fold = fold_ids) %>%
@@ -273,12 +295,14 @@ Compare all feature-class and regularization settings using the four spatial par
 # Sediment codes represent categories, not a continuous measurement.
 predictors[["Sediment"]] <- as.factor(predictors[["Sediment"]])
 
-enm_eval <- ENMeval::ENMevaluate(
+e.mx <- ENMeval::ENMevaluate(
   occs = occ_xy,
   envs = predictors,
   bg = bg_xy,
   algorithm = "maxnet",
   categoricals = "Sediment",
+  #partitions = "user",
+  #user.grp = user_groups,
   partitions = "block",
   partition.settings = list(orientation = block_orientation),
   tune.args = tune_settings,
@@ -293,21 +317,9 @@ enm_eval <- ENMeval::ENMevaluate(
   quiet = FALSE
 )
 
-results <- tibble::as_tibble(ENMeval::eval.results(enm_eval))
+results <- tibble::as_tibble(ENMeval::eval.results(e.mx))
 partition_results <- tibble::as_tibble(
-  ENMeval::eval.results.partitions(enm_eval)
-)
-
-# Confirm that the preview matches the partitions used by ENMeval.
-stopifnot(
-  identical(
-    as.integer(ENMeval::eval.occs.grp(enm_eval)),
-    as.integer(partition_groups$occs.grp)
-  ),
-  identical(
-    as.integer(ENMeval::eval.bg.grp(enm_eval)),
-    as.integer(partition_groups$bg.grp)
-  )
+  ENMeval::eval.results.partitions(e.mx)
 )
 
 ranked_models <- results %>%
@@ -330,42 +342,48 @@ print(
 
 Retain models within two AICc units of the minimum when available, then rank by validation omission, AUC, and model complexity. These are tuning results from the same folds used to choose the model.
 
+sequential method that uses cross-validation results by selecting models with the lowest average 10 percentile omission rate, and to break ties, with the highest average validation Continuous Boyce Index (Hirzel et al. 2006) calculated with the function from the R package ecospat (Di Cola et al. 2017).
+
 ```{r}
 #| label: select-final-model
+#| 
+res <- eval.results(e.mx)
 
-candidate_models <- results %>%
-  filter(
-    is.finite(auc.val.avg),
-    is.finite(or.10p.avg)
+# first removes settings with NA values for omission rate.
+# Select the model with delta AICc equal to 0, or the one with the lowest AICc score.
+
+opt.seq <- res %>%
+  filter(!is.na(or.10p.avg)) %>%
+  filter(or.10p.avg == min(or.10p.avg)) %>%
+  filter(cbi.val.avg == max(cbi.val.avg))
+
+model_id <- as.character(opt.seq$tune.args[[1]])
+mod.seq <- eval.models(e.mx)[[model_id]]
+
+best_model <- opt.seq
+final_model <- mod.seq
+
+data <- eval.occs(e.mx)[, names(predictors), drop = FALSE]
+
+curve_vars <- names(data)[
+  vapply(names(data), function(variable) {
+    is.numeric(data[[variable]]) &&
+      any(grepl(variable, names(mod.seq$betas), fixed = TRUE))
+  }, logical(1))
+]
+
+response_plots <- lapply(curve_vars, function(variable) {
+  ENMeval::evalplot.respCurve(
+    mod.seq,
+    data,
+    var = variable,
+    type = 2
   )
+})
 
-if (nrow(candidate_models) == 0L) {
-  stop("No candidate model has finite validation AUC and omission.")
-}
+patchwork::wrap_plots(response_plots, ncol = 3)
 
-competitive <- candidate_models %>%
-  filter(
-    is.finite(delta.AICc),
-    delta.AICc <= 2
-  )
 
-if (nrow(competitive) == 0L) {
-  competitive <- candidate_models
-}
-
-best_model <- competitive %>%
-  arrange(or.10p.avg, desc(auc.val.avg), ncoef) %>%
-  slice(1)
-
-model_id <- as.character(best_model$tune.args[[1]])
-models <- ENMeval::eval.models(enm_eval)
-selected_model <- models[[model_id]]
-
-# ENMeval has already fitted this model to all prepared points.
-final_model <- selected_model
-
-print(best_model)
-cat("\nSelected model:", model_id, "\n")
 ```
 
 # Evaluation summary
@@ -493,24 +511,34 @@ Predict the selected model on the same cloglog scale used during evaluation. Res
 ```{r}
 #| label: predict-suitability
 
-maxent_suitability <- terra::predict(
-  predictors,
-  final_model,
-  fun = function(model, data, type) {
-    data <- as.data.frame(data)
-    data$Sediment <- factor(
-      data$Sediment,
-      levels = model$levels$Sediment
-    )
-    as.numeric(
-      stats::predict(model, data, type = type, clamp = TRUE)
-    )
-  },
-  type = prediction_type,
-  na.rm = TRUE
+# maxent_suitability <- terra::predict(
+#   predictors,
+#   final_model,
+#   fun = function(model, data, type) {
+#     data <- as.data.frame(data)
+#     data$Sediment <- factor(
+#       data$Sediment,
+#       levels = model$levels$Sediment
+#     )
+#     as.numeric(
+#       stats::predict(model, data, type = type, clamp = TRUE)
+#     )
+#   },
+#   type = prediction_type,
+#   na.rm = TRUE
+# )
+
+maxent_suitability <- ENMeval::maxnet.predictRaster(
+  mod = mod.seq,
+  envs = predictors,
+  pred.type = "logistic"
 )
 
+terra::crs(maxent_suitability) <- terra::crs(predictors)
+
 names(maxent_suitability) <- "oyster_suitability"
+
+
 ```
 
 # Suitability map
@@ -528,7 +556,7 @@ p_map <-
   tmap::tm_raster(
     col_alpha = 0.85,
     col.scale = tm_scale_continuous(
-      values = "scico.imola",
+      values = "brewer.rd_yl_gn",
       limits = c(0, 1),
       value.na = "transparent"
     ),
@@ -579,7 +607,7 @@ p_map_classified <-
     col_alpha = 0.85,
     col.scale = tm_scale_intervals(
       breaks = seq(0, 1, length.out = 7),
-      values = "scico.imola",
+      values = "brewer.rd_yl_gn",
       value.na = "transparent"
     ),
     col.legend = tm_legend(

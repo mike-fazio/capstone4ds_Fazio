@@ -1,4 +1,11 @@
 # Results
+
+<!--
+Outline: report connections to finish
+- Values below were checked against the saved inputs and model outputs on November 19, 2026. Replace the old five-fold dismo model descriptions with the current four-partition ENMeval/maxnet results.
+- The setup still reads older processed filenames. Current inputs are proc_chla.rds, proc_do.rds, proc_sal.rds, proc_turb.rds, proc_water_temp.rds, and proc_oys_reefs.rds in 2-data/processed.
+- Two chunks share the label fig-environmental-rasters. Resolve the duplicate before rendering. The disabled MaxEnt and HSI chunks also need their current file paths and column names connected before their references will produce outputs.
+-->
 ```{r}
 #| label: results-setup
 #| include: false
@@ -115,6 +122,13 @@ oyster_points <- readRDS(
 
 ## Water-Quality Data Coverage
 
+<!--
+Outline: data coverage checks
+- Use @tbl-data-summary and @fig-monitoring-coverage. The raw count is 25,665 observations across 174 unique site identifiers. Chlorophyll-a has 1,847 raw records, so correct the narrative value of 1,845.
+- Processing retains 11,946 observations (46.5%) in 291 parameter-specific bin records. There are 286 finite bin means: chlorophyll-a 25 of 27, dissolved oxygen 68 of 68, salinity 67 of 67, turbidity 58 of 61, and temperature 68 of 68. Do not describe all 291 records as usable predictor values.
+- Keep the chlorophyll-a exclusion and the main spatial coverage gaps. Correct the incomplete phrase "using 666" to identify observations and the typo "fo" in the existing paragraph.
+-->
+
 There were 25,665 raw observations from across all five parameter datasets, representing 174 unique site locations. Chlorophyll-a had 1,845 records from 54 sites. Processing resulted in 27 binned values using 666. Dissolved Oxygen had 6,261 observations from 169 sites. Processing reduced the data to 68 binned values using 3,010 observations. Salinity returned 6,994 observation values from 159 sites. The data was processed into 67 binned values using 3,400 observations.  Turbidity had 3,402 observed values from 146 sites. After processing there were 61 binned values using 1,429 observations. Water temperature had 7,161 raw observations from 169 sites. Data processing returned 68 binned values using 3,441 observations. Overall, data processing returned 291 parameterized data values using 11,946 fo the 25,665 original values, representing 46.5% of the original dataset (@tbl-data-summary).
 
 For all parameters, the data was heavily skewed spatially, with the majority of samples located in Escambia and Pensacola Bays. Chlorophyll-a in particular had much fewer sites and almost no observations located in the eastern half of the study area. Due to such a lack of spatial distribution, chlorophyll-a was subsequently dropped from the analysis (@fig-monitoring-coverage). 
@@ -193,6 +207,13 @@ ggplot() +
 ```
 
 ## Environmental Predictor Results
+
+<!--
+Outline: shared environmental results
+- Use @fig-ipdw-sensitivity for sensitivity, @tbl-ipdw-validation for repeated validation at the chosen settings, @tbl-raster-summary for raster ranges, and @fig-environmental-rasters for spatial patterns. There is no fig-processed-mean-distributions chunk in this document.
+- All four selected water-quality surfaces use power 0.25 and range 10 km. Describe the values with SDs as repeated validation summaries, rather than statistics from the separate seed-42 final check.
+- Add oyster recruitment: 10 input sites, values 0 to 14.76; saved validation MAE 5.510, RMSE 6.481, bias -0.808, and 100% coverage. Its raster has 33,323 finite cells, mean 7.354 and SD 3.035. Supply units and the validation-fold setup before finalizing this paragraph. The current shared tables and map omit recruitment.
+-->
 
 Each parameter (save for chlorophyll-a) was interpolated into predicted surface rasters using an inverse-path distance weighting algorithm. To ensure the highest accuracy was achieved, a sensitivy analysis was conducted on each parameter model using 36 distance-power/range combinations, which were in turn evaluated across five random five-fold spatial partitions. Powers ranged from 0.25 to 3.00, and  maximum range values evaluated were 5, 10, 15, and 20 km (@fig-ipdw-sensitivity). 
 
@@ -289,24 +310,43 @@ wrap_plots(sensitivity_plots, ncol = 2) +
 
 ### Dissolved Oxygen
 
+<!--
+Outline: dissolved oxygen check
+- Round the lowest sensitivity MAE consistently to 0.426 mg/L (power 0.75, range 10 km). Selected-setting MAE is 0.431 (SD 0.006), RMSE 0.552 (SD 0.004), bias +0.013, coverage 100% (@tbl-ipdw-validation).
+- Correct "rater" and check the geographic wording against @fig-environmental-rasters; the current sentence describes a westward decrease but places the lowest values in East Bay and northern Blackwater Bay.
+-->
+
 Dissolved oxygen sensitivity had a mean MAE ranging from 0.426 to 0.507 mg/L. The lowest mean MAE with 100% prediction was 0.425mg/L using a distance power of 0.75 and max range of 10km (@tbl-ipdw-validation). The predicted rater surface values ranged from 5.28mg/L to 7.99mg/L (n = 33,792; µ = 6.52; σ = 0.26; @tbl-raster-summary). The final prediction model achieved 100% coverage with a MAE of 0.431 mg/L (σ = 0.006) with RMSE = 0.552 mg/L (σ = 0.004). The model tended to over predict by +0.013 mg/L. Spatially, dissolved oxygen generally decreased in the western portions of the study area. With the lowest values appearing in East Bay and northern Blackwater Bay (@fig-environmental-rasters).   
 
 
 ### Salinity
 
+<!--
+Outline: salinity check
+- Clarify the MAE comparison: selected 0.25/10 km = 2.490102 ppt; best with full coverage, 0.50/10 km = 2.489983 ppt; difference = 0.000119 ppt. The overall minimum, 3.00/5 km = 2.397423 ppt, differs from the selected result by 0.092679 ppt and has mean coverage 96.1% (@fig-ipdw-sensitivity).
+-->
+
 The salinity sensitivity analysis had a mean MAE ranging from 2.397 ppt to 3.125 ppt. The lowest reported MAE with 100% model coverage was 2.49 ppt using distance power 0.50 and max range of 10km. The absolute lowest mean MAE was 2.397 ppt was achieved using distance power of 3.00 and a max range of 5km , but model coverage fell to 96.1%. The difference in mean MAE between the lowest achieved DP-MR combination and the actual DP-MR combination used was 0.000119 ppt (@tbl-ipdw-validation). Spatial cross-validation of the final model fit had a MAE of 2.49 ppt (σ = 0.036) and RMSE 3.444 ppt (σ = 0.024). The model slightly over predicted salinity values (+0.140 ppt) and achieved 100% coverage. The predicted values ranged from 2.31 to 26.73 ppt (n = 33,792; µ = 16.36 ppt; σ = 3.14; @tbl-raster-summary). Spatially, salinity generally decreased from west to east with the lowest values being in the northern Blackwater Bay and the highest values located in the southwestern region of Pensacola Bay (@fig-environmental-rasters). 
 
 ### Turbidity
+
+<!--
+Outline: turbidity coverage
+- Explain that 95.1% is 58 valid observed/predicted pairs out of 61 bin records. Three bins have nonfinite observed means after outlier exclusion; this percentage alone does not show failed interpolation (@tbl-ipdw-validation).
+-->
 
 The sensitivity analysis for turbidity reported a mean MAE range from 0.696 to 0.847 NTU. The lowest mean MAE was 0.696 NTU (DP = 1.00, MR = 15km) with 95.1% model coverage (@tbl-ipdw-validation). The final model fit produced a MAE = 0.745 NTU (σ = 0.018) with RMSE = 0.937 NTU (σ = 0.026). Overall the model slightly under predicted by -0.010 NTU and achieved 95.1% coverage. The final predicted surface values ranged from 0.03 NTU to 5.23 NTU (n = 33,790; µ = 2.23 NTU; σ = 0.47; @tbl-raster-summary). Spatially, turbidity generally decreased from north to south, with the highest values occuring near the mouth of Escambia River and the lowest values occuring in the southwestern portion of Pensacola Bay (@fig-environmental-rasters).
 
 ### Water Temperature
 
+<!--
+Outline: temperature and raster summaries
+- The existing temperature values match the saved repeated summaries. Keep the shared raster ranges: dissolved oxygen 5.28 to 7.99 mg/L, salinity 2.31 to 26.73 ppt, turbidity 0.03 to 5.23 NTU, and temperature 25.93 to 30.43 degrees C (@tbl-raster-summary). Raster counts are 33,792 for each except turbidity, which has 33,790.
+-->
+
 Mean MAE for the water temperature sensitivity analysis ranged from 0.978 to 1.135 degrees C. The lowest mean MAE was 0.978 degrees C with 100% model coverage (DP = 0.75, MR = 10km; @tbl-ipdw-validation). The final model had a MAE of 0.988 degrees C (σ = 0.015) and RMSE was 1.163 degrees C (σ = 0.014). The model generally under predicted water temperature by -0.063 degrees C with 100% model coverage. The resulting prediction surface ranged from 25.93 to 30.43 degrees C (n = 33,792; µ = 27.66°C; σ = 0.41°C; @tbl-raster-summary). Water temperature was generally lower in the eastern portions of the study area, with the coolest values trending toward Blackwater Bay (@fig-environmental-rasters). 
 
 
-- Keep Figure @fig-ipdw-sensitivity, Table @tbl-ipdw-validation, Table @tbl-raster-summary, and Figure @fig-environmental-rasters together as shared outputs, referring to the relevant parameter from each subsection. Figure @fig-processed-mean-distributions supports the processed-data summaries.
-- The MaxEnt prediction covers a smaller area because it requires complete values for all six predictors
 
 ```{r}
 #| label: tbl-ipdw-validation
@@ -512,19 +552,12 @@ tmap::tm_save(p_map, here::here("4-tables-and-figures", "maps", "Prediction_Rast
 
 ## Oyster Occurrence Data
 
-Follow the environmental predictor results with the occurrence filtering and model input counts.
-
-Numerical values for the narrative:
-
-- The processed occurrence dataset contains 443 oyster records.
-- The completed model notebook reports 442 records with complete values for all six predictors, leaving 1 record excluded for incomplete predictors.
-- Retaining one presence per 100 m predictor cell reduced those 442 records to 254 modeled presences, removing 188 additional within-cell records.
-- The saved final model contains 254 presence rows and 1,000 sampled background rows, with six predictors. Background points are not verified absences.
-- These counts describe the saved model and the rendered 3-scripts/5-maxent-model.html. The current QMD has later, unfinished thinning edits and a background request of 500; do not use those edits to describe the saved run.
-- Describe clustering and geographic gaps using Figure @fig-oyster-occurrences. The figure shows all 443 processed records, not just the 254 modeled presences.
-
-Available inline value: r scales::comma(total_oyster_points) returns the processed occurrence count.
+<!--
+Outline: occurrence and background counts
+- Begin with 443 processed oyster records and finish with the 34 presences and 10,000 background points in the saved model evaluation. Add the intermediate counts removed by 1 km thinning and incomplete predictors if available; the saved evaluation tables establish the final count only.
+- Describe the geographic distribution using @fig-oyster-occurrences. Its current code maps all processed records, so distinguish these from the 34 modeled presences. Current input: 2-data/processed/proc_oys_reefs.rds.
 -->
+
 
 ```{r}
 #| label: fig-oyster-occurrences
@@ -564,37 +597,15 @@ ggplot() +
 ## MaxEnt Model Tuning and Selection
 
 <!--
-4. MaxEnt Model Results
-4.1 Model Performance
-
-Use a performance narrative for the completed model. Keep predictor importance and predicted suitability as subsections of this same MaxEnt results section. The current visible tuning heading is retained, but no tuning comparison is available.
-
-The model has been run. Available results are in:
-
-- 4-tables-and-figures/tables/maxent_cross_validation_summary.csv
-- 4-tables-and-figures/tables/maxent_cross_validation_metrics.csv
-- 2-data/models/maxent_final_model.rds
-
-Numerical values for a model-performance narrative:
-
-- Five spatial folds were evaluated. Saved mean test AUC = 0.885 (SD 0.066); fold values range from 0.811 to 0.990.
-- Saved mean test omission at the training-presence 10th-percentile cutoff = 30.2% (SD 20.8 percentage points); fold omission ranges from 2.2% to 56.6%.
-- Fold 1: 37 held-out presences, 168 held-out background points; AUC 0.864; omission 43.2%.
-- Fold 2: 42 held-out presences, 203 held-out background points; AUC 0.892; omission 21.4%.
-- Fold 3: 93 held-out presences, 218 held-out background points; AUC 0.990; omission 2.2%.
-- Fold 4: 29 held-out presences, 208 held-out background points; AUC 0.868; omission 27.6%.
-- Fold 5: 53 held-out presences, 203 held-out background points; AUC 0.811; omission 56.6%.
-- These means give equal weight to each fold. They are not pooled metrics across all held-out points.
-- The saved final model has training AUC 0.8574. Keep this separate from held-out test AUC.
-- Report the AUC together with omission and fold variation. The saved omission exceeds 10% in four of five folds; a 10th-percentile training cutoff does not imply 10% test omission.
-
-Reporting limits:
-
-- No candidate feature-class/regularization tuning table, AICc comparison, or Boyce index was found. Five CV fits are not five candidate configurations. Do not claim an optimal feature class or regularization multiplier.
-- The rendered completed notebook uses 5 km spatial blocks; the newer QMD currently specifies 2.5 km. Confirm the settings behind the Nov. 10 CSVs before stating their block size.
-- All five saved threshold_10pct values are identical (0.3554247081). Confirm these fold-specific cutoffs before treating the saved omission results as final.
-- The disabled table below still expects maxent_tuning_results.rds, which does not exist. This comments-only update does not connect the report chunks to the actual saved outputs.
+Outline: current tuning and performance results
+- Report 24 candidates across four spatial partitions. Selected configuration: LQH, regularization multiplier 0.5, and 14 nonzero coefficients. Selection uses lowest mean 10th-percentile omission, then highest mean Continuous Boyce Index.
+- Selected mean validation AUC = 0.703 (SD 0.136); omission = 11.46% (SD 9.10 percentage points); Continuous Boyce Index = 0.093 (SD 0.525). Training AUC = 0.862. These summarize the tuning folds, rather than independent validation.
+- Fold AUC/omission: 1 = 0.843/11.1%, 2 = 0.582/0%, 3 = 0.590/22.2%, 4 = 0.796/12.5%. Held-out presence counts are 9, 8, 9, and 8; background counts are 5,706, 432, 2,594, and 1,268. Briefly mention the variation among partitions.
+- Selected AICc = 691.295 and delta AICc = 13.590. The minimum-AICc candidate is LQ/0.5 (AICc 677.705; validation AUC 0.520; omission 22.22%). Do not describe the selected model as the minimum-AICc model.
+- Use maxent_tuning_results.csv, maxent_selected_settings.csv, and maxent_cross_validation_metrics.csv in 4-tables-and-figures/tables. Adapt @tbl-maxent-selection to these saved columns before citing it; its current RDS input does not exist.
 -->
+
+
 
 ```{r}
 #| label: tbl-maxent-selection
@@ -630,27 +641,13 @@ kable(
 ## Environmental-Variable Influence
 
 <!--
-4.2 Environmental-Variable Influence
-
-Discuss all six predictors together here, after model performance. Keep their MaxEnt importance separate from their earlier interpolation results.
-
-Numerical values from the results slot of 2-data/models/maxent_final_model.rds:
-
-Predictor: percent contribution; permutation importance.
-
-- Salinity: 43.77%; 28.50%.
-- Dissolved Oxygen: 38.06%; 36.07%.
-- Temperature: 8.15%; 3.23%.
-- Depth: 5.50%; 18.86%.
-- Sediment: 3.19%; 3.49%.
-- Turbidity: 1.34%; 9.87%.
-
-Salinity and Dissolved Oxygen together account for 81.83% of contribution and 64.56% of permutation importance. Salinity ranks first in contribution, while Dissolved Oxygen ranks first in permutation importance. Depth ranks third in permutation importance despite contributing only 5.50% during fitting.
-
-These values describe the saved final model. Importance percentages do not establish the direction or shape of a predictor's response, and they are not percentages of explained variance. No saved maxent_response_curves.rds was found, so numerical optima or response directions cannot be reported from the available response-curve output.
-
-The disabled chunks below still expect maxent_variable_importance.rds and maxent_response_curves.rds. Importance is available inside the final model RDS, but the report chunks have not been changed to read it. Refer to Figures @fig-variable-importance and @fig-response-curves only after their actual outputs are connected.
+Outline: predictor responses still needed
+- Interpret the current model response curves for dissolved oxygen, salinity, turbidity, water temperature, and oyster recruitment, plus the sediment categories. Describe the main response patterns and any supported peak or range after checking the actual curves.
+- The saved model is now a maxnet object. The previous dismo contribution and permutation percentages do not describe this fit. Current saved outputs do not supply a replacement importance table, so leave numerical importance rankings pending.
+- The report placeholders @fig-variable-importance and @fig-response-curves remain disabled and expect missing RDS files. The current model notebook generates response plots, but they still need to be connected or exported for this report.
 -->
+
+
 
 ```{r}
 #| label: fig-variable-importance
@@ -731,26 +728,14 @@ ggplot(
 ## Predicted Oyster Habitat Suitability
 
 <!--
-4.3 Predicted Oyster Habitat Suitability
-
-Follow predictor importance with the overall distribution and spatial pattern of the model predictions.
-
-Numerical values calculated from 2-data/rasters/maxent_suitability.tif:
-
-- Relative suitability ranges from 1.7887e-17 (effectively 0) to 0.8654 on the 0 to 1 output scale.
-- Mean = 0.1318; SD = 0.1660; median = 0.0452.
-- First quartile = 0.000124; third quartile = 0.2430; 90th percentile = 0.3953.
-- There are 32,592 predicted 100 x 100 m cells, covering 325.92 square km.
-- 24,633 cells (75.58%) have suitability <= 0.25.
-- 6,796 cells (20.85%) have suitability > 0.25 and <= 0.50.
-- 1,161 cells (3.56%) have suitability > 0.50 and <= 0.75.
-- 2 cells (0.006%) have suitability > 0.75.
-- In total, 1,163 cells (3.57%, or 11.63 square km) exceed 0.50.
-
-These intervals describe the distribution only; they are not validated low/moderate/high habitat classes. The completed notebook requests logistic output, which should be described as relative suitability rather than a calibrated probability of oyster occurrence. Summarize only the predicted area; masked cells are not zero-suitability habitat.
-
-Describe geographic concentrations and gaps from the completed model map in 3-scripts/5-maxent-model.html. The disabled chunk below still expects 2-data/models/maxent_suitability.rds; the actual prediction is a TIFF in 2-data/rasters. Figure @fig-maxent-suitability requires that connection before it can be cited in this report.
+Outline: current prediction summary
+- Saved prediction: 2-data/rasters/maxent_suitability.tif. There are 32,455 finite 100 x 100 m cells, covering 324.55 square km. Relative suitability ranges from effectively 0 to 0.987; mean 0.236, SD 0.220, median 0.171.
+- Using the five comparison intervals: 0 to <0.20 = 17,204 cells (53.01%); 0.20 to <0.40 = 6,324 (19.49%); 0.40 to <0.60 = 6,903 (21.27%); 0.60 to <0.80 = 1,954 (6.02%); 0.80 to 1 = 70 (0.22%). Use only the class detail needed for the main pattern; these are descriptive intervals.
+- Describe the main geographic concentrations and gaps from the current map. The prediction call requests logistic output despite cloglog wording elsewhere. Resolve that inconsistency before naming the scale; report relative suitability rather than a calibrated occurrence probability.
+- Connect @fig-maxent-suitability to the TIFF before citing it. The current chunk expects an unavailable RDS file. Masked cells are outside the prediction summary.
 -->
+
+
 
 ```{r}
 #| label: fig-maxent-suitability
@@ -797,16 +782,14 @@ par(old_par)
 ## Comparison with the Existing HSI
 
 <!--
-5. Comparison with the Existing HSI
-
-Keep the model comparison separate from the individual environmental parameters and MaxEnt results.
-
-No saved HSI prediction raster or completed MaxEnt/HSI comparison output was found in 2-data. Correlations, difference metrics, overlap percentages, and locations of agreement cannot yet be reported.
-
-The available MaxEnt prediction is 2-data/rasters/maxent_suitability.tif, with 32,592 predicted cells at 100 m resolution. A comparable HSI raster must use the same CRS, resolution, origin, extent, and mask. Calculate comparisons only over cells with both predictions, and report that paired-cell count. Confirm the interpretation of the two output scales before treating numerical differences as agreement.
-
-The disabled chunks below still expect maxent_suitability.rds and hsi_suitability.rds. Table @tbl-hsi-comparison and Figures @fig-hsi-comparison and @fig-hsi-scatter remain placeholders until actual comparison outputs are available.
+Outline: HSI comparison results and remaining description
+- Current inputs are 2-data/hsm/normalized_suitability.tif and 2-data/rasters/maxent_suitability.tif. Reproducing the existing comparison steps on November 19 gives 31,774 paired 100 m cells (317.74 square km), less than the full MaxEnt prediction area.
+- Exact agreement across the five equal-interval classes = 27.54%; agreement within one class = 73.38%; continuous Spearman rho = 0.273. Report the paired area, class boundaries, and these values in @tbl-hsi-comparison after updating its inputs and metrics.
+- Use @fig-hsi-comparison for the main agreement/disagreement locations. Available maps are 4-tables-and-figures/maps/hsi_suitability.png, maxent_suitability.png, and model_favorability.png. Add a geographic description after inspecting the final maps.
+- The comparison notebook maps HSI class minus MaxEnt class, while the report placeholder maps continuous MaxEnt minus HSI. Choose the intended difference and match the caption and sign interpretation. @fig-hsi-scatter is optional and still disabled.
 -->
+
+
 
 ```{r}
 #| label: tbl-hsi-comparison
@@ -978,20 +961,9 @@ ggplot(
 ## Summary of Major Results
 
 <!--
-6. Summary of Major Results
-
-Summarize the environmental findings, then MaxEnt performance and suitability, and finally HSI agreement when available.
-
-Numerical points available for the summary:
-
-- Raw water-quality coverage: 25,665 parameter-specific observations from 174 unique sites across the five datasets.
-- Processed coverage: 291 parameter-specific 500 m bin records, of which 286 have finite means. Chlorophyll-a has only 27 bin records, with 25 finite means, and was excluded from the predictor set.
-- Repeated internal IPDW MAE at the final settings: Dissolved Oxygen 0.431 mg/L, salinity 2.490 ppt, turbidity 0.745 NTU, and temperature 0.988 degrees C.
-- Saved final MaxEnt model: 254 presences, 1,000 sampled background points, and six predictors.
-- Saved five-fold mean test AUC: 0.885 (SD 0.066). Saved mean test omission: 30.2% (SD 20.8 percentage points), subject to the cutoff verification noted above.
-- Salinity and Dissolved Oxygen account for 81.83% of final-model contribution and 64.56% of permutation importance.
-- Relative suitability: mean 0.132, median 0.045, maximum 0.865 across 325.92 square km. Predictions exceed 0.50 in 3.57% of the predicted area; this is a descriptive cutoff, not a validated habitat classification.
-- HSI agreement and geographic locations of the largest differences cannot yet be summarized because comparison outputs are not available.
-
-Values reflect the files available on November 16, 2026. Update these comments if the model or input data are rerun.
+Outline: short results summary
+- Summarize the key water-quality coverage and interpolation findings, then the selected LQH/0.5 model: 34 presences, 10,000 background points, AUC 0.703, and omission 11.46%.
+- Finish with the 324.55 square km prediction area, mean relative suitability 0.236, and HSI comparison: 27.54% exact class agreement, 73.38% within one class, and Spearman rho 0.273 across 317.74 square km. Add the main geographic finding after the maps are reviewed.
 -->
+
+

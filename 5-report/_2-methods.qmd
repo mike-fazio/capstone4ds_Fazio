@@ -1,14 +1,31 @@
 # Methods
 
+<!--
+Outline: remaining methods details
+- Add terra, ENMeval, maxnet, and GeoThinneR to the software description where relevant. Keep the methods consistent with the saved November 19 model outputs.
+-->
+
 All data analysis and processing was performed using the R programming language [@r]. Environmental observation data was acquired from the EPA's Water Quality Portal via the dataRetrieval r-package [@wqp_2026; @dataRetrieval2026]. Data QA/QC and preprocessing was completed utilizing the Tidyverse package and any spatially aware data processing was conducted using the package sf [@tidyverse; @sf]. All spatial data was projected to the NAD83(2011) / Florida North State Plane Coordinate System (EPSG:6440) which minimizes spatial distortion in the study area.
 
 *Study Area*
+
+<!--
+Outline: study area
+- Include the study-area map (@fig-study-area). The nine WBIDs are 548GA, 548GB, 548H, 548C, 548D, 548B, 548AA, 548AB, and 548AC.
+-->
 
 The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay. Boundaries of this study area were achieved by accessing Florida Department of Environmental Protection (FDEP) Waterbody IDs feature layer hosted on ArcGIS Online [@FDEP2005WBIDs]. Once retrieved, the dataset was filtered to include only relevant WBIDs (nine IDs in the 548 series) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it was needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in @Geselbracht2024.
 
 ![Study area for the Pensacola Bay System.](4-tables-and-figures/maps/study_area.png){#fig-study-area}
 
 *Data Acquisition and Processing*
+
+<!--
+Outline: data sources still needed
+- Complete the sediment source, original class definitions, and reclassification details. Include the oyster recruitment source, collection period, units, and how the estimates were derived. Add these to @tbl-metadata.
+- The saved recruitment input contains 10 sites with estimates from 0 to 14.76. Describe its interpolation settings and validation procedure. Saved stats use distance power 0.25 and range 10 km; no recruitment sensitivity results were found.
+- Clarify the requested 2005 to 2025 period versus the saved observations, which end in December 2024. Avoid describing an inclusive 2005 to 2025 period as 20 calendar years.
+-->
 
 Oyster occurrence data was acquired from the Florida Fish and Wildlife Commission's GIS portal as polygons and converted to points using polygon centroids [@FWC2026Oysters]. Salinity, dissolved oxygen, temperature, turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the 'dataRetrieval' package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 [@wqp_2026, @dataRetrieval2026]. Parameters were chosen based on relevance and representation in previous oyster habitat restoration studies [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]. Bathymetry data for the PBS was obtained from NOAA [@NOAA_2018]. Bottom sediment data was obtained from the Pensacola and Perdido Bay Estuary Program.
    
@@ -32,6 +49,13 @@ readxl::read_excel(here::here("4-tables-and-figures", "tables", "data_summary.xl
 
 *Water-quality Data Preprocessing*
 
+<!--
+Outline: processing details to finish
+- Briefly document how missing values, nonnumeric results, and measurement units were handled. Salinity includes PSS, ppt, and ppth labels; explain the treatment used. Water temperature values of 100 degrees C or higher are removed before processing in the current notebook.
+- Keep the aggregation order clear: May to October observations, station-year means, station means across years, then station means averaged within 2 km hexagons. IQR limits are calculated before seasonal filtering.
+- Explain the exclusion of chlorophyll-a because of limited spatial coverage, supported by @fig-monitoring-coverage. Report data counts in @tbl-data-summary rather than repeating them here.
+-->
+
 All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. The IQR screen was applied to each parameter using data from all months. Aggregation then used non-outlier observations from the warm season (May through October). Outliers were defined as follows.
 $$
 \begin{aligned}
@@ -48,6 +72,13 @@ Observations were averaged within station and year, then the annual means were a
 
 ## Environmental Prediction Rasters
 
+<!--
+Outline: raster preparation still needed
+- Add the 100 m cost-raster resolution and land-barrier construction from the study-area boundary and a 1 km surrounding buffer. The final environmental rasters use 100 x 100 m cells in EPSG:6440.
+- Describe alignment to the shared grid and masking to the study area. Continuous layers use bilinear resampling; sediment uses mode resampling and is treated as categorical.
+- Include oyster recruitment in the predictor-surface description. Depth was prepared as a raster but is excluded from the current fitted model. Keep the distinction between prepared layers and modeled predictors clear.
+-->
+
 Prior to use in the MaxEnt modeling framework, continuous prediction rasters were created for dissolved oxygen, salinity, turbidity, and water temperature using the Inverse Path Distance Weighting (IPDW) package in R [@IPDW_2023]. IPDW is a variant of Inverse Distance Weighting (IDW), which is a deterministic interpolation method that allows for the estimation of point values using the equation:
 
 $$ 
@@ -61,6 +92,13 @@ where $d$ is the distance between the prediction and measurement points, $v_i$ i
 
 *IPDW parameter sensitivity analysis*
 
+<!--
+Outline: IPDW validation details
+- State that 36 power/range combinations were evaluated using five folds, 5 km blocks, and five random partitions (seeds 1 to 5). Validation units are the binned points, so replace references to withheld station means where needed.
+- Record the final choice of power 0.25 and range 10 km for the four water-quality surfaces, with the reason for preferring smoother predictions. Use @fig-ipdw-sensitivity and @tbl-ipdw-validation for the sensitivity and selected-setting results.
+- Distinguish repeated sensitivity summaries from the additional single-partition validation using seed 42. The report table currently uses the repeated summaries. Coverage is the proportion of validation rows with finite observed and predicted values.
+-->
+
 The IPDW sensitivity analysis evaluated distance power and nominal interpolation range for each parameter. In IPDW, distance power determines how rapidly a site's influence decays as path distance increases. The tested powers ($p$) were 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50, and 3.00. The tested ranges were 5, 10, 15, and 20 km. All combinations were evaluated for each parameter.
 
 Spatial cross-validation was used to determine interpolation accuracy using the blockCV package in R, which uses spatial folds to split data into test and training data sets [@Valavi2019]. To assess sensitivity to the spatial split, the fold-generation procedure was repeated, each time refitting the IPDW model and comparing the results to the held-out observation spatial-blocks. For this analysis 5 spatial folds were used with 5 km spatial blocks, and blocks were assigned the folds randomly. This process was then repeated across 5 random seeds in which a new spatial partition was generated for each seed. For each spatial fold, the monitoring locations were used in the training data to construct the IPDW prediction surface. Withheld monitoring locations were used to extract predicted values from the prediction raster and compared to the observed station means.
@@ -70,6 +108,16 @@ Finally, model performance was evaluated using calculated prediction-error stati
 The final prediction surfaces were generated by fitting the IPDW algorithm using the selected distance power and range on the full dataset for each environmental variable. The selected settings were evaluated using 5 km spatial blocks and five folds to calculate MAE, RMSE, prediction bias, and prediction coverage.
 
 ## Species Distribution Model
+
+<!--
+Outline: MaxEnt methods to reconcile with the saved run
+- The saved model uses six predictors: dissolved oxygen, salinity, sediment, turbidity, water temperature, and oyster recruitment. Remove depth from the final predictor list. Sediment codes 1, 2, and 3 are categorical; supply their substrate names.
+- Describe 1 km occurrence thinning with seed 42, complete-predictor filtering, and one presence per raster cell. The final run contains 34 presences and 10,000 background points. Update the existing 5,000-background statement; background points were sampled from complete cells excluding presence cells.
+- Retain the four ENMeval geographic block partitions (northing, then easting), four feature-class combinations, and six regularization multipliers: 24 candidates and 96 partition evaluations. Describe this as leaving out one spatial partition at a time.
+- Correct the selection rule: the current code selects the lowest mean 10th-percentile omission, then the highest mean Continuous Boyce Index. It does not filter by delta AICc <= 2. The saved selection is LQH with multiplier 0.5, despite delta AICc = 13.590.
+- Explain validation AUC against background in the held-out partition, 10th-percentile training omission, and Continuous Boyce Index. The existing metrics chunk needs a tbl- label before it can be cited as a Quarto table.
+- Resolve the output-scale wording: evaluation is configured for cloglog, but the active raster-prediction call requests logistic output. Describe the final raster using the scale actually generated. The same spatial folds are used for tuning and performance reporting.
+-->
 
 The species distribution model was fit, tuned and evaluated using the ENMeval package in r (@Kass2021). A presence-background MaxEnt framework was used via the "maxnet" algorithm included in said package. Final predictors used in model fitting were depth, dissolved oxygen, salinity, sediment, turbidity, water temperature, and oyster recruitment. Sediment was the only categorical variable. The prediction domain was reduced to include areas that had a prediction cell value for each of the prediction variables. To avoid introducing spatial bias into the model, occurrence points were thinned to include only one point per 1km. 5,000 background points were randomly sampled from complete prediction cells that did not have an occurrence point. 
 
@@ -116,3 +164,26 @@ knitr::kable(
 )
 
 ```
+
+### HSI vs MaxEnt Comparison
+
+<!--
+Outline: comparison with the existing HSI, add a methods subsection
+- Identify the source HSI from Geselbracht and describe how 2-data/hsm/normalized_suitability.tif was normalized. The normalization formula and original suitability range still need to be supplied.
+- Describe projection, bilinear resampling to the 100 m MaxEnt grid, and use of the shared complete-predictor mask. Compare only cells where both rasters have values.
+- The current comparison uses five equal intervals with breaks 0, 0.20, 0.40, 0.60, 0.80, and 1. Report exact class agreement, agreement within one class, and continuous Spearman correlation. These are descriptive classes.
+- The mapped difference in 3-scripts/5-hsi-comparison.qmd is HSI class minus MaxEnt class: positive values favor HSI, negative values favor MaxEnt. The report placeholder uses the opposite direction, so reconcile the caption and calculation. Planned outputs: @tbl-hsi-comparison, @fig-hsi-comparison, and @fig-hsi-scatter if retained.
+-->
+
+Data used to create a modified habitat suitability index derived from the HSI presented in @Geselbrach2024 was obtained from the Pensacola Perdido Bay Estuary Program and recreated using the ArcGIS Pro Suitability Modeler toolbox and subsequently imported into r for comparison. The HSI was projected to align with the MaxEnt raster surface, grid cells were resampled to 100m using bilinear resampling. A coverage mask was created to ensure only cells that had values within both rasters were used in the comparison. Finally, the rasters were classified using equal intervals using breaks 0, 0.20, 0.40, 0.60, and 1. 
+
+Classified prediction raster agreement was descried by determining the count of cells of exact agreement, the count of cells in psuedo-agreement (i.e. those that fell within one class), and finally by utilizing continuous Spearman correlation. Additionally, spatial agreement was evaluated mathematically by subtracting the values of the HSI from the values of the MaxEnt prediction surfaces, where;
+
+$$ 
+\begin{aligned}
+\text{MaxEnt Favorability} : i_{jk} \le 0  \newline
+\text{Model Agreement} : i_{jk} = 0 \newline
+\text{HSI Favorability} : i_{jk} \ge 0 
+\end{aligned}
+$$
+

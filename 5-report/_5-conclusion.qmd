@@ -1,3 +1,46 @@
 # Conclusion
 
+
+<!--
+Writing outline: Conclusion
+
+1. Restate the study's main accomplishment and scope.
+   - State that an occurrence-based MaxEnt workflow integrated six environmental predictors to produce a relative Eastern oyster suitability surface for the Pensacola Bay System and compare it with the existing HSI [@Geselbracht2024; @Kass2021].
+   - Keep the conclusion focused on completed work. The fitted predictors are dissolved oxygen, salinity, sediment, turbidity, water temperature, and oyster recruitment. Depth is not a fitted predictor.
+
+2. Give the essential model performance evidence.
+   - Summarize the selected LQH model with regularization multiplier 0.5, fitted using 34 presences and 10,000 background points.
+   - Report mean four-partition validation AUC of 0.703 and 10th-percentile omission of 11.46%, using @tbl-maxent-selection only after the disabled report table is connected.
+   - Note that performance varies among partitions and that the mean validation CBI of 0.093 warrants restraint. Avoid describing the current internal evaluation as independent confirmation of high predictive accuracy.
+
+3. Summarize the spatial finding without repeating the full Results.
+   - The logistic relative-suitability raster covers 324.55 square km, with mean suitability 0.236 and median 0.171.
+   - Mention the main pattern supported by the current maps: higher predictions along eastern/northeastern East Bay margins and lower predictions across southwestern Pensacola Bay and upper Escambia/Blackwater Bay.
+   - Refer to @fig-maxent-suitability after connecting the current raster. Describe these as relative model predictions, not estimated occurrence probabilities or demonstrated restoration success [@Elith2011; @Merow2013].
+
+4. Answer the model-comparison objective.
+   - Across 317.74 square km with paired predictions, continuous Spearman rho is 0.273, exact five-class agreement is 27.54%, and agreement within one class is 73.38%.
+   - If the directional comparison is useful to the final takeaway, note that HSI assigns a higher class in 56.37% of paired cells, MaxEnt in 16.09%, and both assign the same class in 27.54%. Avoid implying that the higher-scoring approach is more accurate.
+   - Conclude that the two surfaces offer complementary perspectives rather than interchangeable suitability estimates. Neither model has been established as ground truth for the other [@Johnson2005; @Geselbracht2024]. Use @tbl-hsi-comparison and @fig-hsi-comparison only after their current outputs are connected.
+   - Address the expectation of high overall agreement cautiously. Current rank association and exact class agreement do not support a simple claim that the models produce the same priorities.
+
+5. State the practical implication and the next priority.
+   - Explain that agreement and disagreement can guide field assessment, monitoring, and review of model assumptions alongside restoration planning [@LaPeyre2021; @Geselbracht2024].
+   - End with the principal qualification: uneven source coverage, only 34 modeled presences, uncertain recruitment estimates, and internal validation limit confidence in site-level recommendations.
+   - Identify independent field evaluation and improved input coverage as the immediate next steps. Do not introduce new analysis results, unverified biological thresholds, or new predictor rankings in the conclusion.
+-->
+
 In progress...
+
+<!--
+Suggested fixes: Conclusion
+
+- Preserve the current "In progress..." wording. The outline is guidance for the conclusion and does not replace the user's prose.
+- Keep all final values consistent with the current Results: 34 presences, 10,000 background points, LQH/0.5, four-partition AUC 0.703, omission 11.46%, MaxEnt prediction area 324.55 square km, and paired HSI comparison area 317.74 square km.
+- Keep 27.54% exact class agreement separate from 73.38% agreement within one class. These are different summaries and should not be substituted for one another.
+- Describe the saved raster as logistic relative suitability. Do not describe it as a calibrated probability of oyster occurrence or a quantified probability of successful restoration.
+- Avoid claims of high accuracy, validated restoration sites, superiority to HSI, proof of causation, or high overall agreement unless additional evidence is produced.
+- Refer only to figures and tables that are actually produced in the final report. The current MaxEnt and HSI reference labels exist but their report chunks remain disabled or unconnected.
+- The LaPeyre2021 citation key is valid, but its bibliography entry needs the copied journal fields corrected to the official USGS Open-File Report 2021-1063, 40 pages. This is a bibliography metadata correction rather than a citation-key typo.
+- Keep the conclusion restricted to analyses completed and described earlier. Additional uncertainty analysis, nested validation, field validation, or environmental event metrics belong in future work unless they are subsequently performed.
+-->

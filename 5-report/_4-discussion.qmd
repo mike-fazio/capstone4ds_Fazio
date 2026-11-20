@@ -1,3 +1,87 @@
 # Discussion
 
+
+<!--
+Writing outline: Discussion
+
+1. Return to the study objective and the expected relationship between the models.
+   - Explain what the fitted MaxEnt model adds to the existing Pensacola Bay HSI: an occurrence-based view of relative suitability that can be compared with expert-derived suitability rules and management considerations [@Phillips2006; @Elith2011; @Geselbracht2024].
+   - Address the introduction's predictions of high overall agreement and a smoother MaxEnt surface. Current comparison values show positive but limited continuous correspondence: Spearman rho = 0.273, exact five-class agreement = 27.54%, and agreement within one class = 73.38% across 31,774 paired cells.
+   - Explain why these metrics describe different aspects of agreement. Exact agreement depends on class boundaries, within-one agreement allows neighboring classes, and Spearman compares continuous ranks. Avoid treating 73.38% within-one agreement as 73.38% exact agreement.
+   - Discuss whether the evidence supports the expected high agreement without treating the expectation as a formal hypothesis test. No advance numerical definition of high agreement or inferential test was specified.
+   - Refer to @tbl-hsi-comparison and @fig-hsi-comparison only after their disabled report chunks are connected to the current data. Do not claim smoother predictions solely because the MaxEnt map uses a continuous color scale. Interpolation, output transformation, input resolution, and map classification also affect appearance.
+
+2. Discuss the environmental interpolation and its effect on the final modeling framework.
+   - Explain why IPDW is appropriate for this estuary: aquatic path distances account for separation by peninsulas and other land barriers, particularly around Garcon Point [@Stachelek2015]. Connect this point to @fig-study-area and @fig-environmental-rasters.
+   - Explain the deliberate error and smoothness tradeoff in selecting distance power 0.25 and nominal range 10 km rather than each parameter's absolute minimum MAE. Support the comparison with @fig-ipdw-sensitivity and @tbl-ipdw-validation.
+   - Salinity provides a clear example: selected-setting MAE = 2.490102 ppt versus 2.489983 ppt for the full-coverage optimum (power 0.50, range 10 km). Their difference is only 0.000119 ppt. The overall minimum, 2.397423 ppt at power 3.00 and range 5 km, has mean coverage of 96.1%.
+   - Summarize selected repeated-validation MAE in each variable's own units: dissolved oxygen 0.431 mg/L, salinity 2.490 ppt, turbidity 0.745 NTU, and temperature 0.988 degrees C. Do not compare raw MAE values across these different units as an accuracy ranking.
+   - Explain that smoother surfaces can represent broad estuarine gradients while concealing local extremes or abrupt changes. Do not claim an empirical superiority over ordinary IDW or kriging because those approaches were not compared in the completed workflow.
+   - Clarify turbidity coverage: 58 of 61 bin records have finite observed means, so the 95.1% valid-pair statistic cannot alone establish failed interpolation at 4.9% of locations.
+   - Discuss the separate recruitment surface cautiously. Ten source estimates and a saved MAE of 5.510, RMSE of 6.481, and bias of -0.808 indicate substantial uncertainty in the input's own units. Supply provenance and units before ecological interpretation. Environmental interpolation validation does not establish accuracy of the final oyster suitability map.
+
+3. Interpret the selected model's performance and variation among spatial partitions.
+   - Identify the fitted configuration: LQH features, regularization multiplier 0.5, 14 nonzero coefficients, 34 presences, and 10,000 background points. Use @tbl-maxent-selection once its current inputs and columns are connected [@Kass2021; @Muscarella2014].
+   - Report mean spatial validation AUC = 0.703 (SD 0.136), mean 10th-percentile omission = 11.46% (SD 9.10 percentage points), and mean Continuous Boyce Index = 0.093 (SD 0.525). Discuss these together instead of describing the model as strongly predictive from AUC alone.
+   - Fold AUC values are 0.843, 0.582, 0.590, and 0.796; omission values are 11.11%, 0%, 22.22%, and 12.50%; CBI values are 0.161, -0.570, 0.069, and 0.712. These results show considerable variation in performance across withheld geographic regions.
+   - Each test partition has only eight or nine presences, while each training fit has 25 or 26. A single omitted presence therefore changes a fold's omission by about 11 to 12.5 percentage points. Interpret the fold estimates with this limited sample size in mind.
+   - Held-out background counts are 5,706, 432, 2,594, and 1,268. Differences among AUC values reflect prediction within different geographic and environmental comparison domains; do not assign those differences entirely to oyster ecology.
+   - Explain that geographic partitioning addresses dependence and tests prediction across withheld regions, but the same partitions were used for tuning and selected-model reporting. These are internal evaluation results, not independent external validation [@Roberts2017; @Kass2021]. Training AUC = 0.862 is a separate in-sample value.
+   - Explain the selection-criterion tradeoff. The code prioritizes lowest average 10th-percentile omission, then highest average CBI. Selected delta AICc = 13.590, while LQ with multiplier 0.5 has the minimum AICc. Do not call the selected configuration the minimum-AICc model or a universally optimal model [@Muscarella2014].
+
+4. Relate confirmed environmental responses to oyster ecology.
+   - Interpret the actual response curves for salinity, dissolved oxygen, temperature, turbidity, oyster recruitment, and sediment in relation to oyster habitat requirements [@Barnes2007; @Pollack2012; @LaPeyre2021; @Geselbracht2024]. Refer to @fig-response-curves after that disabled output is connected.
+   - Distinguish the modeled response within sampled environmental conditions from a physiological tolerance limit, causal effect, or restoration threshold. Avoid adding unverified numerical optima.
+   - Do not interpret individual coefficients as complete ecological responses. The LQH fit combines linear, quadratic, hinge, and categorical features.
+   - Supply the substrate names represented by sediment codes 1, 2, and 3 before interpreting differences among categories. Recruitment estimates from ten input sites need a source, units, estimation procedure, and uncertainty discussion.
+   - Depth was excluded from the fitted predictor stack. Its exclusion does not demonstrate that depth is ecologically unimportant; the reason for excluding it still needs to be documented.
+   - Do not reuse the earlier dismo contribution or permutation-importance percentages. The current saved maxnet object does not supply that earlier importance table. @fig-variable-importance remains a disabled placeholder with no connected current output.
+   - If predictor correlation has not been assessed, acknowledge that correlated environmental surfaces can complicate attribution to individual predictors. Describe this as a limitation or future check rather than a completed screening analysis [@Dormann2013].
+
+5. Interpret the geographic distribution of relative suitability.
+   - Current prediction summary: 32,455 finite 100 x 100 m cells, 324.55 square km, mean suitability 0.236, SD 0.220, median 0.171, and maximum 0.987. Use @fig-maxent-suitability after connecting the TIFF.
+   - Most predicted area is in the lowest of the five comparison intervals: 53.01% below 0.20. Only 6.24% is at or above 0.60. These intervals are descriptive, not independently validated habitat quality or restoration success classes.
+   - From the available continuous and classified MaxEnt maps, describe higher predictions along eastern and northeastern East Bay margins, lower predictions across southwestern Pensacola Bay and upper Escambia and Blackwater Bays, and intermediate predictions across central/lower Escambia and much of East Bay. Keep the description at the geographic scale supported by the maps.
+   - Relate the spatial pattern to confirmed predictor relationships without claiming a single predictor caused it. Masked cells lack complete predictor coverage and should not be interpreted as unsuitable habitat.
+   - The saved TIFF has been numerically verified against logistic predictions from the saved model. Describe the raster as logistic relative suitability. It is not a calibrated occurrence probability, abundance estimate, harvest yield, or predicted restoration success [@Elith2011; @Merow2013].
+
+6. Explain agreement and disagreement with the existing HSI.
+   - State the paired domain: 31,774 cells, representing 317.74 square km. This is smaller than the complete MaxEnt prediction domain and is the denominator for model agreement.
+   - Across these paired cells, the five-class HSI assigns a higher class in 17,911 cells (56.37%), MaxEnt assigns a higher class in 5,113 cells (16.09%), and both assign the same class in 8,750 cells (27.54%). Explain this directional tendency without equating a higher score with better prediction.
+   - Discuss differences in purpose and structure. MaxEnt fits associations from mapped oyster locations, while an HSI can incorporate biological requirements, physical conditions, regulatory constraints, and stakeholder priorities [@Geselbracht2024]. Confirm which HSI revision and layers the current normalized raster contains before attributing disagreement to specific rules or weights.
+   - Mapping both outputs to 0 to 1 does not make their numerical values ecologically equivalent. Normalization and equal-width class thresholds affect exact agreement. Positive monotonic transformations preserve ranks, which helps explain why Spearman correlation describes a different relationship from class agreement [@Elith2011].
+   - Neither model is ground truth. Agreement can identify locations for field assessment, and disagreement can identify assumptions, inputs, or locations that merit closer inspection [@Johnson2005; @LaPeyre2021]. This comparison does not establish that either approach is more accurate.
+   - Add named agreement and disagreement locations only after inspecting a current HSI map and difference map. The files hsi_suitability.png and model_favorability.png are currently absent, despite earlier comments claiming their availability.
+   - The existing comparison notebook defines class difference as HSI minus MaxEnt: positive values favor HSI and negative values favor MaxEnt. The disabled report placeholder instead calculates continuous MaxEnt minus HSI. Settle the intended comparison before discussing signs in @fig-hsi-comparison.
+
+7. Explain the main limitations that affect interpretation.
+   - Spatial monitoring coverage is uneven, chlorophyll-a was excluded, and some areas remain weakly represented by direct observations. Use @fig-monitoring-coverage to connect this limitation to the input distribution.
+   - Warm-season means across 2005 to 2024 combine years and conditions. They can obscure short periods of low dissolved oxygen, freshwater pulses, high turbidity, or temperature extremes that matter for oyster survival.
+   - IQR screening identifies statistically extreme values; it does not prove that low oxygen or high turbidity observations were erroneous. Explain the potential loss of ecologically meaningful extremes without claiming a demonstrated effect on the model.
+   - A 100 m output grid does not imply independent observations at 100 m spacing when water-quality inputs were aggregated into 2 km hexagons and interpolated. Interpolation uncertainty has not been propagated through the final MaxEnt prediction.
+   - FWC reef-derived points represent mapped oyster features and may reflect mapping history, uneven survey effort, and temporal mismatch with the environmental observations. Thinning reduces clustering but does not prove sampling bias has been removed [@FWC2026Oysters; @Phillips2009].
+   - Small held-out samples and use of the tuning folds for performance reporting limit confidence in generalization [@Roberts2017; @Kass2021].
+   - Not every factor relevant to restoration is represented, such as site-specific substrate stability, access and permitting, disease and predation, harvesting, or future hydrologic conditions. Restrict examples to factors relevant to the documented study scope [@LaPeyre2021; @Geselbracht2024].
+
+8. End with practical implications and targeted future work.
+   - Position the MaxEnt map as a screening and comparison tool to guide monitoring, stakeholder review, and field verification alongside the HSI [@Geselbracht2024; @LaPeyre2021].
+   - Prioritize independent site observations or restoration monitoring to test whether relative predictions translate into recruitment, survival, and persistent reef development. Do not equate mapped suitability with demonstrated restoration success.
+   - Improve sampling in underrepresented areas and strengthen recruitment and substrate inputs. Consider temporal or event-sensitive environmental summaries as future work rather than analyses already completed.
+   - Evaluate sensitivity to thinning, background definition, interpolation, normalization, and class thresholds. External or nested validation would help distinguish model selection performance from prediction accuracy.
+-->
+
 In progress...
+
+<!--
+Suggested fixes: Discussion
+
+- The only current visible prose is "In progress...". Preserve it until the discussion is written; the outline above is writing guidance rather than replacement prose.
+- Use logistic relative suitability for the saved MaxEnt TIFF, which has been numerically checked against predictions from the saved model. The model notebook still contains cloglog wording and an evaluation configuration that differs from its logistic raster-prediction call. Reconcile that description when writing the Methods and Results.
+- The report chunks for MaxEnt selection, variable importance, response curves, suitability, and HSI comparison remain disabled or unconnected. Their labels exist, but those outputs cannot yet support rendered figure or table references. Connect current saved outputs before citing them in narrative.
+- No current HSI or model-favorability map file was found under 4-tables-and-figures/maps. Earlier notes describing hsi_suitability.png and model_favorability.png as available should not be carried forward.
+- The HSI comparison script uses HSI class minus MaxEnt class; the report placeholder uses continuous MaxEnt minus HSI. Confirm which difference is intended and make the written sign interpretation match it.
+- Confirm the precise HSI revision, normalization procedure, recruitment provenance and units, sediment category names, and reason for excluding depth. Do not invent missing details.
+- The LaPeyre2021 bibliography key exists, but its entry contains journal, volume, issue, and page fields apparently copied from another paper. The official source is USGS Open-File Report 2021-1063, 40 pages, DOI 10.3133/ofr20211063. Correct those metadata fields when the bibliography is revised; the citation key itself need not change.
+- The environmental-driver source table contains "smoother" where "smother" is intended. Suggest that wording correction separately because the table source is outside this section's prose and should not be silently edited during the outline update.
+- Avoid unqualified descriptions such as high accuracy, a superior model, validated restoration sites, proof of predictor causation, or high overall agreement. Report the actual metrics and the practical limits of the evaluation.
+-->

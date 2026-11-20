@@ -508,6 +508,7 @@ print(plot_omission)
 print(plot_aicc)
 ```
 
+
 # Predict habitat suitability
 
 Predict the selected model on the same cloglog scale used during evaluation. Restrict predictions to cells with complete predictor coverage.
@@ -535,7 +536,7 @@ Predict the selected model on the same cloglog scale used during evaluation. Res
 maxent_suitability <- ENMeval::maxnet.predictRaster(
   mod = mod.seq,
   envs = predictors,
-  pred.type = "logistic"
+  pred.type = "cloglog"
 )
 
 terra::crs(maxent_suitability) <- terra::crs(predictors)
@@ -543,6 +544,17 @@ terra::crs(maxent_suitability) <- terra::crs(predictors)
 names(maxent_suitability) <- "oyster_suitability"
 
 ```
+
+## Compare model to Null Model
+
+```{r}
+# run null sim with 100 iterations for reasonable null dist
+
+null_model <- ENMeval::ENMnulls(e.mx, list(fc = "LQH", rm = 3), no.iter = 100)
+
+
+```
+
 
 ```{r}
 #| label: final-model-equation
@@ -564,105 +576,6 @@ cat(
 )
 
 
-```
-
-
-# Suitability map
-
-```{r}
-#| label: fig-maxent-suitability
-#| fig-cap: "Relative Eastern oyster habitat suitability in the Pensacola Bay System on the cloglog scale."
-
-tmap::tmap_mode("plot")
-my_bbox <- sf::st_bbox(study_area)
-
-p_map <-
-  tmap::tm_basemap("Esri.WorldGrayCanvas") +
-  tmap::tm_shape(maxent_suitability, bbox = my_bbox) +
-  tmap::tm_raster(
-    col_alpha = 0.85,
-    col.scale = tm_scale_continuous(
-      values = "brewer.rd_yl_gn",
-      limits = c(0, 1),
-      value.na = "transparent"
-    ),
-    col.legend = tm_legend(
-      title = "Relative Suitability",
-      title.fontface = 2,
-      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
-      orientation = "landscape",
-      na.show = FALSE,
-      show = TRUE
-    )
-  ) +
-  tmap::tm_shape(pb[pb$pb == 1L, ]) +
-  tmap::tm_dots(
-    fill = "black",
-    col = "black",
-    size = 0.05
-  ) +
-  tmap::tm_layout(
-    frame = TRUE,
-    inner.margins = c(0.2, 0.2, 0.2, 0.2)
-  ) +
-  tmap::tm_title(
-    "Eastern Oyster Habitat Suitability (Presence-Background Model)",
-    fontface = 2,
-    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
-  ) +
-  tmap::tm_compass(type = "8star", size = 3)
-
-p_map
-```
-
-# Classified suitability map
-
-Display six equal intervals across the 0 to 1 cloglog scale. These are display classes rather than biological suitability thresholds.
-
-```{r}
-#| label: fig-maxent-classified-suitability
-#| fig-cap: "Relative Eastern oyster habitat suitability displayed in six intervals."
-
-tmap::tmap_mode("plot")
-my_bbox <- sf::st_bbox(study_area)
-
-p_map_classified <-
-  tmap::tm_basemap("Esri.WorldGrayCanvas") +
-  tmap::tm_shape(maxent_suitability, bbox = my_bbox) +
-  tmap::tm_raster(
-    col_alpha = 0.85,
-    col.scale = tm_scale_intervals(
-      breaks = seq(0, 1, length.out = 7),
-      values = "brewer.rd_yl_gn",
-      value.na = "transparent"
-    ),
-    col.legend = tm_legend(
-      title = "Relative Suitability",
-      title.fontface = 2,
-      position = tm_pos_out("center", "bottom", pos.h = "CENTER"),
-      orientation = "landscape",
-      na.show = FALSE,
-      show = TRUE
-    )
-  ) +
-  tmap::tm_shape(pb[pb$pb == 1L, ]) +
-  tmap::tm_dots(
-    fill = "black",
-    col = "black",
-    size = 0.05
-  ) +
-  tmap::tm_layout(
-    frame = TRUE,
-    inner.margins = c(0.2, 0.2, 0.2, 0.2)
-  ) +
-  tmap::tm_title(
-    "Eastern Oyster Habitat Classified Suitability (Presence-Background Model)",
-    fontface = 2,
-    position = tm_pos_out("center", "top", pos.h = "left", pos.v = "BOTTOM")
-  ) +
-  tmap::tm_compass(type = "8star", size = 3)
-
-p_map_classified
 ```
 
 # Save outputs

@@ -1,21 +1,43 @@
 ---
-title: "DRAFT: Comparing Habitat Suitability Modeling Approaches for the Eastern Oyster in the Pensacola Bay System"
-author: "M. Fazio"
+title: Comparing Maximum Entropy Modeling and Habitat Suitability Indices for Eastern Oyster (Crassostrea virginica) in the Pensacola Bay System
+subtitle: Capsone Working Draft 
 
-date: today 
-date-format: "MM/DD/YYYY"
+author:
+  - name: Mike Fazio
+    email: mvf2@students.uwf.edu
+    affiliations: 
+        - id: UWF
+          name: University of West Florida
+          department: Department of Mathematics and Statistics
+          address: 11000 University Pkwy, Bldg 4, Rm 223
+          city: Pensacola
+          state: Florida
+          postal-code: 32514
+    attributes:
+        corresponding: true
+    note: In completing the program requirements for the Data Science M.S.
 
+keywords: 
+  - maxent
+  - sdm
+  - gis
+  - oyster
+  - habitat suitability
+date: last-modified
+   
 bibliography: references.bib
-
-
 format:
-  pdf:
-    toc: false
-    number-sections: false
-
-execute:
+  elsevier-pdf:
+    keep-tex: true
+    journal:
+      name: UWF Data Science M.S. Capstone
+      formatting: review
+      # model: 3p # Don't set a model with preprint
+      cite-style: numbers
+execute: 
   echo: false
   warning: false
+  error: false
 ---
 
 {{< include 5-report/_1-introduction.qmd >}}

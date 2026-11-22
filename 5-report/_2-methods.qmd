@@ -11,10 +11,9 @@ Writing outline: Methods
    - State the analytical raster CRS, NAD83(2011) / Florida North, EPSG:6440, with distances in meters. Explain the reason for using a projected grid for path distances, binning, and cell-area calculations. Describe reprojection during the workflow rather than assuming all stored inputs already use that CRS.
 -->
 
-All data analysis and processing was performed using the R programming language [@r]. Environmental observation data was acquired from the EPA's Water Quality Portal via the dataRetrieval r-package [@wqp_2026; @dataRetrieval2026]. Data QA/QC and preprocessing was completed utilizing the Tidyverse package and any spatially aware data processing was conducted using the package sf [@tidyverse; @sf]. All spatial data was projected to the NAD83(2011) / Florida North State Plane Coordinate System (EPSG:6440) with distances in meters, which minimizes spatial distortion in the study area.
+All data analysis and processing was performed using the R programming language [@r]. Environmental observation data was acquired from the EPA's Water Quality Portal via the dataRetrieval r-package [@wqp_2026; @dataRetrieval2026]. To avoid distortion, all spatial data was projected to the NAD83(2011) / Florida North State Plane Coordinate System (EPSG:6440) with distances in meters. A full list of r packages will be provied in the supplemental section. 
 
 ## Study Area
-
 
 <!--
 Writing outline: Study Area
@@ -25,7 +24,7 @@ Writing outline: Study Area
    - Explain the intention to align the study domain with the earlier estuary-specific HSI, while documenting any boundary differences [@Geselbracht2024]. Do not substitute the 324.55 square km MaxEnt prediction area for total study-polygon area.
 -->
 
-The study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay [@fig-study-area]. Boundaries of this study area were achieved by accessing Florida Department of Environmental Protection (FDEP) Waterbody IDs feature layer hosted on ArcGIS Online [@FDEP2005WBIDs]. Once retrieved, the dataset was filtered to include only relevant WBIDs (nine IDs in the 548 series) and then combined to create a singular study area polygon. Creating the study area polygon is an important first step as it was needed to extract relevant environmental data from much larger datasets in the coming data gathering. The study area was intentionally chosen in an attempt to match the previous study area applied in @Geselbracht2024.
+As previously described, the study area for this project is the Pensacola Bay System which includes portions of Pensacola Bay, Escambia Bay, East Bay and Blackwater Bay [@fig-study-area]. Boundaries of this study area were determined by using the Florida Department of Environmental Protections (FDEP) Waterbody IDs ArcGIS Online feature [@FDEP2005WBIDs]. The dataset was filtered to include only relevant WBIDs (nine IDs in the 548 series) and then combined to create a singular study area polygon. This polygon also served as a spatial filter and was used to extract relevant environmental data from much larger datasets in the coming data gathering. The chosen WBIDs were used in order to match the previous study area applied in @Geselbracht2024 and @PPBEP_OysterRestoration.
 
 ![Study area for the Pensacola Bay System.](4-tables-and-figures/maps/study_area.png){#fig-study-area width="75%"}
 
@@ -45,25 +44,8 @@ Writing outline: Data Acquisition and Processing
    - Chlorophyll-a was screened but excluded for sparse geographic coverage. The fitted model contains dissolved oxygen, salinity, sediment, turbidity, water temperature, and oyster recruitment. The source inventory currently needs recruitment added (@tbl-metadata).
 -->
 
-Oyster occurrence data was acquired from the Florida Fish and Wildlife Commission's GIS portal as polygons and converted to points using polygon centroids [@FWC2026Oysters]. Salinity, dissolved oxygen, temperature, turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the 'dataRetrieval' package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 [@wqp_2026; @dataRetrieval2026]. Parameters were chosen based on relevance and representation in previous oyster habitat restoration studies [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]. Bathymetry data for the PBS was obtained from NOAA [@NOAA_2018]. Bottom sediment data and oyster recruitment data was obtained from the Pensacola and Perdido Bay Estuary Program although the data were first reported by @MacCauley2004 and @Arnold2017, respectively.
+Oyster occurrence data was acquired from the Florida Fish and Wildlife Commission's GIS portal as polygons and converted to points using polygon centroids [@FWC2026]. Salinity, dissolved oxygen, temperature, turbidity, and chlorophyll-a observations were obtained from the Water Quality Portal using the 'dataRetrieval' package in R for all sites located within the PBS and collected within the 20 year period from 2005 to 2025 [@wqp_2026; @dataRetrieval2026]. Parameters were chosen based on relevance and representation in previous oyster habitat restoration studies [@LaPeyre2021; @Barnes2007; @Pollack2012; @Geselbracht2024]. Bathymetry data for the PBS was obtained from NOAA [@NOAA_2018]. Bottom sediment data and oyster recruitment data was obtained from the Pensacola and Perdido Bay Estuary Program although the data source attribution originally belongs to @Macauley2005 and @Arnold2017, respectively.
    
-```{r}
-#| label: tbl-metadata
-#| tbl-cap: "Environmental Parameters"
-#| echo: false
-#| warning: false
-
-library(tidyverse)
-
-# insert data table with environmental metadata  
-
-readxl::read_excel(here::here("4-tables-and-figures", "tables", "data_summary.xlsx")) %>%
-  dplyr::select(Dataset, `Data Type`, Source) %>%
-  dplyr::mutate(Source = ifelse(Dataset == "Depth / bathymetry", "[@NOAA_2018]", Source)) %>%
-  knitr::kable(format = "pipe")
-   
-```
-
 ## Water-quality Data Preprocessing
 
 <!--
@@ -81,7 +63,7 @@ Writing outline: Water-quality Data Preprocessing
 -->
 
 
-All water quality parameters were inspected to ensure comparable measurement units and analytical procedures and avoid combining different forms of similar analytes. The IQR screen was applied to each parameter using data from all months. Aggregation then used non-outlier observations from the warm season (May through October). Outliers were defined as follows.
+All water quality parameters were inspected to ensure comparable measurement units and analytical procedures to avoid combining different forms of similar analytes. To avoid extereme outliers leading to sskewed data, all raw datasets first underwent an outlier detection screening using the inter-quartile range (IQR) to flag potential outliers. Outliers were defined as follows:
 $$
 \begin{aligned}
 \text{Outlier if } \quad
@@ -93,7 +75,7 @@ x &> Q_{0.75} + 1.5(IQR) \\
 \end{aligned}
 $$
 
-Observations were averaged within station and year, then the annual means were averaged within station. Station means were averaged within 2 km hexagonal bins clipped to the study area. Each bin was represented by a point on its surface. Stations with one usable observation were retained.
+The data was then filtered to include only observations collected during the warm season (May through October). To reduce spatial bias, where certain locations were monitored much more heavily and much more often then others, all stations were averaged to one value per unique station per year. Finally, the annual means were averaged so that only one overall representative value for each unique location ID. However, significant spatial clustering remained, so station means were averaged within 2 km hexagonal bins, and converted to a centroid to represent the overall conditions for that 2km region.
 
 ## Environmental Prediction Rasters
 
@@ -115,9 +97,11 @@ Finally, model performance was evaluated using calculated prediction-error stati
 
 The final prediction surfaces were generated by fitting the IPDW algorithm using the selected distance power and range on the full dataset for each environmental variable. The selected settings were evaluated using 5 km spatial blocks and five folds to calculate MAE, RMSE, prediction bias, and prediction coverage.
 
-## Species Distribution Model
+## Oyster Occurence and Background Data
 
 Oyster occurrence data had to go through some processing prior to being used in the MaxEnt model. To avoid introducing unwanted spatial bias in the model, the original 443 processed occurence locations were spatially thinned to 1 km per point using the GeoThinneR package [@GeoThinneR]. MaxEnt also requires the use of background data, which are points who's locations characterize available environmental conditions without being treated as oyster absences [@Phillips2006; @Elith2011; @Phillips2009]. Randomly generated background points (n = 10,000) were randomly generated in areas that had complete prediction raster coverage, excluding any cells that already contained a presence location. 
+
+## MaxEnt Species Distribution Modeling
 
 The species distribution model was fit, tuned and evaluated using the ENMeval package in R (@Kass2021). A presence-background MaxEnt framework was used via the "maxnet" algorithm included in said package. The final environmental predictors used were dissolved oxygen, salinity, sediment, turbidity, water temperature, and oyster recruitment. Sediment was treated as a factor with codes 1, 2, and 3, representing mud, muddy sand, and sand, respectively. The prediction domain was reduced to include areas that had a prediction cell value for each of the prediction variables. 
 
@@ -134,15 +118,8 @@ Finally, we compare the selected models metrics to a null model built on random 
 -->
 ## HSI vs MaxEnt Comparison
 
-A modified habitat suitability index (HSI) was created using similar methods presented in @Geselbracht2024. The data and methods used were based on a PPBEP adaption of the original HSI. Original input data was able to be obtained from PPBEP unfortunately the exact HSI model was no longer available so it had to be recreated using their provided methodology. The HSI was created using ArcGis Pro Suitability Modeler, with the inptu rasters transformed into suitability scores and subsequently combined using percentage weights. Environmental data used included salinity, temperature, dissolved oxygen, chlorophyll-a, and turbidity, with only observations collected between May through October in the years 2017 - 2023. It should be noted that this data was provided as-is and as such, should not be considered equal to the previously created environmental rasters in this study. The HSI also included the same sediment and larval dispersal data used here. Finally, the model included 2021 oyster distribution data, though it is not confirmed whether it is the same dataset obatained earlier in this study. Each variable was rated from 1 through 10, with all variables recieving a 1, 5 or 10. Where 1 = low, 5 = moderate, and 10 = high. @tbl-hsi-classification-table describes each classification or transformation that was used. The HSI model output was then normalized using the ArcGIS Pro Raster Calculator tool with the Min-Max Normalization formula:
+A modified habitat suitability index (HSI) was created using similar methods presented in @Geselbracht2024. The data and methods used were based on a PPBEP adaption of the original HSI. Original input data was able to be obtained from PPBEP unfortunately the exact HSI model was no longer available so it had to be recreated using their provided methodology. The HSI was created using ArcGis Pro Suitability Modeler, with the input rasters transformed into suitability scores and subsequently combined using percentage weights. Environmental data used included salinity, temperature, dissolved oxygen, chlorophyll-a, and turbidity, with only observations collected between May through October in the years 2017 - 2023. It should be noted that this data was provided as-is and as such, should not be considered equal to the previously created environmental rasters in this study. The HSI also included the same sediment and larval dispersal data used here. Finally, the model included 2021 oyster distribution data, though it is not confirmed whether it is the same dataset obatained earlier in this study. Each variable was rated from 1 through 10, with all variables recieving a 1, 5 or 10. Where 1 = low, 5 = moderate, and 10 = high. @tbl-hsi-classification-table describes each classification or transformation that was used. The HSI model output was then normalized via Min-Max Normalization using the ArcGIS Pro Raster Calculator.
 
-$$
-\begin{gathered}
-x'= \frac{ x - x_{min}}{x_{max}-x_{min}}\text{.} \\
-\end{gathered} 
-$$
-
-Where $0 \le x' \le 1$ and $x \text{ is equal to any cell } i \text{ at location } [j,k] $. 
 
 ```{r}
 #| label: tbl-hsi-classification-table
@@ -180,33 +157,32 @@ hsi_classes %>%
     booktabs = TRUE,
     align = c("l", "c", "c", "c")
   ) %>%
-  kableExtra::collapse_rows(
+   kableExtra::collapse_rows(
     columns = 1:2,
+    target = 1,
     valign = "middle"
   ) %>%
+  kableExtra::kable_styling(
+    latex_options = "HOLD_position",
+    position = "center",
+    font_size = 9
+  ) %>%
   kableExtra::footnote(
-  general = c(
-    "Suitability scores range from 0 (unsuitable) to 10 (optimal).",
-    "* Inverse linear transformation, following the earlier model."
-  ),
-  general_title = "",
-  footnote_as_chunk = TRUE
-)
+    general = c(
+      "Suitability scores range from 0 (unsuitable) to 10 (optimal).",
+      "* Inverse linear transformation, following the earlier model."
+    ),
+    general_title = "Note: ",
+    footnote_as_chunk = FALSE,
+    threeparttable = TRUE
+  ) 
 ```
 
- The HSI was projected to align with the MaxEnt raster surface, grid cells were resampled to 100m using bilinear resampling. A coverage mask was created to ensure only cells that had values within both rasters were used in the comparison. Finally, the rasters were classified using equal intervals using breaks 0, 0.20, 0.40, 0.60, 0.80 and 1. The resulting classes were labeled low, intermediate-low, intermediate, intermediate-high, and high, respectively.  
-
-Classified prediction raster agreement was described by determining the count of cells of exact agreement, the count of cells in close-agreement (i.e. those that fell within one class), and finally by utilizing continuous Spearman correlation. Additionally, spatial agreement was evaluated mathematically by subtracting the values of the HSI from the values of the MaxEnt prediction surfaces, where;
-
-$$ 
-\begin{aligned}
-\text{MaxEnt Favorability } : i_{jk} \le 0  \\
-\text{Model Agreement } : i_{jk} = 0 \\
-\text{HSI Favorability } : i_{jk} \ge 0 
-\end{aligned}
-$$
 
 
+To ensure raster alignment, both the HSI and MaxEnt surfaces were projected to the Florida State Plane North coordinate reference system, and resampled to 100m using bilinear resampling. A coverage mask was created to ensure only cells that had values within both rasters were used in the comparison. Finally, the rasters were classified using equal intervals using breaks 0, 0.20, 0.40, 0.60, 0.80 and 1. The resulting classes were labeled low, intermediate-low, intermediate, intermediate-high, and high, respectively.  
+
+Classified prediction raster agreement was described by determining the count of cells of exact agreement, the count of cells in close-agreement (i.e. those that fell within one class), and finally by utilizing continuous Spearman correlation. Additionally, spatial agreement was evaluated mathematically by subtracting the values of the HSI from the values of the MaxEnt prediction surfaces. This would result in a divergent comparison matrix in which negative values would indicate areas that the MaxEnt model favored, values at or close to zero represent areas where the models agreed, and postive values showed areas that the HSI favored. 
 
 <!--
 Suggested fixes: Methods

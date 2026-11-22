@@ -1,3 +1,4 @@
+
 @article{Arnold2017,
    author = {William S. Arnold and Steven D. Meyers and Stephen P. Geiger and Mark E. Luther and Diego Narváez and Marc E. Frischer and Eileen Hofmann},
    doi = {10.2983/036.036.0112},
@@ -6,12 +7,11 @@
    journal = {Journal of Shellfish Research},
    month = {4},
    pages = {101-118},
-   title = {Applying a Coupled Biophysical Model to Predict Larval Dispersal and Source/Sink Relationships in a Depleted Metapopulation of the Eastern Oyster <i>Crassostrea virginica</i>},
+   title = {Applying a Coupled Biophysical Model to Predict Larval Dispersal and Source/Sink Relationships in a Depleted Metapopulation of the Eastern Oyster Crassostrea virginica},
    volume = {36},
    url = {http://www.bioone.org/doi/10.2983/036.036.0112},
    year = {2017}
 }
-
 
 @article{Barnes2007,
   author        = {Barnes, T. K. and Volety, A. K. and Chartier, K. and Mazzotti, F. J. and Pearlstine, L.},
@@ -111,7 +111,7 @@
   note          = {Accessed Sep 25, 2026}
 }
 
-@misc{FWC2026Oysters,
+@misc{FWC2026,
   author        = {{FWC-FWRI}},
   title         = {Oyster Beds in Florida},
   year          = {2026},
@@ -121,16 +121,17 @@
   urldate       = {2026-09-24}
 }
 
+
 @Article{GeoThinneR,
-    title = {GeoThinneR: An R Package for Efficient Spatial Thinning of Species Occurrences and Point Data},
-    author = {Jorge Mestre-Tomás},
-    journal = {The R Journal},
-    year = {2026},
-    volume = {18},
-    number = {1},
-    pages = {299--314},
-    doi = {10.32614/RJ-2026-006},
-  }
+  title = {GeoThinneR: An R Package for Efficient Spatial Thinning of Species Occurrences and Point Data},
+  author = {Jorge Mestre-Tomás},
+  journal = {The R Journal},
+  year = {2026},
+  volume = {18},
+  number = {1},
+  pages = {299--314},
+  doi = {10.32614/RJ-2026-006},
+}
 
 @article{Geselbracht2024,
   author        = {L. Geselbracht and M. Johnston and B. M. DeAngelis and A. Birch},
@@ -210,29 +211,24 @@
 @techreport{LaPeyre2021,
   author        = {Megan K. La Peyre and Danielle A. Marshall and Shaye E. Sable},
   doi           = {10.3133/ofr20211063},
+  issue         = {1},
   institution   = {U.S. Geological Survey},
-  type          = {Open-File Report},
-  number        = {2021-1063},
-  pagetotal     = {40},
+  journal       = {Diversity and Distributions},
+  month         = {1},
+  pages         = {43-57},
   title         = {Oyster model inventory: Identifying critical data and modeling approaches to support restoration of oyster reefs in coastal U.S. Gulf of Mexico waters},
+  volume        = {17},
   url           = {https://pubs.usgs.gov/publication/ofr20211063},
   year          = {2021}
 }
 
-@report{Macauley2004,
-  author = {Macauley, John and Smith, Lisa M. and Ruth, Barbara F.},
-  address = {Washington, DC},
-  booktitle = {The ecological condition of the Pensacola Bay System, Northwest Florida},
-  keywords = {Ecological assessment (Biology) -- Florida -- Pensacola Bay ; Gulf of Mexico -- Pensacola Bay},
-  language = {eng},
-  lccn = {2005414666},
-  publisher = {United States Environmental Protection Agency, Office of Research and Development},
-  title = {The ecological condition of the Pensacola Bay System, Northwest Florida },
-  url = {https://nepis.epa.gov/Exe/ZyPDF.cgi?Dockey=P1006GD6.PDF},
-  year = {2005}
+@techReport{Macauley2005,
+   author = {John Macauley and Lisa M Smith and Barbara F Ruth},
+   institution = {U.S Epa},
+   title = {The Ecological Condition of the Pensacola Bay System, Northwest Florida},
+   url = {https://nepis.epa.gov/Exe/ZyPURL.cgi?Dockey=P1006GD6.txt},
+   year = {2005}
 }
-
-
 
 @article{Merow2013,
   author        = {Cory Merow and Matthew J. Smith and John A. Silander},
@@ -245,23 +241,6 @@
   volume        = {36},
   year          = {2013}
 }
-
-@article{Muscarella2014,
-   abstract = {Recent studies have demonstrated a need for increased rigour in building and evaluating ecological niche models (ENMs) based on presence-only occurrence data. Two major goals are to balance goodness-of-fit with model complexity (e.g. by 'tuning' model settings) and to evaluate models with spatially independent data. These issues are especially critical for data sets suffering from sampling bias, and for studies that require transferring models across space or time (e.g. responses to climate change or spread of invasive species). Efficient implementation of procedures to accomplish these goals, however, requires automation. We developed ENMeval, an R package that: (i) creates data sets for k-fold cross-validation using one of several methods for partitioning occurrence data (including options for spatially independent partitions), (ii) builds a series of candidate models using Maxent with a variety of user-defined settings and (iii) provides multiple evaluation metrics to aid in selecting optimal model settings. The six methods for partitioning data are n-1 jackknife, random k-folds ( = bins), user-specified folds and three methods of masked geographically structured folds. ENMeval quantifies six evaluation metrics: the area under the curve of the receiver-operating characteristic plot for test localities (AUCTEST), the difference between training and testing AUC (AUCDIFF), two different threshold-based omission rates for test localities and the Akaike information criterion corrected for small sample sizes (AICc). We demonstrate ENMeval by tuning model settings for eight tree species of the genus Coccoloba in Puerto Rico based on AICc. Evaluation metrics varied substantially across model settings, and models selected with AICc differed from default ones. In summary, ENMeval facilitates the production of better ENMs and should promote future methodological research on many outstanding issues.},
-   author = {Robert Muscarella and Peter J. Galante and Mariano Soley-Guardia and Robert A. Boria and Jamie M. Kass and María Uriarte and Robert P. Anderson},
-   doi = {10.1111/2041-210X.12261},
-   issn = {2041210X},
-   issue = {11},
-   journal = {Methods in Ecology and Evolution},
-   keywords = {AIC,Bioinformatics,Ecological niche model,Model complexity,Overfitting,Software,Species distribution model},
-   month = {11},
-   pages = {1198-1205},
-   publisher = {British Ecological Society},
-   title = {ENMeval: An R package for conducting spatially independent evaluations and estimating optimal model complexity for Maxent ecological niche models},
-   volume = {5},
-   year = {2014}
-}
-
 
 @misc{NOAA_2018,
   author        = {{National Centers for Environmental Information}},
@@ -324,6 +303,14 @@
   year          = {2024},
   url           = {https://www.R-project.org/}
 }
+
+ @Manual{raster,
+    title = {raster: Geographic Data Analysis and Modeling},
+    author = {Robert J. Hijmans},
+    year = {2025},
+    note = {R package version 3.6-32},
+    url = {https://CRAN.R-project.org/package=raster},
+  }
 
 @misc{Roberts2017,
   author        = {David R. Roberts and Volker Bahn and Simone Ciuti and Mark S. Boyce and Jane Elith and Gurutzeta Guillera-Arroita and Severin Hauenstein and José J. Lahoz-Monfort and Boris Schröder and Wilfried Thuiller and David I. Warton and Brendan A. Wintle and Florian Hartig and Carsten F. Dormann},
@@ -400,6 +387,14 @@
   pages = {1240--1250},
   doi = {10.1080/13658816.2015.1018833}
 }
+
+@Manual{terra,
+    title = {terra: Spatial Data Analysis},
+    author = {Robert J. Hijmans},
+    year = {2025},
+    note = {R package version 1.8-42},
+    url = {https://CRAN.R-project.org/package=terra},
+  }
 
 @article{tidyverse,
   title         = {Welcome to the {tidyverse}},

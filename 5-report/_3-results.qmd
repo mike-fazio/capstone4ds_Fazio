@@ -519,52 +519,120 @@ Writing outline: Oyster Occurrence and Background Data
    - Held-out presence counts 9, 8, 9, and 8; background counts 5,706, 432, 2,594, and 1,268. Presence counts are fairly even while background counts vary considerably among the four ENMeval geographic blocks. Evidence: maxent_cross_validation_metrics.csv.
 -->
 
-
-<!-- 
-The raw oyster reef count was 443 individual records -->
-
-<!-- 
+Initial oyster presence data was heavily skewed and had to be thinned in order to avoid spatial bias in the model. The thinning process removed 408 of 443 records leaving 35 oyster reefs that had a minimum seperation distance of 1km. 1 additional oyster point was dropped due to lack of predictor coverage. The final model had 34 presences and 10,000 background points [@fig-oyster-occurrences]. The spatial partition held-out presence counts were well spit with values of 9, 8, 9, and 8. Background counts were less evenly split, with counts of 5,706, 432, 2,594, and 1,268, respectively. 
 
 ```{r}
 #| label: fig-oyster-occurrences
-#| fig-cap: "Spatial distribution of Eastern oyster occurrence points within the Pensacola Bay System."
-#| fig-width: 8
-#| fig-height: 7
+#| fig-cap: "Eastern oyster occurrences before and after spatial thinning, with background sampling points."
+#| fig-width: 10
+#| fig-height: 4.2
+#| out-width: "100%"
 #| echo: false
 #| warning: false
 
-oyster_points_map <- oyster_points %>%
-  st_transform(st_crs(study_area))
+tmap::tmap_mode("plot")
 
-ggplot() +
-  geom_sf(
-    data = study_area,
-    fill = "#D9EEF5",
-    color = "grey35",
-    linewidth = 0.35
-  ) +
-  geom_sf(
-    data = oyster_points_map,
-    color = "#B2182B",
-    size = 0.8,
-    alpha = 0.55
-  ) +
-  labs(
-    x = NULL,
-    y = NULL
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    axis.text = element_blank()
+# Combine datasets for faceting
+original_pts <- oyster_points |>
+  sf::st_transform(sf::st_crs(pb)) |>
+  dplyr::transmute(
+    Panel = "A. Original Occurrences",
+    Point_Type = "Presence"
   )
+
+processed_pts <- pb |>
+  dplyr::transmute(
+    Panel = "B. Processed Occurrences",
+    Point_Type = dplyr::if_else(
+      as.character(pb) == "1",
+      "Presence",
+      "Background"
+    )
+  )
+
+plot_points <- dplyr::bind_rows(
+  original_pts,
+  processed_pts
+)
+
+# Establish consistent factor ordering
+plot_points$Panel <- factor(
+  plot_points$Panel,
+  levels = c(
+    "A. Original Occurrences",
+    "B. Processed Occurrences"
+  )
+)
+
+plot_points$Point_Type <- factor(
+  plot_points$Point_Type,
+  levels = c("Background", "Presence")
+)
+
+# Tight bounding box around both datasets
+my_bbox <- sf::st_bbox(plot_points)
+
+# Only 3% padding
+xpad <- (my_bbox["xmax"] - my_bbox["xmin"]) * 0.03
+ypad <- (my_bbox["ymax"] - my_bbox["ymin"]) * 0.03
+
+my_bbox["xmin"] <- my_bbox["xmin"] - xpad
+my_bbox["xmax"] <- my_bbox["xmax"] + xpad
+my_bbox["ymin"] <- my_bbox["ymin"] - ypad
+my_bbox["ymax"] <- my_bbox["ymax"] + ypad
+
+# Single faceted map
+oyster_comparison <-
+  tmap::tm_basemap("Esri.WorldGrayCanvas") +
+  tmap::tm_shape(plot_points, bbox = my_bbox) +
+  tmap::tm_dots(
+    fill = "Point_Type",
+    fill.scale = tmap::tm_scale_categorical(
+      values = c("#B0B0B0", "#B2182B")
+    ),
+    fill.free = FALSE,
+    size = "Point_Type",
+    size.scale = tmap::tm_scale_categorical(
+      values = c(0.035, 0.20)
+    ),
+    size.legend = tmap::tm_legend_hide(),
+    plot.order = tmap::tm_plot_order(
+      "fill", reverse = FALSE
+    ),
+    fill.legend = tmap::tm_legend(
+      title = "Point Type",
+      position = tmap::tm_pos_out(
+        "center", "bottom"
+      ),
+      orientation = "landscape"
+    )
+  ) +
+  tmap::tm_facets_wrap(
+    by = "Panel",
+    ncol = 2,
+    free.coords = FALSE
+  ) +
+  tmap::tm_layout(
+    asp = 0,
+    frame = FALSE,
+    inner.margins = 0.01,
+    outer.margins = 0.01,
+    panel.label.size = 1.1,
+    panel.label.fontface = 2
+  )
+
+oyster_comparison
+
+tmap_save(oyster_comparison, here::here("4-tables-and-figures", "maps", "occurrence_comparison.png"))
 ```
+
 
 ## MaxEnt Model Tuning and Selection -->
 
-
 <!--
 Writing outline: MaxEnt Model Tuning and Selection
+
+Out of the 24 model candidates with 96 partition evaluations. The LQH model was selected with regularization multiplier 0.5. This model retained 14 non-zero coefficients, had an AICc 691.30 and delta AICc 13.59. The selected model was tied for lowest 10th-percentile omission, but had the highest mean CBI which served as the tie breaker. 
 
 1. Identify the selected configuration and the selection basis.
    - 24 candidates and 96 partition evaluations. Selected LQH with regularization multiplier 0.5; 14 nonzero coefficients. Lowest mean 10th-percentile omission, with highest mean CBI breaking the tie [@Kass2021].

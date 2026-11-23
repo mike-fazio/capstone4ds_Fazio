@@ -46,6 +46,7 @@ execute:
 
 {{< include 5-report/_2-methods.qmd >}}
 
+{{< include 5-report/_3-results.qmd >}}
 
 # References
 

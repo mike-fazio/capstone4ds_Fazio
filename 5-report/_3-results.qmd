@@ -151,7 +151,7 @@ For all parameters, the data was heavily skewed spatially, with the majority of 
 ```{r}
 #| label: tbl-data-summary
 #| tbl-cap: "Summary of raw and processed warm-season water-quality data by environmental parameter."
-#| echo: false
+#| echo: true
 #| warning: false
 
 wq_summary <- tibble::tribble(
@@ -522,25 +522,21 @@ Writing outline: Oyster Occurrence and Background Data
 Initial oyster presence data was heavily skewed and had to be thinned in order to avoid spatial bias in the model. The thinning process removed 408 of 443 records leaving 35 oyster reefs that had a minimum seperation distance of 1km. 1 additional oyster point was dropped due to lack of predictor coverage. The final model had 34 presences and 10,000 background points [@fig-oyster-occurrences]. The spatial partition held-out presence counts were well spit with values of 9, 8, 9, and 8. Background counts were less evenly split, with counts of 5,706, 432, 2,594, and 1,268, respectively. 
 
 ```{r}
-#| label: fig-oyster-occurrences
-#| fig-cap: "Eastern oyster occurrences before and after spatial thinning, with background sampling points."
-#| fig-width: 10
-#| fig-height: 4.2
-#| out-width: "100%"
 #| echo: false
 #| warning: false
+#| eval: false
 
 tmap::tmap_mode("plot")
 
 # Combine datasets for faceting
-original_pts <- oyster_points |>
-  sf::st_transform(sf::st_crs(pb)) |>
+original_pts <- oyster_points %>%
+  sf::st_transform(sf::st_crs(pb)) %>%
   dplyr::transmute(
     Panel = "A. Original Occurrences",
     Point_Type = "Presence"
   )
 
-processed_pts <- pb |>
+processed_pts <- pb %>%
   dplyr::transmute(
     Panel = "B. Processed Occurrences",
     Point_Type = dplyr::if_else(
@@ -626,13 +622,22 @@ oyster_comparison
 tmap_save(oyster_comparison, here::here("4-tables-and-figures", "maps", "occurrence_comparison.png"))
 ```
 
+![Eastern oyster occurrences before and after spatial thinning, with background sampling points.](4-tables-and-figures/maps/occurrence_comparison.png){#fig-oyster-occurrences width="100%"}
 
-## MaxEnt Model Tuning and Selection -->
+## MaxEnt Model Tuning and Selection
+
+Overall, the models performed moderately at best with 16 of the 24 candidate models having $\bar{AUC} \le 0.50$. Across the 24 candidate models, training AUC ranged from 0.747 to 0.863, while mean validation AUC ranged from 0.460 to 0.703. Mean validation Continuous Boyce Index (CBI) ranged from −0.353 to 0.334, and mean 10th-percentile omission rates ranged from 0.115 to 0.250. AICc values ranged from 677.70 to 693.66, with model complexity ranging from 3 to 14 nonzero coefficients.
+
+Selected Model Performance
+
+The selected model used linear, quadratic, and hinge (LQH) features with a regularization multiplier of 0.5 [@tbl-maxent-selection]. This configuration achieved the highest mean validation AUC (0.703 ± 0.136 SD) and tied for the lowest mean 10th-percentile omission rate (0.115 ± 0.091 SD). Its mean validation CBI was 0.093 ± 0.525 SD, with a training AUC of 0.862.
+
+The LQHP configuration with a regularization multiplier of 0.5 achieved the same mean omission rate (0.115), with a slightly lower mean validation AUC (0.697) and CBI (0.046). The highest validation CBI (0.334) occurred with the LQHP configuration at a regularization multiplier of 1.0.
+
+The lowest AICc (677.70) was achieved by the LQ configuration with a regularization multiplier of 0.5. This model had a mean validation AUC of 0.520 and CBI of −0.253, compared with 0.703 and 0.093, respectively, for the selected LQH model.
 
 <!--
-Writing outline: MaxEnt Model Tuning and Selection
 
-Out of the 24 model candidates with 96 partition evaluations. The LQH model was selected with regularization multiplier 0.5. This model retained 14 non-zero coefficients, had an AICc 691.30 and delta AICc 13.59. The selected model was tied for lowest 10th-percentile omission, but had the highest mean CBI which served as the tie breaker. 
 
 1. Identify the selected configuration and the selection basis.
    - 24 candidates and 96 partition evaluations. Selected LQH with regularization multiplier 0.5; 14 nonzero coefficients. Lowest mean 10th-percentile omission, with highest mean CBI breaking the tie [@Kass2021].
@@ -644,40 +649,40 @@ Out of the 24 model candidates with 96 partition evaluations. The LQH model was 
    - Identify these as the same folds used during tuning, without calling them independent final validation or evidence of uniformly strong performance [@Roberts2017; @Kass2021]. Definitions are available in @tbl-eval-metrics, with CBI still needing to be added.
 -->
 
-
-
-
-
 ```{r}
 #| label: tbl-maxent-selection
 #| tbl-cap: "Performance of the leading candidate MaxEnt configurations."
 #| echo: false
 #| warning: false
-#| eval: false
+#| eval: true
 
-maxent_tuning <- readRDS(
-  here("2-data", "models", "maxent_tuning_results.rds")
+maxent_tuning <- read.csv(
+  here("4-tables-and-figures", "tables", "maxent_tuning_results.csv")
 )
 
 maxent_tuning_table <- maxent_tuning %>%
-  arrange(desc(selected), delta_aicc) %>%
+  arrange(or.10p.avg, desc(cbi.val.avg)) %>%
   slice_head(n = 10) %>%
   transmute(
-    `Feature class` = feature_class,
-    `Regularization multiplier` = regularization_multiplier,
-    `Mean AUC` = sprintf("%.3f", mean_auc),
-    `Mean omission rate` = sprintf("%.3f", mean_omission_rate),
-    `Mean Boyce index` = sprintf("%.3f", mean_boyce),
-    `Delta AICc` = sprintf("%.2f", delta_aicc),
-    Selected = if_else(selected, "Yes", "No")
+    `Feature Class` = fc,
+    `Regularization Multiplier` = rm,
+    `Validation AUC (Mean)` = sprintf("%.3f", auc.val.avg),
+    `Validation AUC (s.d.)` = sprintf("%.3f", auc.val.sd),
+    `Omission Rate (Mean)` = sprintf("%.3f", or.10p.avg),
+    `Omission Rate (s.d.)` = sprintf("%.3f", or.10p.sd),
+    `Validation CBI (Mean)` = sprintf("%.3f", cbi.val.avg),
+    `Validation CBI (s.d.)` = sprintf("%.3f", cbi.val.sd),
+    `Delta AICc` = sprintf("%.2f", delta.AICc)
   )
 
 kable(
   maxent_tuning_table,
   booktabs = TRUE,
-  align = c("l", "r", "r", "r", "r", "r", "c")
+  align = c("l", "r", "r", "r", "r", "r","r","r","r", "c")
 )
 ```
+
+
 <!-- 
 ## Environmental-Variable Influence -->
 

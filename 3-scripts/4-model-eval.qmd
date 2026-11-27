@@ -9,9 +9,9 @@ library(ENMeval)
 library(terra)
 library(sf)
 library(maxnet)
-library(dplyr)
 library(ggplot2)
 library(tmap)
+library(tidyverse)
 
 #here::i_am("3-scripts/5-model-eval.qmd")
 set.seed(42)
@@ -30,7 +30,9 @@ n_background <- 10000L
 
 k_folds <- 4L
 block_orientation <- "lat_lon"
-prediction_type <- "cloglog"
+prediction_type <- "logistic"
+
+"
 ```
 
 # Environmental predictors
@@ -299,14 +301,12 @@ Compare all feature-class and regularization settings using the four spatial par
 # Sediment codes represent categories, not a continuous measurement.
 predictors[["Sediment"]] <- as.factor(predictors[["Sediment"]])
 
-e.mx <- ENMeval::ENMevaluate(
+eval_models <- ENMeval::ENMevaluate(
   occs = occ_xy,
   envs = predictors,
   bg = bg_xy,
   algorithm = "maxnet",
   categoricals = "Sediment",
-  #partitions = "user",
-  #user.grp = user_groups,
   partitions = "block",
   partition.settings = list(orientation = block_orientation),
   tune.args = tune_settings,
@@ -321,25 +321,14 @@ e.mx <- ENMeval::ENMevaluate(
   quiet = FALSE
 )
 
-results <- tibble::as_tibble(ENMeval::eval.results(e.mx))
+results <- tibble::as_tibble(ENMeval::eval.results(eval_models))
 partition_results <- tibble::as_tibble(
-  ENMeval::eval.results.partitions(e.mx)
+  ENMeval::eval.results.partitions(eval_models)
 )
 
 ranked_models <- results %>%
   arrange(delta.AICc)
 
-print(
-  ranked_models %>%
-    select(
-      any_of(c(
-        "fc", "rm", "tune.args", "auc.val.avg", "auc.val.sd",
-        "auc.diff.avg", "cbi.val.avg", "or.10p.avg",
-        "AICc", "delta.AICc", "ncoef"
-      ))
-    ),
-  n = Inf
-)
 ```
 
 # Select the final model
@@ -351,34 +340,34 @@ sequential method that uses cross-validation results by selecting models with th
 ```{r}
 #| label: select-final-model
 #| 
-res <- eval.results(e.mx)
+res <- eval.results(eval_models)
 
 # first removes settings with NA values for omission rate.
 # Select the model with delta AICc equal to 0, or the one with the lowest AICc score.
 
-opt.seq <- res %>%
+optimal <- res %>%
   filter(!is.na(or.10p.avg)) %>%
   filter(or.10p.avg == min(or.10p.avg)) %>%
   filter(cbi.val.avg == max(cbi.val.avg))
 
-model_id <- as.character(opt.seq$tune.args[[1]])
-mod.seq <- eval.models(e.mx)[[model_id]]
+model_id <- as.character(optimal$tune_args[[1]])
+model_seq <- eval.models(eval_models)[[model_id]]
 
-best_model <- opt.seq
-final_model <- mod.seq
+best_model <- optimal
+final_model <- model_seq
 
-data <- eval.occs(e.mx)[, names(predictors), drop = FALSE]
+data <- eval.occs(eval_models)[, names(predictors), drop = FALSE]
 
 curve_vars <- names(data)[
   vapply(names(data), function(variable) {
     is.numeric(data[[variable]]) &&
-      any(grepl(variable, names(mod.seq$betas), fixed = TRUE))
+      any(grepl(variable, names(model_seq$betas), fixed = TRUE))
   }, logical(1))
 ]
 
 response_plots <- lapply(curve_vars, function(variable) {
   ENMeval::evalplot.respCurve(
-    mod.seq,
+    model_seq,
     data,
     var = variable,
     type = 2
@@ -398,7 +387,7 @@ Summarize the selected model's held-out folds using the existing cross-validatio
 #| label: evaluation-summary
 
 fold_metrics <- partition_results %>%
-  filter(as.character(tune.args) == model_id) %>%
+  filter(as.character(tune_args) == model_id) %>%
   mutate(fold = as.integer(fold)) %>%
   left_join(fold_summary, by = "fold") %>%
   transmute(
@@ -516,25 +505,8 @@ Predict the selected model on the same cloglog scale used during evaluation. Res
 ```{r}
 #| label: predict-suitability
 
-# maxent_suitability <- terra::predict(
-#   predictors,
-#   final_model,
-#   fun = function(model, data, type) {
-#     data <- as.data.frame(data)
-#     data$Sediment <- factor(
-#       data$Sediment,
-#       levels = model$levels$Sediment
-#     )
-#     as.numeric(
-#       stats::predict(model, data, type = type, clamp = TRUE)
-#     )
-#   },
-#   type = prediction_type,
-#   na.rm = TRUE
-# )
-
 maxent_suitability <- ENMeval::maxnet.predictRaster(
-  mod = mod.seq,
+  mod = model_seq,
   envs = predictors,
   pred.type = "cloglog"
 )
@@ -550,7 +522,7 @@ names(maxent_suitability) <- "oyster_suitability"
 ```{r}
 # run null sim with 100 iterations for reasonable null dist
 
-null_model <- ENMeval::ENMnulls(e.mx, list(fc = "LQH", rm = 3), no.iter = 100)
+null_model <- ENMeval::ENMnulls(eval_models, list(fc = "LQH", rm = 3), no.iter = 100)
 
 
 ```
@@ -559,8 +531,8 @@ null_model <- ENMeval::ENMnulls(e.mx, list(fc = "LQH", rm = 3), no.iter = 100)
 ```{r}
 #| label: final-model-equation
 
-b <- mod.seq$betas
-intercept <- mod.seq$alpha + mod.seq$entropy
+b <- model_seq$betas
+intercept <- model_seq$alpha + model_seq$entropy
 
 equation <- paste0(
   "eta = ", signif(intercept, 6), " ",
